@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Revisión Editorial — NewsCMS</title>
-    <link rel="stylesheet" href="../css/admin.css?v=20261119e">
+    <link rel="stylesheet" href="../css/admin.css?v=20261119f">
 </head>
 <body>
     <div id="contenedor-admin" class="contenedor-admin" hidden>
@@ -109,7 +109,7 @@
                         >
                             <div class="cabecera-evaluacion-revision">
                                 <div class="evaluacion-etiquetas-top">
-                                    <span class="etiqueta-contexto-revision">En evaluación</span>
+                                    <span id="detalle-tipo-revision" class="item-bandeja-tipo tipo-revision-nueva">Nueva publicación</span>
                                     <span class="estado-badge estado-pendiente_revision">Pendiente de revisión</span>
                                     <span id="detalle-categoria" class="chip-categoria-revision"></span>
                                 </div>
@@ -119,6 +119,15 @@
                             </div>
 
                             <div class="cuerpo-evaluacion-revision">
+                                <section id="bloque-version-publicada" class="bloque-version-publicada" hidden aria-labelledby="titulo-version-publicada">
+                                    <div class="cabecera-version-publicada">
+                                        <span class="etiqueta-version-publicada">Versión publicada vigente</span>
+                                        <span id="meta-version-publicada" class="meta-version-publicada"></span>
+                                    </div>
+                                    <h3 id="titulo-version-publicada" class="titulo-version-publicada"></h3>
+                                    <p id="resumen-version-publicada" class="resumen-version-publicada" hidden></p>
+                                </section>
+
                                 <p id="detalle-resumen" class="resumen-revision" hidden></p>
 
                                 <div id="detalle-imagen-contenedor" class="vista-previa-imagen imagen-evaluacion-revision" hidden>
@@ -201,6 +210,6 @@
         </div>
     </div>
 
-    <script src="../js/revision.js?v=20261119e"></script>
+    <script src="../js/revision.js?v=20261119f"></script>
 </body>
 </html>

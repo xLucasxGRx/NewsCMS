@@ -448,7 +448,13 @@ function responderListaAdmin(PDO $pdo): void
                          FROM revisiones_editoriales r
                          WHERE r.noticia_id = n.id
                          ORDER BY r.fecha_creacion DESC, r.id DESC
-                         LIMIT 1) AS ultima_observacion
+                         LIMIT 1) AS ultima_observacion,
+                        (SELECT a.estado
+                         FROM actualizaciones_noticias a
+                         WHERE a.noticia_id = n.id
+                           AND a.estado IN ('borrador', 'pendiente_revision', 'cambios_solicitados')
+                         ORDER BY a.id DESC
+                         LIMIT 1) AS estado_actualizacion
                  FROM noticias n
                  INNER JOIN categorias c ON c.id = n.categoria_id
                  INNER JOIN usuarios u ON u.id = n.autor_id
@@ -511,7 +517,7 @@ function responderNoticiaAdmin(PDO $pdo): void
 
     $consulta = $pdo->prepare(
         'SELECT id, titulo, resumen, contenido, categoria_id, autor_id, imagen,
-                estado, es_destacada, es_ultima_hora
+                estado, es_destacada, es_ultima_hora, fecha_publicacion
          FROM noticias
          WHERE id = ?
          LIMIT 1'
@@ -535,6 +541,53 @@ function responderNoticiaAdmin(PDO $pdo): void
     $stmtEtiquetas = $pdo->prepare('SELECT etiqueta_id FROM noticias_etiquetas WHERE noticia_id = ?');
     $stmtEtiquetas->execute([$id]);
     $noticia['etiquetas_ids'] = array_map('intval', $stmtEtiquetas->fetchAll(PDO::FETCH_COLUMN));
+    $noticia['actualizacion_activa'] = null;
+    $noticia['version_publicada'] = null;
+
+    if ($noticia['estado'] === 'publicada') {
+        $noticia['version_publicada'] = [
+            'titulo'            => $noticia['titulo'],
+            'imagen'            => $noticia['imagen'],
+            'fecha_publicacion' => $noticia['fecha_publicacion'],
+        ];
+
+        $stmtProp = $pdo->prepare(
+            "SELECT a.id, a.titulo, a.resumen, a.contenido, a.categoria_id, a.imagen,
+                    a.etiquetas_json, a.es_destacada, a.es_ultima_hora, a.estado,
+                    a.observaciones, a.fecha_actualizacion, u.nombre AS editor_nombre
+             FROM actualizaciones_noticias a
+             LEFT JOIN usuarios u ON u.id = a.editor_id
+             WHERE a.noticia_id = ?
+               AND a.estado IN ('borrador', 'pendiente_revision', 'cambios_solicitados')
+             ORDER BY a.id DESC
+             LIMIT 1"
+        );
+        $stmtProp->execute([$id]);
+        $propuesta = $stmtProp->fetch();
+
+        if ($propuesta) {
+            $noticia['titulo'] = $propuesta['titulo'];
+            $noticia['resumen'] = $propuesta['resumen'];
+            $noticia['contenido'] = $propuesta['contenido'];
+            $noticia['categoria_id'] = (int) $propuesta['categoria_id'];
+            $noticia['imagen'] = $propuesta['imagen'];
+            $noticia['es_destacada'] = (int) $propuesta['es_destacada'];
+            $noticia['es_ultima_hora'] = (int) $propuesta['es_ultima_hora'];
+
+            $etiquetasDecodificadas = json_decode((string) ($propuesta['etiquetas_json'] ?? '[]'), true);
+            $noticia['etiquetas_ids'] = is_array($etiquetasDecodificadas)
+                ? array_map('intval', $etiquetasDecodificadas)
+                : [];
+
+            $noticia['actualizacion_activa'] = [
+                'id'                  => (int) $propuesta['id'],
+                'estado'              => $propuesta['estado'],
+                'observaciones'       => $propuesta['observaciones'],
+                'editor'              => $propuesta['editor_nombre'],
+                'fecha_actualizacion' => $propuesta['fecha_actualizacion'],
+            ];
+        }
+    }
 
     echo json_encode([
         'ok'      => true,
@@ -543,7 +596,7 @@ function responderNoticiaAdmin(PDO $pdo): void
 }
 
 /**
- * Crea o actualiza una noticia validando rol, CSRF, contenido e imagen.
+ * Crea o actualiza una noticia o propuesta de actualización siguiendo el flujo editorial obligatorio.
  */
 function guardarNoticia(PDO $pdo): void
 {
@@ -566,8 +619,6 @@ function guardarNoticia(PDO $pdo): void
     }
 
     $usuario = obtenerUsuarioActual();
-    $rol = $usuario['rol'];
-
     $id = (int) ($_POST['id'] ?? 0);
     if ($id <= 0 && !tienePermiso('crear_noticias')) {
         http_response_code(403);
@@ -583,6 +634,36 @@ function guardarNoticia(PDO $pdo): void
     $esDestacada = !empty($_POST['es_destacada']) ? 1 : 0;
     $esUltimaHora = !empty($_POST['es_ultima_hora']) ? 1 : 0;
     $etiquetasIds = $_POST['etiquetas'] ?? [];
+
+    // Prohibir la publicación directa desde Crear/Editar Noticias para todos los roles
+    if ($accion === 'publicada') {
+        http_response_code(403);
+        echo json_encode([
+            'ok'      => false,
+            'mensaje' => 'La publicación directa está deshabilitada. Envía la noticia o actualización a Revisión Editorial.',
+        ]);
+        return;
+    }
+
+    $accionesValidas = [
+        'borrador',
+        'guardar_correcciones',
+        'pendiente_revision',
+        'borrador_actualizacion',
+        'enviar_actualizacion',
+    ];
+    if (!in_array($accion, $accionesValidas, true)) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'mensaje' => 'Acción editorial no válida.']);
+        return;
+    }
+
+    $requiereEnvioRevision = in_array($accion, ['pendiente_revision', 'enviar_actualizacion'], true);
+    if ($requiereEnvioRevision && !tienePermiso('enviar_revision')) {
+        http_response_code(403);
+        echo json_encode(['ok' => false, 'mensaje' => 'Tu rol no tiene autorización para enviar noticias a revisión.']);
+        return;
+    }
 
     if ($titulo === '' || mb_strlen($titulo) > 200) {
         http_response_code(400);
@@ -606,22 +687,7 @@ function guardarNoticia(PDO $pdo): void
         return;
     }
 
-    // Validar estado permitido según permisos efectivos del rol
-    $estadosPermitidos = ['borrador'];
-    if (tienePermiso('enviar_revision')) {
-        $estadosPermitidos[] = 'pendiente_revision';
-    }
-    if (tienePermiso('publicar_noticias')) {
-        $estadosPermitidos[] = 'publicada';
-    }
-
-    if (!in_array($accion, $estadosPermitidos, true)) {
-        http_response_code(403);
-        echo json_encode(['ok' => false, 'mensaje' => 'Tu rol no tiene autorización para guardar la noticia en ese estado.']);
-        return;
-    }
-
-    // Solo los roles autorizados a publicar pueden destacar o marcar última hora
+    // Solo los roles autorizados pueden marcar destacada o última hora
     if (!tienePermiso('publicar_noticias')) {
         $esDestacada = 0;
         $esUltimaHora = 0;
@@ -644,10 +710,20 @@ function guardarNoticia(PDO $pdo): void
             echo json_encode(['ok' => false, 'mensaje' => 'No tienes permisos para editar esta noticia.']);
             return;
         }
+
+        if ($noticiaExistente['estado'] === 'archivada') {
+            http_response_code(409);
+            echo json_encode(['ok' => false, 'mensaje' => 'Esta noticia está archivada. Restáurala antes de editarla o proponer cambios.']);
+            return;
+        }
+    } elseif (in_array($accion, ['borrador_actualizacion', 'enviar_actualizacion'], true)) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'mensaje' => 'Las acciones de actualización solo aplican a noticias ya publicadas.']);
+        return;
     }
 
-    // Procesar imagen si se subió una nueva
-    $rutaImagen = $noticiaExistente ? $noticiaExistente['imagen'] : null;
+    // Subir nueva imagen si se adjuntó; no sobrescribe la imagen publicada vigente
+    $nuevaRutaSubida = null;
     if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] !== UPLOAD_ERR_NO_FILE) {
         $resultadoImagen = procesarImagenPortada($_FILES['imagen']);
         if (!$resultadoImagen['ok']) {
@@ -655,15 +731,164 @@ function guardarNoticia(PDO $pdo): void
             echo json_encode(['ok' => false, 'mensaje' => $resultadoImagen['mensaje']]);
             return;
         }
-        $rutaImagen = $resultadoImagen['ruta'];
+        $nuevaRutaSubida = $resultadoImagen['ruta'];
     }
+
+    $etiquetasLimpias = filtrarEtiquetasExistentes($pdo, is_array($etiquetasIds) ? $etiquetasIds : []);
+    $imagenReemplazadaLimpiar = null;
 
     try {
         $pdo->beginTransaction();
 
-        $fechaPublicacion = $noticiaExistente ? $noticiaExistente['fecha_publicacion'] : null;
-        if ($accion === 'publicada' && empty($fechaPublicacion)) {
-            $fechaPublicacion = date('Y-m-d H:i:s');
+        if ($id > 0) {
+            $stmtLock = $pdo->prepare('SELECT * FROM noticias WHERE id = ? LIMIT 1 FOR UPDATE');
+            $stmtLock->execute([$id]);
+            $noticiaExistente = $stmtLock->fetch();
+            if (!$noticiaExistente) {
+                $pdo->rollBack();
+                limpiarArchivoPortadaNoUsado($pdo, $nuevaRutaSubida);
+                http_response_code(404);
+                echo json_encode(['ok' => false, 'mensaje' => 'La noticia solicitada no existe.']);
+                return;
+            }
+        }
+
+        // CASO A: NOTICIA PUBLICADA -> Guardar o enviar propuesta de actualización sin tocar la versión pública
+        if ($noticiaExistente && $noticiaExistente['estado'] === 'publicada') {
+            $stmtPropLock = $pdo->prepare(
+                "SELECT *
+                 FROM actualizaciones_noticias
+                 WHERE noticia_id = ?
+                   AND estado IN ('borrador', 'pendiente_revision', 'cambios_solicitados')
+                 ORDER BY id DESC
+                 LIMIT 1
+                 FOR UPDATE"
+            );
+            $stmtPropLock->execute([$id]);
+            $propuesta = $stmtPropLock->fetch();
+
+            if ($propuesta && $propuesta['estado'] === 'pendiente_revision') {
+                $pdo->rollBack();
+                limpiarArchivoPortadaNoUsado($pdo, $nuevaRutaSubida);
+                http_response_code(409);
+                echo json_encode([
+                    'ok'      => false,
+                    'mensaje' => 'Esta noticia ya tiene una actualización pendiente en Revisión Editorial. Espera su evaluación antes de enviar otra.',
+                ]);
+                return;
+            }
+
+            if ($accion === 'enviar_actualizacion' || $accion === 'pendiente_revision') {
+                $estadoPropuesta = 'pendiente_revision';
+            } elseif ($accion === 'guardar_correcciones' && $propuesta && $propuesta['estado'] === 'cambios_solicitados') {
+                $estadoPropuesta = 'cambios_solicitados';
+            } else {
+                $estadoPropuesta = 'borrador';
+            }
+
+            $rutaImagenPropuesta = $propuesta ? $propuesta['imagen'] : $noticiaExistente['imagen'];
+            if ($nuevaRutaSubida !== null) {
+                if ($propuesta && !empty($propuesta['imagen']) && $propuesta['imagen'] !== $noticiaExistente['imagen']) {
+                    $imagenReemplazadaLimpiar = $propuesta['imagen'];
+                }
+                $rutaImagenPropuesta = $nuevaRutaSubida;
+            }
+
+            $etiquetasJson = json_encode($etiquetasLimpias);
+            $resumenLimpio = $resumen !== '' ? $resumen : null;
+
+            if ($propuesta) {
+                $stmtUpdProp = $pdo->prepare(
+                    'UPDATE actualizaciones_noticias
+                     SET autor_id = ?, titulo = ?, resumen = ?, contenido = ?, categoria_id = ?,
+                         imagen = ?, etiquetas_json = ?, es_destacada = ?, es_ultima_hora = ?, estado = ?
+                     WHERE id = ?'
+                );
+                $stmtUpdProp->execute([
+                    $usuario['id'],
+                    $titulo,
+                    $resumenLimpio,
+                    $contenidoLimpio,
+                    $categoriaId,
+                    $rutaImagenPropuesta,
+                    $etiquetasJson,
+                    $esDestacada,
+                    $esUltimaHora,
+                    $estadoPropuesta,
+                    $propuesta['id'],
+                ]);
+                $actualizacionId = (int) $propuesta['id'];
+            } else {
+                $stmtInsProp = $pdo->prepare(
+                    'INSERT INTO actualizaciones_noticias
+                     (noticia_id, autor_id, titulo, resumen, contenido, categoria_id, imagen,
+                      etiquetas_json, es_destacada, es_ultima_hora, estado)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                );
+                $stmtInsProp->execute([
+                    $id,
+                    $usuario['id'],
+                    $titulo,
+                    $resumenLimpio,
+                    $contenidoLimpio,
+                    $categoriaId,
+                    $rutaImagenPropuesta,
+                    $etiquetasJson,
+                    $esDestacada,
+                    $esUltimaHora,
+                    $estadoPropuesta,
+                ]);
+                $actualizacionId = (int) $pdo->lastInsertId();
+            }
+
+            $pdo->commit();
+            if ($imagenReemplazadaLimpiar !== null) {
+                limpiarArchivoPortadaNoUsado($pdo, $imagenReemplazadaLimpiar);
+            }
+
+            $mensaje = $estadoPropuesta === 'pendiente_revision'
+                ? 'Actualización enviada a Revisión Editorial. La versión publicada vigente sigue visible en el portal hasta su aprobación.'
+                : ($estadoPropuesta === 'cambios_solicitados'
+                    ? 'Correcciones de actualización guardadas. Reenvíala a revisión cuando esté lista.'
+                    : 'Borrador de actualización guardado. La versión publicada en el portal permanece sin cambios.');
+
+            echo json_encode([
+                'ok'                   => true,
+                'id'                   => $id,
+                'actualizacion_id'     => $actualizacionId,
+                'estado'               => 'publicada',
+                'estado_actualizacion' => $estadoPropuesta,
+                'mensaje'              => $mensaje,
+            ]);
+            return;
+        }
+
+        // CASO B: NOTICIA NUEVA O AÚN NO PUBLICADA (borrador / cambios_solicitados / pendiente_revision)
+        if ($noticiaExistente && $noticiaExistente['estado'] === 'pendiente_revision' && $requiereEnvioRevision) {
+            $pdo->rollBack();
+            limpiarArchivoPortadaNoUsado($pdo, $nuevaRutaSubida);
+            http_response_code(409);
+            echo json_encode([
+                'ok'      => false,
+                'mensaje' => 'Esta noticia ya está en Revisión Editorial pendiente de aprobación.',
+            ]);
+            return;
+        }
+
+        if ($requiereEnvioRevision) {
+            $estadoFinal = 'pendiente_revision';
+        } elseif ($accion === 'guardar_correcciones' && $noticiaExistente && $noticiaExistente['estado'] === 'cambios_solicitados') {
+            $estadoFinal = 'cambios_solicitados';
+        } else {
+            $estadoFinal = 'borrador';
+        }
+
+        $rutaImagen = $noticiaExistente ? $noticiaExistente['imagen'] : null;
+        if ($nuevaRutaSubida !== null) {
+            if ($noticiaExistente && !empty($noticiaExistente['imagen'])) {
+                $imagenReemplazadaLimpiar = $noticiaExistente['imagen'];
+            }
+            $rutaImagen = $nuevaRutaSubida;
         }
 
         if ($id === 0) {
@@ -672,7 +897,7 @@ function guardarNoticia(PDO $pdo): void
                 'INSERT INTO noticias
                  (titulo, identificador, resumen, contenido, categoria_id, autor_id, imagen,
                   estado, es_destacada, es_ultima_hora, fecha_publicacion)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)'
             );
             $stmtInsert->execute([
                 $titulo,
@@ -682,17 +907,16 @@ function guardarNoticia(PDO $pdo): void
                 $categoriaId,
                 $usuario['id'],
                 $rutaImagen,
-                $accion,
+                $estadoFinal,
                 $esDestacada,
                 $esUltimaHora,
-                $fechaPublicacion,
             ]);
             $id = (int) $pdo->lastInsertId();
         } else {
             $stmtUpdate = $pdo->prepare(
                 'UPDATE noticias
                  SET titulo = ?, resumen = ?, contenido = ?, categoria_id = ?, imagen = ?,
-                     estado = ?, es_destacada = ?, es_ultima_hora = ?, fecha_publicacion = ?
+                     estado = ?, es_destacada = ?, es_ultima_hora = ?
                  WHERE id = ?'
             );
             $stmtUpdate->execute([
@@ -701,27 +925,36 @@ function guardarNoticia(PDO $pdo): void
                 $contenidoLimpio,
                 $categoriaId,
                 $rutaImagen,
-                $accion,
+                $estadoFinal,
                 $esDestacada,
                 $esUltimaHora,
-                $fechaPublicacion,
                 $id,
             ]);
         }
 
-        guardarEtiquetasNoticia($pdo, $id, is_array($etiquetasIds) ? $etiquetasIds : []);
+        guardarEtiquetasNoticia($pdo, $id, $etiquetasLimpias);
         $pdo->commit();
+        if ($imagenReemplazadaLimpiar !== null) {
+            limpiarArchivoPortadaNoUsado($pdo, $imagenReemplazadaLimpiar);
+        }
+
+        $mensaje = $estadoFinal === 'pendiente_revision'
+            ? 'Noticia enviada a Revisión Editorial correctamente.'
+            : ($estadoFinal === 'cambios_solicitados'
+                ? 'Correcciones guardadas. Reenvía la noticia a revisión cuando esté lista.'
+                : 'Borrador guardado correctamente.');
 
         echo json_encode([
             'ok'      => true,
             'id'      => $id,
-            'estado'  => $accion,
-            'mensaje' => 'Noticia guardada correctamente.',
+            'estado'  => $estadoFinal,
+            'mensaje' => $mensaje,
         ]);
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
+        limpiarArchivoPortadaNoUsado($pdo, $nuevaRutaSubida);
         error_log('NewsCMS - Error al guardar noticia: ' . $e->getMessage());
         http_response_code(500);
         echo json_encode(['ok' => false, 'mensaje' => 'No se pudo guardar la noticia.']);
@@ -828,6 +1061,14 @@ function cambiarEstadoPublicacion(PDO $pdo, string $accion): void
                 echo json_encode(['ok' => false, 'mensaje' => 'El estado de la noticia cambió concurrentemente.']);
                 return;
             }
+
+            $updProp = $pdo->prepare(
+                "UPDATE actualizaciones_noticias
+                 SET estado = 'descartada'
+                 WHERE noticia_id = ?
+                   AND estado IN ('borrador', 'pendiente_revision', 'cambios_solicitados')"
+            );
+            $updProp->execute([$id]);
 
             $pdo->commit();
             echo json_encode([
@@ -1054,6 +1295,68 @@ function generarIdentificadorUnico(PDO $pdo, string $titulo): string
         }
         $identificador = $base . '-' . $contador;
         $contador++;
+    }
+}
+
+/**
+ * Filtra y valida identificadores de etiquetas existentes en la base de datos.
+ */
+function filtrarEtiquetasExistentes(PDO $pdo, array $etiquetasIds): array
+{
+    if (empty($etiquetasIds)) {
+        return [];
+    }
+
+    $stmtExiste = $pdo->prepare('SELECT id FROM etiquetas WHERE id = ? LIMIT 1');
+    $validas = [];
+    foreach ($etiquetasIds as $etiquetaId) {
+        $idLimpio = (int) $etiquetaId;
+        if ($idLimpio <= 0 || in_array($idLimpio, $validas, true)) {
+            continue;
+        }
+        $stmtExiste->execute([$idLimpio]);
+        if ($stmtExiste->fetch()) {
+            $validas[] = $idLimpio;
+        }
+    }
+    return $validas;
+}
+
+/**
+ * Elimina un archivo en uploads/portadas/ únicamente si ya no es referenciado por noticias ni propuestas.
+ */
+function limpiarArchivoPortadaNoUsado(PDO $pdo, ?string $rutaRelativa): void
+{
+    $ruta = trim((string) $rutaRelativa);
+    if ($ruta === '' || strpos($ruta, 'uploads/portadas/') !== 0 || strpos($ruta, '..') !== false) {
+        return;
+    }
+
+    try {
+        $stmtNot = $pdo->prepare('SELECT COUNT(*) FROM noticias WHERE imagen = ?');
+        $stmtNot->execute([$ruta]);
+        if ((int) $stmtNot->fetchColumn() > 0) {
+            return;
+        }
+
+        $stmtAct = $pdo->prepare("SELECT COUNT(*) FROM actualizaciones_noticias WHERE imagen = ? AND estado IN ('borrador', 'pendiente_revision', 'cambios_solicitados')");
+        $stmtAct->execute([$ruta]);
+        if ((int) $stmtAct->fetchColumn() > 0) {
+            return;
+        }
+    } catch (Throwable $e) {
+        return;
+    }
+
+    $dirPermitido = realpath(__DIR__ . '/../uploads/portadas');
+    $archivoReal = realpath(__DIR__ . '/../' . $ruta);
+    if (
+        $dirPermitido !== false
+        && $archivoReal !== false
+        && strpos($archivoReal, $dirPermitido . DIRECTORY_SEPARATOR) === 0
+        && is_file($archivoReal)
+    ) {
+        @unlink($archivoReal);
     }
 }
 

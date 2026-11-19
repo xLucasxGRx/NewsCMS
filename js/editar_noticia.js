@@ -5,6 +5,9 @@
 
 let csrfTokenEditor = "";
 let rolUsuarioEditor = "";
+let permisosUsuarioEditor = {};
+let estadoNoticiaActual = "nueva";
+let estadoActualizacionActual = null;
 let tinyMceListo = false;
 let tinyMceErrorCarga = false;
 let envioEnCurso = false;
@@ -32,6 +35,7 @@ async function iniciarEditorNoticia() {
         csrfTokenEditor = datos.csrf_token || "";
         rolUsuarioEditor = datos.usuario.rol || "";
         const permisos = datos.permisos || {};
+        permisosUsuarioEditor = permisos;
         document.getElementById("csrf-token").value = csrfTokenEditor;
 
         const params = new URLSearchParams(window.location.search);
@@ -44,6 +48,7 @@ async function iniciarEditorNoticia() {
         mostrarUsuarioEditor(datos.usuario);
         renderizarSidebarEditor(datos.modulos_permitidos || ["Dashboard"]);
         configurarPermisosVisuales(permisos);
+        actualizarFlujoBotonesEditor("nueva", null);
         inicializarSidebarMovilEditor();
         inicializarSalirEditor();
         inicializarVistaPreviaImagen();
@@ -105,15 +110,11 @@ function renderizarSidebarEditor(modulos) {
 }
 
 function configurarPermisosVisuales(permisos) {
-    const btnPublicar = document.getElementById("btn-publicar");
     const opcionesEditoriales = document.getElementById("opciones-editoriales");
-    const btnRevision = document.querySelector('.acciones-formulario button[data-accion="pendiente_revision"]');
+    const btnRevision = document.getElementById("btn-revision");
     const puedePublicar = Boolean(permisos && permisos.publicar_noticias);
     const puedeEnviarRevision = Boolean(permisos && permisos.enviar_revision);
 
-    if (btnPublicar) {
-        btnPublicar.hidden = !puedePublicar;
-    }
     if (opcionesEditoriales) {
         opcionesEditoriales.hidden = !puedePublicar;
     }
@@ -183,12 +184,19 @@ async function cargarNoticiaExistente(id) {
     }
 
     const n = datos.noticia;
+    const act = n.actualizacion_activa || null;
+    estadoNoticiaActual = n.estado || "borrador";
+    estadoActualizacionActual = act ? act.estado : null;
+
     document.getElementById("titulo-pagina-editor").textContent = "Editar noticia";
     const subtituloEditor = document.getElementById("subtitulo-pagina-editor");
     if (subtituloEditor) {
-        subtituloEditor.textContent = "Modifica el artículo y guarda cambios o actualiza su publicación";
+        subtituloEditor.textContent = n.estado === "publicada"
+            ? "Propón actualizaciones sin alterar la noticia publicada hasta su aprobación editorial"
+            : "Modifica el artículo y guarda avances o envíalo a Revisión Editorial";
     }
-    actualizarInsigniaEstadoEditor(n.estado || "borrador");
+    actualizarInsigniaEstadoEditor(estadoNoticiaActual, estadoActualizacionActual);
+    actualizarFlujoBotonesEditor(estadoNoticiaActual, estadoActualizacionActual);
     document.getElementById("noticia-id").value = String(n.id);
     document.getElementById("titulo").value = n.titulo || "";
     document.getElementById("resumen").value = n.resumen || "";
@@ -224,7 +232,16 @@ async function cargarNoticiaExistente(id) {
         check.checked = idsEtiquetas.includes(Number(check.value));
     });
 
-    await cargarObservacionesNoticia(id);
+    if (act && act.estado === "cambios_solicitados" && act.observaciones) {
+        const caja = document.getElementById("caja-observaciones-editor");
+        const texto = document.getElementById("texto-observaciones-editor");
+        if (caja && texto) {
+            texto.textContent = act.editor ? `${act.observaciones} (${act.editor})` : act.observaciones;
+            caja.hidden = false;
+        }
+    } else {
+        await cargarObservacionesNoticia(id);
+    }
 }
 
 async function cargarObservacionesNoticia(id) {
@@ -365,20 +382,175 @@ function actualizarEstadoVisualImagen(tieneImagen) {
     }
 }
 
-function actualizarInsigniaEstadoEditor(estado) {
+function actualizarInsigniaEstadoEditor(estado, estadoActualizacion) {
     const badge = document.getElementById("badge-estado-editor");
     if (!badge) {
         return;
     }
     const etiquetas = {
+        nueva: "Nueva noticia",
         borrador: "Borrador",
         pendiente_revision: "Pendiente de revisión",
         cambios_solicitados: "Cambios solicitados",
         publicada: "Publicada",
         archivada: "Archivada"
     };
-    badge.className = `estado-badge estado-${estado || "borrador"}`;
+
+    if (estado === "publicada" && estadoActualizacion) {
+        const sufijos = {
+            borrador: "Publicada · Borrador de actualización",
+            pendiente_revision: "Publicada · Actualización pendiente",
+            cambios_solicitados: "Publicada · Correcciones en actualización"
+        };
+        badge.className = estadoActualizacion === "pendiente_revision"
+            ? "estado-badge estado-pendiente_revision"
+            : (estadoActualizacion === "cambios_solicitados"
+                ? "estado-badge estado-cambios_solicitados"
+                : "estado-badge estado-publicada");
+        badge.textContent = sufijos[estadoActualizacion] || "Publicada";
+        return;
+    }
+
+    badge.className = `estado-badge estado-${estado === "nueva" ? "borrador" : (estado || "borrador")}`;
     badge.textContent = etiquetas[estado] || "Nueva noticia";
+}
+
+function mostrarAvisoFlujoEditor(texto, esBloqueo, mostrarEnlaceRevision) {
+    const aviso = document.getElementById("aviso-flujo-editor");
+    const spanTxt = document.getElementById("texto-aviso-flujo-editor");
+    const enlaceRev = document.getElementById("enlace-ir-revision-editor");
+    if (!aviso || !spanTxt) {
+        return;
+    }
+    if (!texto) {
+        aviso.hidden = true;
+        spanTxt.textContent = "";
+        if (enlaceRev) enlaceRev.hidden = true;
+        return;
+    }
+    spanTxt.textContent = texto;
+    aviso.className = esBloqueo
+        ? "alerta-admin alerta-observacion alerta-flujo-editor"
+        : "alerta-admin alerta-flujo-editor";
+    if (enlaceRev) {
+        enlaceRev.hidden = !(mostrarEnlaceRevision && permisosUsuarioEditor && permisosUsuarioEditor.consultar_revision);
+    }
+    aviso.hidden = false;
+}
+
+function actualizarFlujoBotonesEditor(estado, estadoActualizacion) {
+    const btnRevision = document.getElementById("btn-revision");
+    const btnBorrador = document.getElementById("btn-borrador");
+    const descPanel = document.getElementById("descripcion-panel-publicacion");
+    const puedeEnviar = Boolean(permisosUsuarioEditor && permisosUsuarioEditor.enviar_revision);
+
+    if (!btnRevision || !btnBorrador) {
+        return;
+    }
+
+    btnRevision.disabled = false;
+    btnBorrador.disabled = false;
+    btnRevision.hidden = !puedeEnviar;
+    btnBorrador.hidden = false;
+
+    if (estado === "publicada") {
+        if (estadoActualizacion === "pendiente_revision") {
+            btnRevision.hidden = true;
+            btnBorrador.hidden = true;
+            if (descPanel) {
+                descPanel.textContent = "Actualización pendiente de aprobación en Revisión Editorial.";
+            }
+            mostrarAvisoFlujoEditor(
+                "Ya existe una actualización pendiente en Revisión Editorial. La versión publicada vigente sigue visible en el portal y se bloquea un nuevo envío hasta que sea evaluada.",
+                true,
+                true
+            );
+            return;
+        }
+
+        if (estadoActualizacion === "cambios_solicitados") {
+            btnRevision.dataset.accion = "enviar_actualizacion";
+            btnRevision.textContent = "Reenviar actualización a revisión";
+            btnBorrador.dataset.accion = "guardar_correcciones";
+            btnBorrador.textContent = "Guardar correcciones";
+            if (descPanel) {
+                descPanel.textContent = "Corrige la actualización propuesta sin alterar la noticia publicada.";
+            }
+            mostrarAvisoFlujoEditor(
+                "Se solicitaron correcciones sobre la propuesta de actualización. La noticia publicada actual permanece visible sin cambios.",
+                false,
+                false
+            );
+            return;
+        }
+
+        btnRevision.dataset.accion = "enviar_actualizacion";
+        btnRevision.textContent = "Actualizar y enviar a revisión";
+        btnBorrador.dataset.accion = "borrador_actualizacion";
+        btnBorrador.textContent = "Guardar borrador de actualización";
+        if (descPanel) {
+            descPanel.textContent = "Los cambios sobre noticias publicadas pasan por Revisión Editorial antes de sustituir la versión visible.";
+        }
+        mostrarAvisoFlujoEditor(
+            estadoActualizacion === "borrador"
+                ? "Estás editando un borrador de actualización. La versión publicada en el portal sigue intacta hasta su aprobación."
+                : "Esta noticia está publicada. Cualquier modificación se guardará como propuesta de actualización pendiente de aprobación.",
+            false,
+            false
+        );
+        return;
+    }
+
+    if (estado === "pendiente_revision") {
+        btnRevision.hidden = true;
+        if (rolUsuarioEditor === "redactor" && !permisosUsuarioEditor.publicar_noticias) {
+            btnBorrador.hidden = true;
+        } else {
+            btnBorrador.dataset.accion = "borrador";
+            btnBorrador.textContent = "Devolver a borrador";
+        }
+        if (descPanel) {
+            descPanel.textContent = "Artículo actualmente en cola de Revisión Editorial.";
+        }
+        mostrarAvisoFlujoEditor(
+            "Esta noticia ya fue enviada a Revisión Editorial. No es posible reenviarla hasta que un revisor tome una decisión.",
+            true,
+            true
+        );
+        return;
+    }
+
+    if (estado === "cambios_solicitados") {
+        btnRevision.dataset.accion = "pendiente_revision";
+        btnRevision.textContent = "Reenviar a revisión";
+        btnBorrador.dataset.accion = "guardar_correcciones";
+        btnBorrador.textContent = "Guardar correcciones";
+        if (descPanel) {
+            descPanel.textContent = "Aplica las observaciones editoriales y reenvía el artículo.";
+        }
+        mostrarAvisoFlujoEditor("", false, false);
+        return;
+    }
+
+    if (estado === "archivada") {
+        btnRevision.hidden = true;
+        btnBorrador.hidden = true;
+        if (descPanel) {
+            descPanel.textContent = "Noticia archivada; restáurala en Gestión de Noticias para editarla.";
+        }
+        mostrarAvisoFlujoEditor("Esta noticia se encuentra archivada y no puede editarse en este estado.", true, false);
+        return;
+    }
+
+    // Nueva noticia o borrador
+    btnRevision.dataset.accion = "pendiente_revision";
+    btnRevision.textContent = "Enviar a revisión";
+    btnBorrador.dataset.accion = "borrador";
+    btnBorrador.textContent = "Guardar borrador";
+    if (descPanel) {
+        descPanel.textContent = "Toda noticia nueva debe enviarse a Revisión Editorial antes de publicarse.";
+    }
+    mostrarAvisoFlujoEditor("", false, false);
 }
 
 function inicializarBotonesGuardado() {
@@ -421,6 +593,7 @@ async function enviarFormularioNoticia(accion) {
     datosFormulario.set("accion", accion);
 
     envioEnCurso = true;
+    deshabilitarBotonesGuardado(true);
     try {
         const respuesta = await fetch("../php/noticias.php", {
             method: "POST",
@@ -430,8 +603,20 @@ async function enviarFormularioNoticia(accion) {
 
         const resultado = await respuesta.json();
         if (respuesta.ok && resultado.ok) {
-            document.getElementById("noticia-id").value = String(resultado.id);
-            actualizarInsigniaEstadoEditor(accion);
+            const nuevoId = Number(resultado.id || 0);
+            document.getElementById("noticia-id").value = String(nuevoId);
+            estadoNoticiaActual = resultado.estado || estadoNoticiaActual;
+            estadoActualizacionActual = resultado.estado_actualizacion !== undefined
+                ? resultado.estado_actualizacion
+                : null;
+
+            actualizarInsigniaEstadoEditor(estadoNoticiaActual, estadoActualizacionActual);
+            actualizarFlujoBotonesEditor(estadoNoticiaActual, estadoActualizacionActual);
+
+            if (nuevoId > 0 && !new URLSearchParams(window.location.search).get("id")) {
+                window.history.replaceState(null, "", `editar_noticia.html?id=${encodeURIComponent(nuevoId)}`);
+            }
+
             mostrarMensajeEditor(resultado.mensaje || "Noticia guardada.", false);
             return;
         }
@@ -441,6 +626,7 @@ async function enviarFormularioNoticia(accion) {
         mostrarMensajeEditor("Error de comunicación con el servidor.", true);
     } finally {
         envioEnCurso = false;
+        deshabilitarBotonesGuardado(false);
     }
 }
 

@@ -468,6 +468,21 @@ async function cargarNoticiasAdmin() {
             insignia.textContent = etiquetasEstado[n.estado] || n.estado;
             tdEstado.appendChild(insignia);
 
+            if (n.estado === "publicada" && n.estado_actualizacion) {
+                const subBadge = document.createElement("span");
+                const mapaSub = {
+                    pendiente_revision: ["Actualización pendiente", "badge-actualizacion-pendiente"],
+                    cambios_solicitados: ["Actualización con cambios", "badge-actualizacion-cambios"],
+                    borrador: ["Borrador de actualización", "badge-actualizacion-borrador"]
+                };
+                const infoSub = mapaSub[n.estado_actualizacion];
+                if (infoSub) {
+                    subBadge.className = `badge-actualizacion-lista ${infoSub[1]}`;
+                    subBadge.textContent = infoSub[0];
+                    tdEstado.appendChild(subBadge);
+                }
+            }
+
             const tdFecha = document.createElement("td");
             tdFecha.className = "celda-fecha-noticias";
             tdFecha.setAttribute("data-etiqueta", "Fecha");

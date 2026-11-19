@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Noticia — NewsCMS</title>
-    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/admin.css?v=20261119f">
 </head>
 <body>
     <div id="contenedor-admin" class="contenedor-admin" hidden>
@@ -66,6 +66,11 @@
 
                     <div id="mensaje-editor" class="alerta-admin" role="status" hidden></div>
 
+                    <div id="aviso-flujo-editor" class="alerta-admin alerta-flujo-editor" role="note" hidden>
+                        <span id="texto-aviso-flujo-editor"></span>
+                        <a id="enlace-ir-revision-editor" href="revision.html" class="enlace-aviso-revision" hidden>Ir a Revisión Editorial &rarr;</a>
+                    </div>
+
                     <div id="caja-observaciones-editor" class="alerta-admin alerta-observacion" role="note" hidden>
                         <strong>Observaciones editoriales:</strong>
                         <p id="texto-observaciones-editor"></p>
@@ -121,15 +126,12 @@
                             <aside class="columna-lateral-form barra-ajustes-noticia" aria-label="Configuración y publicación">
                                 <section class="bloque-lateral-editor panel-publicacion-editor">
                                     <div class="cabecera-bloque-lateral">
-                                        <h2>Publicación</h2>
-                                        <p>Guarda tu avance o envía la noticia al flujo editorial.</p>
+                                        <h2>Flujo editorial</h2>
+                                        <p id="descripcion-panel-publicacion">Toda noticia nueva o actualización requiere aprobación en Revisión Editorial.</p>
                                     </div>
 
                                     <div class="acciones-formulario acciones-editor-noticia">
-                                        <button type="button" id="btn-publicar" class="boton-primario-admin boton-accion-editor" data-accion="publicada" hidden>
-                                            Publicar
-                                        </button>
-                                        <button type="button" id="btn-revision" class="boton-aviso-admin boton-accion-editor" data-accion="pendiente_revision">
+                                        <button type="button" id="btn-revision" class="boton-primario-admin boton-accion-editor" data-accion="pendiente_revision">
                                             Enviar a revisión
                                         </button>
                                         <button type="button" id="btn-borrador" class="boton-secundario-admin boton-accion-editor" data-accion="borrador">
@@ -194,6 +196,6 @@
     </div>
 
     <script src="../vendor/tinymce/js/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
-    <script src="../js/editar_noticia.js"></script>
+    <script src="../js/editar_noticia.js?v=20261119f"></script>
 </body>
 </html>

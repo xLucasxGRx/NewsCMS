@@ -7437,3 +7437,132 @@ body {
         width: 100%;
     }
 }
+
+/* =========================================================
+   Flujo Editorial Obligatorio y Control de Actualizaciones
+   ========================================================= */
+
+.alerta-flujo-editor[hidden],
+.enlace-aviso-revision[hidden],
+.bloque-version-publicada[hidden],
+.resumen-version-publicada[hidden] {
+    display: none;
+}
+
+.alerta-flujo-editor {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    background-color: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1e3a8a;
+}
+
+.enlace-aviso-revision {
+    font-weight: 700;
+    color: var(--admin-primario);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.enlace-aviso-revision:hover {
+    text-decoration: underline;
+}
+
+.badge-actualizacion-lista {
+    display: inline-block;
+    margin-top: 0.28rem;
+    padding: 0.14rem 0.52rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.badge-actualizacion-pendiente {
+    background-color: #e0e7ff;
+    color: #3730a3;
+    border: 1px solid #c7d2fe;
+}
+
+.badge-actualizacion-cambios {
+    background-color: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #fed7aa;
+}
+
+.badge-actualizacion-borrador {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
+.item-bandeja-tipo {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.14rem 0.52rem;
+    border-radius: 999px;
+    font-size: 0.71rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.tipo-revision-nueva {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+}
+
+.tipo-revision-actualizacion {
+    background-color: #eef2ff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+}
+
+.bloque-version-publicada {
+    padding: 0.9rem 1.05rem;
+    border-radius: 8px;
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.cabecera-version-publicada {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.etiqueta-version-publicada {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #15803d;
+}
+
+.meta-version-publicada {
+    font-size: 0.76rem;
+    color: var(--admin-texto-suave);
+}
+
+.titulo-version-publicada {
+    margin: 0;
+    font-size: 0.96rem;
+    font-weight: 700;
+    color: var(--admin-texto);
+}
+
+.resumen-version-publicada {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #475569;
+    line-height: 1.45;
+}

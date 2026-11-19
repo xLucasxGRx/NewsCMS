@@ -5,7 +5,7 @@
 let csrfTokenRevision = "";
 let permisosRevision = {};
 let noticiasPendientes = [];
-let noticiaSeleccionadaId = 0;
+let noticiaSeleccionadaClave = "";
 let noticiaSeleccionadaActual = null;
 let secuenciaDetalleRevision = 0;
 let controladorDetalleRevision = null;
@@ -107,6 +107,15 @@ function mostrarVistaCentroRevision(estado) {
     if (layout) layout.hidden = estado !== "activo";
 }
 
+function obtenerClaveItemRevision(item) {
+    if (item.clave_item) {
+        return String(item.clave_item);
+    }
+    return item.actualizacion_id
+        ? `actualizacion:${item.actualizacion_id}`
+        : `noticia:${item.noticia_id || item.id}`;
+}
+
 async function cargarPendientes() {
     const listaEl = document.getElementById("cuerpo-tabla-revision");
     const contadorEl = document.getElementById("contador-pendientes");
@@ -147,7 +156,7 @@ async function cargarPendientes() {
         }
 
         if (noticiasPendientes.length === 0) {
-            noticiaSeleccionadaId = 0;
+            noticiaSeleccionadaClave = "";
             noticiaSeleccionadaActual = null;
             cerrarFormularioCambios();
             mostrarVistaCentroRevision("vacio");
@@ -156,9 +165,9 @@ async function cargarPendientes() {
 
         mostrarVistaCentroRevision("activo");
 
-        const sigueDisponible = noticiasPendientes.some((n) => Number(n.id) === Number(noticiaSeleccionadaId));
+        const sigueDisponible = noticiasPendientes.some((n) => obtenerClaveItemRevision(n) === noticiaSeleccionadaClave);
         const objetivo = sigueDisponible
-            ? noticiasPendientes.find((n) => Number(n.id) === Number(noticiaSeleccionadaId))
+            ? noticiasPendientes.find((n) => obtenerClaveItemRevision(n) === noticiaSeleccionadaClave)
             : noticiasPendientes[0];
 
         noticiasPendientes.forEach((n, indice) => {
@@ -178,25 +187,31 @@ async function cargarPendientes() {
 }
 
 function construirElementoBandeja(noticia, indice) {
+    const esActualizacion = noticia.tipo_revision === "actualizacion_pendiente";
+    const clave = obtenerClaveItemRevision(noticia);
+
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "item-bandeja-revision";
-    btn.dataset.noticiaId = String(noticia.id);
+    btn.dataset.noticiaId = String(noticia.noticia_id || noticia.id);
+    btn.dataset.claveItem = clave;
     btn.setAttribute("role", "option");
     btn.setAttribute("aria-selected", "false");
 
     const filaMeta = document.createElement("div");
     filaMeta.className = "item-bandeja-meta-top";
 
-    const chipCat = document.createElement("span");
-    chipCat.className = "chip-categoria-revision";
-    chipCat.textContent = noticia.categoria || "General";
+    const badgeTipo = document.createElement("span");
+    badgeTipo.className = esActualizacion
+        ? "item-bandeja-tipo tipo-revision-actualizacion"
+        : "item-bandeja-tipo tipo-revision-nueva";
+    badgeTipo.textContent = esActualizacion ? "Actualización pendiente" : "Nueva publicación";
 
     const fecha = document.createElement("span");
     fecha.className = "item-bandeja-fecha";
     fecha.textContent = (noticia.fecha_creacion || "").slice(0, 10) || "-";
 
-    filaMeta.appendChild(chipCat);
+    filaMeta.appendChild(badgeTipo);
     filaMeta.appendChild(fecha);
 
     const titulo = document.createElement("span");
@@ -210,12 +225,12 @@ function construirElementoBandeja(noticia, indice) {
     redactor.className = "item-bandeja-redactor";
     redactor.textContent = `Redactor: ${noticia.redactor || ""}`;
 
-    const estadoPill = document.createElement("span");
-    estadoPill.className = "item-bandeja-estado";
-    estadoPill.textContent = "Pendiente";
+    const chipCat = document.createElement("span");
+    chipCat.className = "chip-categoria-revision";
+    chipCat.textContent = noticia.categoria || "General";
 
     filaPie.appendChild(redactor);
-    filaPie.appendChild(estadoPill);
+    filaPie.appendChild(chipCat);
 
     btn.appendChild(filaMeta);
     btn.appendChild(titulo);
@@ -245,10 +260,10 @@ function manejarTecladoBandeja(evento, indiceActual) {
     }
 }
 
-function resaltarItemBandeja(id) {
-    const objetivo = String(id || "");
+function resaltarItemBandeja(clave) {
+    const objetivo = String(clave || "");
     document.querySelectorAll("#cuerpo-tabla-revision .item-bandeja-revision").forEach((btn) => {
-        const esActiva = objetivo !== "0" && btn.dataset.noticiaId === objetivo;
+        const esActiva = objetivo !== "" && btn.dataset.claveItem === objetivo;
         btn.classList.toggle("activa", esActiva);
         btn.setAttribute("aria-selected", esActiva ? "true" : "false");
     });
@@ -259,9 +274,12 @@ async function seleccionarNoticiaRevision(noticiaBase, desplazarEnMovil) {
         return;
     }
 
-    noticiaSeleccionadaId = Number(noticiaBase.id);
+    const esActualizacion = noticiaBase.tipo_revision === "actualizacion_pendiente" && Number(noticiaBase.actualizacion_id) > 0;
+    const idNoticia = Number(noticiaBase.noticia_id || noticiaBase.id);
+
+    noticiaSeleccionadaClave = obtenerClaveItemRevision(noticiaBase);
     noticiaSeleccionadaActual = noticiaBase;
-    resaltarItemBandeja(noticiaSeleccionadaId);
+    resaltarItemBandeja(noticiaSeleccionadaClave);
     cerrarFormularioCambios();
 
     const miSecuencia = ++secuenciaDetalleRevision;
@@ -273,6 +291,10 @@ async function seleccionarNoticiaRevision(noticiaBase, desplazarEnMovil) {
     poblarEncabezadoEvaluacion(noticiaBase, null);
     configurarAccionesEvaluacion(noticiaBase);
 
+    const bloquePub = document.getElementById("bloque-version-publicada");
+    const tituloPub = document.getElementById("titulo-version-publicada");
+    const metaPub = document.getElementById("meta-version-publicada");
+    const resumenPub = document.getElementById("resumen-version-publicada");
     const resumenEl = document.getElementById("detalle-resumen");
     const contImg = document.getElementById("detalle-imagen-contenedor");
     const imgEl = document.getElementById("detalle-imagen");
@@ -282,6 +304,10 @@ async function seleccionarNoticiaRevision(noticiaBase, desplazarEnMovil) {
     const historialBloque = document.getElementById("bloque-historial-revision");
     const historialLista = document.getElementById("lista-historial-revision");
 
+    if (bloquePub) bloquePub.hidden = true;
+    if (tituloPub) tituloPub.textContent = "";
+    if (metaPub) metaPub.textContent = "";
+    if (resumenPub) { resumenPub.textContent = ""; resumenPub.hidden = true; }
     if (resumenEl) { resumenEl.textContent = ""; resumenEl.hidden = true; }
     if (contImg) contImg.hidden = true;
     if (imgEl) imgEl.src = "";
@@ -290,7 +316,9 @@ async function seleccionarNoticiaRevision(noticiaBase, desplazarEnMovil) {
     if (historialLista) historialLista.textContent = "";
     if (historialBloque) historialBloque.hidden = true;
     if (avisoEl) {
-        avisoEl.textContent = "Cargando contenido completo para evaluación...";
+        avisoEl.textContent = esActualizacion
+            ? "Cargando propuesta de actualización y versión publicada..."
+            : "Cargando contenido completo para evaluación...";
         avisoEl.className = "aviso-contenido-revision";
         avisoEl.hidden = false;
     }
@@ -300,14 +328,14 @@ async function seleccionarNoticiaRevision(noticiaBase, desplazarEnMovil) {
     }
 
     const signal = controladorDetalleRevision ? controladorDetalleRevision.signal : undefined;
+    const urlDetalle = esActualizacion
+        ? `../php/revision.php?accion=detalle_propuesta&actualizacion_id=${encodeURIComponent(noticiaBase.actualizacion_id)}`
+        : `../php/noticias.php?modo=detalle&id=${encodeURIComponent(idNoticia)}`;
 
     try {
         const [resDetalle, resHistorial] = await Promise.allSettled([
-            fetch(`../php/noticias.php?modo=detalle&id=${encodeURIComponent(noticiaSeleccionadaId)}`, {
-                credentials: "same-origin",
-                signal
-            }),
-            fetch(`../php/revision.php?accion=historial&noticia_id=${encodeURIComponent(noticiaSeleccionadaId)}`, {
+            fetch(urlDetalle, { credentials: "same-origin", signal }),
+            fetch(`../php/revision.php?accion=historial&noticia_id=${encodeURIComponent(idNoticia)}`, {
                 credentials: "same-origin",
                 signal
             })
@@ -317,7 +345,6 @@ async function seleccionarNoticiaRevision(noticiaBase, desplazarEnMovil) {
             return;
         }
 
-        // Procesar historial de revisiones previas
         if (resHistorial.status === "fulfilled" && resHistorial.value.ok) {
             try {
                 const datosHist = await resHistorial.value.json();
@@ -330,7 +357,6 @@ async function seleccionarNoticiaRevision(noticiaBase, desplazarEnMovil) {
             }
         }
 
-        // Procesar detalle completo autorizado
         if (resDetalle.status !== "fulfilled") {
             mostrarAvisoContenido("No se pudo recuperar el cuerpo del artículo desde el servidor. Puedes usar «Ver noticia» o decidir con los datos visibles.");
             return;
@@ -348,16 +374,35 @@ async function seleccionarNoticiaRevision(noticiaBase, desplazarEnMovil) {
             return;
         }
 
-        if (!respDet.ok || !datosDet || !datosDet.ok || !datosDet.noticia) {
+        const okDetalle = esActualizacion
+            ? (respDet.ok && datosDet && datosDet.exito && datosDet.propuesta)
+            : (respDet.ok && datosDet && datosDet.ok && datosDet.noticia);
+
+        if (!okDetalle) {
             const mensajeAcceso = respDet.status === 404
-                ? "Tu rol tiene acceso a la bandeja de revisión, pero no permiso para leer el borrador completo de noticias ajenas desde este panel."
-                : ((datosDet && datosDet.mensaje) || "No se pudo cargar el contenido completo de la noticia.");
+                ? "Tu rol tiene acceso a la bandeja de revisión, pero no permiso para leer el contenido completo de noticias ajenas desde este panel."
+                : ((datosDet && datosDet.mensaje) || "No se pudo cargar el contenido completo para evaluación.");
             mostrarAvisoContenido(mensajeAcceso);
             return;
         }
 
-        const n = datosDet.noticia;
+        const n = esActualizacion ? datosDet.propuesta : datosDet.noticia;
+        const pub = esActualizacion ? datosDet.publicada : null;
+
         poblarEncabezadoEvaluacion(noticiaBase, n);
+
+        if (esActualizacion && pub && bloquePub && tituloPub) {
+            tituloPub.textContent = pub.titulo || "";
+            if (metaPub) {
+                const fPub = (pub.fecha_publicacion || pub.fecha_creacion || "").slice(0, 10) || "-";
+                metaPub.textContent = `Categoría vigente: ${pub.categoria || "-"} · Publicada el ${fPub}`;
+            }
+            if (resumenPub && pub.resumen) {
+                resumenPub.textContent = pub.resumen;
+                resumenPub.hidden = false;
+            }
+            bloquePub.hidden = false;
+        }
 
         if (n.resumen && resumenEl) {
             resumenEl.textContent = n.resumen;
@@ -396,33 +441,48 @@ async function seleccionarNoticiaRevision(noticiaBase, desplazarEnMovil) {
             return;
         }
         if (miSecuencia === secuenciaDetalleRevision) {
-            mostrarAvisoContenido("Error al consultar el contenido completo de la noticia.");
+            mostrarAvisoContenido("Error al consultar el contenido completo para evaluación.");
         }
     }
 }
 
 function poblarEncabezadoEvaluacion(base, detalle) {
+    const tipoEl = document.getElementById("detalle-tipo-revision");
     const catEl = document.getElementById("detalle-categoria");
     const titEl = document.getElementById("detalle-titulo");
     const metaEl = document.getElementById("detalle-meta");
 
+    const esActualizacion = base.tipo_revision === "actualizacion_pendiente";
     const titulo = (detalle && detalle.titulo) || base.titulo || "";
     const autor = (detalle && detalle.autor) || base.redactor || "";
     const categoria = (detalle && detalle.categoria) || base.categoria || "";
-    const fecha = ((detalle && detalle.fecha_creacion) || base.fecha_creacion || "").slice(0, 10) || "-";
+    const fecha = ((detalle && (detalle.fecha_actualizacion || detalle.fecha_creacion)) || base.fecha_creacion || "").slice(0, 10) || "-";
 
+    if (tipoEl) {
+        tipoEl.textContent = esActualizacion ? "Actualización pendiente" : "Nueva publicación";
+        tipoEl.className = esActualizacion
+            ? "item-bandeja-tipo tipo-revision-actualizacion"
+            : "item-bandeja-tipo tipo-revision-nueva";
+    }
     if (catEl) catEl.textContent = categoria;
     if (titEl) titEl.textContent = titulo;
-    if (metaEl) metaEl.textContent = `Redactor: ${autor} · Enviado el ${fecha}`;
+    if (metaEl) {
+        metaEl.textContent = esActualizacion
+            ? `Autor de propuesta: ${autor} · Enviada el ${fecha}`
+            : `Redactor: ${autor} · Enviado el ${fecha}`;
+    }
 }
 
 function configurarAccionesEvaluacion(noticia) {
     const enlaceVer = document.getElementById("enlace-ver-noticia");
     const btnCambios = document.getElementById("btn-abrir-cambios");
     const btnAprobar = document.getElementById("btn-aprobar-noticia");
+    const esActualizacion = noticia.tipo_revision === "actualizacion_pendiente";
 
     if (enlaceVer) {
-        enlaceVer.href = `../noticia.html?id=${encodeURIComponent(noticia.id)}`;
+        const idNot = noticia.noticia_id || noticia.id;
+        enlaceVer.href = `../noticia.html?id=${encodeURIComponent(idNot)}`;
+        enlaceVer.textContent = esActualizacion ? "Ver versión publicada" : "Ver noticia";
     }
     if (btnCambios) {
         btnCambios.hidden = !permisosRevision.solicitar_correcciones;
@@ -430,6 +490,7 @@ function configurarAccionesEvaluacion(noticia) {
     }
     if (btnAprobar) {
         btnAprobar.hidden = !permisosRevision.aprobar_noticias;
+        btnAprobar.textContent = esActualizacion ? "Aprobar actualización" : "Aprobar y publicar";
         btnAprobar.disabled = false;
     }
 }
@@ -453,7 +514,9 @@ function renderizarHistorialEditorial(revisiones) {
     lista.textContent = "";
     const etiquetasAccion = {
         aprobada: "Aprobada",
-        cambios_solicitados: "Cambios solicitados"
+        cambios_solicitados: "Cambios solicitados",
+        actualizacion_aprobada: "Actualización aprobada",
+        cambios_actualizacion: "Correcciones en actualización"
     };
 
     revisiones.forEach((rev) => {
@@ -464,9 +527,8 @@ function renderizarHistorialEditorial(revisiones) {
         cab.className = "item-historial-cabecera";
 
         const accion = document.createElement("span");
-        accion.className = rev.accion === "cambios_solicitados"
-            ? "badge-historial-cambios"
-            : "badge-historial-aprobada";
+        const esCambios = rev.accion === "cambios_solicitados" || rev.accion === "cambios_actualizacion";
+        accion.className = esCambios ? "badge-historial-cambios" : "badge-historial-aprobada";
         accion.textContent = etiquetasAccion[rev.accion] || rev.accion;
 
         const meta = document.createElement("span");
@@ -577,16 +639,25 @@ async function aprobarNoticiaActual() {
         return;
     }
 
-    const { id, titulo } = noticiaSeleccionadaActual;
-    const confirmado = window.confirm(`¿Deseas aprobar y publicar la noticia "${titulo}"?`);
-    if (!confirmado) {
+    const idNoticia = Number(noticiaSeleccionadaActual.noticia_id || noticiaSeleccionadaActual.id);
+    const idAct = Number(noticiaSeleccionadaActual.actualizacion_id || 0);
+    const titulo = noticiaSeleccionadaActual.titulo || "";
+
+    const msgConfirm = idAct > 0
+        ? `¿Deseas aprobar esta actualización para "${titulo}" y reemplazar la versión publicada vigente?`
+        : `¿Deseas aprobar y publicar la noticia "${titulo}"?`;
+
+    if (!window.confirm(msgConfirm)) {
         return;
     }
 
     const form = new FormData();
     form.append("csrf_token", csrfTokenRevision);
     form.append("accion", "aprobar");
-    form.append("noticia_id", String(id));
+    form.append("noticia_id", String(idNoticia));
+    if (idAct > 0) {
+        form.append("actualizacion_id", String(idAct));
+    }
 
     enviandoDecisionEditorial = true;
     establecerBotonesDecisionDeshabilitados(true);
@@ -600,14 +671,14 @@ async function aprobarNoticiaActual() {
         const datos = await respuesta.json();
 
         if (respuesta.ok && datos.exito) {
-            mostrarMensajeRevision(datos.mensaje || "Noticia aprobada y publicada.", false);
-            noticiaSeleccionadaId = 0;
+            mostrarMensajeRevision(datos.mensaje || "Aprobación registrada correctamente.", false);
+            noticiaSeleccionadaClave = "";
             cerrarFormularioCambios();
             await cargarPendientes();
             return;
         }
 
-        mostrarMensajeRevision(datos.mensaje || "No se pudo aprobar la noticia.", true);
+        mostrarMensajeRevision(datos.mensaje || "No se pudo aprobar la solicitud.", true);
         if (respuesta.status === 409) {
             await cargarPendientes();
         }
@@ -623,9 +694,12 @@ function abrirFormularioCambiosActual() {
     if (!noticiaSeleccionadaActual || !permisosRevision.solicitar_correcciones) {
         return;
     }
+    const idNoticia = Number(noticiaSeleccionadaActual.noticia_id || noticiaSeleccionadaActual.id);
     const panel = document.getElementById("panel-solicitar-cambios");
-    document.getElementById("cambios-noticia-id").value = String(noticiaSeleccionadaActual.id);
-    document.getElementById("cambios-noticia-titulo").textContent = `Noticia: ${noticiaSeleccionadaActual.titulo}`;
+    document.getElementById("cambios-noticia-id").value = String(idNoticia);
+    document.getElementById("cambios-noticia-titulo").textContent = noticiaSeleccionadaActual.actualizacion_id
+        ? `Actualización de: ${noticiaSeleccionadaActual.titulo}`
+        : `Noticia: ${noticiaSeleccionadaActual.titulo}`;
     document.getElementById("campo-observaciones").value = "";
     panel.hidden = false;
     document.getElementById("campo-observaciones")?.focus();
@@ -653,6 +727,7 @@ function inicializarCentroRevision() {
         }
 
         const noticiaId = document.getElementById("cambios-noticia-id").value;
+        const idAct = Number(noticiaSeleccionadaActual?.actualizacion_id || 0);
         const observaciones = document.getElementById("campo-observaciones").value.trim();
 
         if (!observaciones) {
@@ -665,6 +740,9 @@ function inicializarCentroRevision() {
         form.append("csrf_token", csrfTokenRevision);
         form.append("accion", "solicitar_cambios");
         form.append("noticia_id", noticiaId);
+        if (idAct > 0) {
+            form.append("actualizacion_id", String(idAct));
+        }
         form.append("observaciones", observaciones);
 
         enviandoDecisionEditorial = true;
@@ -680,7 +758,7 @@ function inicializarCentroRevision() {
 
             if (respuesta.ok && datos.exito) {
                 mostrarMensajeRevision(datos.mensaje || "Cambios solicitados correctamente.", false);
-                noticiaSeleccionadaId = 0;
+                noticiaSeleccionadaClave = "";
                 cerrarFormularioCambios();
                 await cargarPendientes();
                 return;

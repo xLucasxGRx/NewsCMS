@@ -231,8 +231,8 @@ function obtenerCatalogoPermisos(): array
                 'por_defecto' => ['administrador' => true, 'editor' => true, 'redactor' => true],
             ],
             'publicar_noticias' => [
-                'etiqueta' => 'Publicar noticias',
-                'descripcion' => 'Publicar noticias directamente y marcarlas como destacadas o de última hora.',
+                'etiqueta' => 'Gestionar visibilidad editorial',
+                'descripcion' => 'Retirar o restaurar noticias aprobadas y marcarlas como destacadas o de última hora.',
                 'grupo' => 'Flujo editorial',
                 'por_defecto' => ['administrador' => true, 'editor' => true, 'redactor' => false],
             ],
