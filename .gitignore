@@ -1,0 +1,2 @@
+# Ignorar archivos de configuración local con credenciales
+config/conexion.php

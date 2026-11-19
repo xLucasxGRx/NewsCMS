@@ -1,0 +1,225 @@
+<?php
+require_once __DIR__ . '/config/conexion.php';
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsCMS — Portal de Noticias</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+    <!-- Barra superior: fecha actual y acceso rápido -->
+    <div class="barra-superior">
+        <div class="contenedor barra-superior-contenido">
+            <span id="fecha-actual" class="fecha-actual">Cargando fecha...</span>
+            <div class="barra-acciones">
+                <a href="admin/vista_previa.html" class="enlace-admin-previa">Panel Admin (Vista previa)</a>
+                <span class="estado-sistema <?php echo $conexionActiva ? 'estado-activo' : 'estado-inactivo'; ?>">
+                    <?php echo $conexionActiva ? 'BD conectada' : 'BD sin conexión'; ?>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cabecera moderna con logotipo, buscador y botón de sesión -->
+    <header class="encabezado">
+        <div class="contenedor encabezado-superior">
+            <div class="marca">
+                <a href="index.php" class="logotipo">News<span>CMS</span></a>
+                <p class="lema">Portal informativo universitario</p>
+            </div>
+
+            <form id="formulario-busqueda" class="buscador" role="search" aria-label="Buscar noticias">
+                <input
+                    type="search"
+                    id="campo-busqueda"
+                    class="campo-busqueda"
+                    placeholder="Buscar noticias..."
+                    aria-label="Buscar noticias"
+                >
+                <button type="submit" class="boton-buscar">Buscar</button>
+            </form>
+
+            <div class="acciones-usuario">
+                <button type="button" id="boton-login" class="boton-login">
+                    Iniciar sesión
+                </button>
+                <button
+                    type="button"
+                    id="boton-menu"
+                    class="boton-menu"
+                    aria-expanded="false"
+                    aria-controls="menu-principal"
+                    aria-label="Abrir menú de categorías"
+                >
+                    <span class="linea-menu"></span>
+                    <span class="linea-menu"></span>
+                    <span class="linea-menu"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Menú de categorías -->
+        <nav id="menu-principal" class="navegacion" aria-label="Categorías de noticias">
+            <div class="contenedor">
+                <ul class="lista-navegacion">
+                    <li><a href="#inicio" class="enlace-nav activo" data-seccion="Inicio">Inicio</a></li>
+                    <li><a href="#secciones" class="enlace-nav" data-seccion="Nacional">Nacional</a></li>
+                    <li><a href="#secciones" class="enlace-nav" data-seccion="Tecnología">Tecnología</a></li>
+                    <li><a href="#secciones" class="enlace-nav" data-seccion="Cultura">Cultura</a></li>
+                    <li><a href="#secciones" class="enlace-nav" data-seccion="Deportes">Deportes</a></li>
+                    <li><a href="#secciones" class="enlace-nav" data-seccion="Opinión">Opinión</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Aviso discreto para interacciones visuales (búsqueda / inicio de sesión) -->
+    <div id="aviso-portal" class="aviso-portal oculto" role="status" aria-live="polite">
+        <div class="contenedor aviso-contenido">
+            <p id="texto-aviso"></p>
+            <button type="button" id="cerrar-aviso" class="cerrar-aviso" aria-label="Cerrar aviso">&times;</button>
+        </div>
+    </div>
+
+    <!-- Espacio para noticias de última hora -->
+    <section class="franja-ultima-hora" aria-label="Noticias de última hora">
+        <div class="contenedor ultima-hora-contenido">
+            <span class="etiqueta-ultima-hora">Última hora</span>
+            <p class="texto-ultima-hora">
+                No hay alertas de última hora registradas en este momento.
+            </p>
+        </div>
+    </section>
+
+    <!-- Contenido principal del portal -->
+    <main id="inicio" class="contenedor contenido-principal">
+        <!-- Rejilla superior: Noticia principal + Últimas noticias -->
+        <div class="rejilla-portada">
+            <!-- Sección de noticia principal -->
+            <section class="bloque-noticia-principal" aria-labelledby="titulo-principal">
+                <div class="cabecera-bloque">
+                    <span class="etiqueta-bloque">Portada</span>
+                    <h1 id="titulo-principal" class="titulo-seccion">Noticia Principal</h1>
+                </div>
+
+                <article class="estado-vacio estado-vacio-destacado">
+                    <div class="marco-imagen-vacio" aria-hidden="true">
+                        <span>Espacio reservado para imagen principal</span>
+                    </div>
+                    <div class="contenido-vacio">
+                        <h2>Aún no hay una noticia principal publicada</h2>
+                        <p>
+                            Cuando se publiquen artículos desde el panel administrativo, la noticia
+                            principal aparecerá aquí con su titular, resumen e imagen destacada.
+                        </p>
+                    </div>
+                </article>
+            </section>
+
+            <!-- Área de últimas noticias -->
+            <aside class="bloque-ultimas-noticias" aria-labelledby="titulo-ultimas">
+                <div class="cabecera-bloque">
+                    <span class="etiqueta-bloque">Cronológico</span>
+                    <h2 id="titulo-ultimas" class="titulo-seccion">Últimas Noticias</h2>
+                </div>
+
+                <div class="estado-vacio">
+                    <p class="titulo-vacio">Sin noticias recientes</p>
+                    <p class="texto-vacio">
+                        En este bloque se listarán las publicaciones más recientes en orden cronológico.
+                    </p>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Noticias destacadas -->
+        <section class="bloque-destacadas" aria-labelledby="titulo-destacadas">
+            <div class="cabecera-bloque">
+                <span class="etiqueta-bloque">Selección editorial</span>
+                <h2 id="titulo-destacadas" class="titulo-seccion">Noticias Destacadas</h2>
+            </div>
+
+            <div class="rejilla-destacadas">
+                <article class="tarjeta-vacia">
+                    <span class="marcador-categoria">Destacada 1</span>
+                    <p>Espacio disponible para noticia destacada.</p>
+                </article>
+                <article class="tarjeta-vacia">
+                    <span class="marcador-categoria">Destacada 2</span>
+                    <p>Espacio disponible para noticia destacada.</p>
+                </article>
+                <article class="tarjeta-vacia">
+                    <span class="marcador-categoria">Destacada 3</span>
+                    <p>Espacio disponible para noticia destacada.</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- Secciones por categorías -->
+        <section id="secciones" class="bloque-secciones" aria-labelledby="titulo-secciones">
+            <div class="cabecera-bloque">
+                <span class="etiqueta-bloque">Explorar</span>
+                <h2 id="titulo-secciones" class="titulo-seccion">
+                    Secciones por Categorías — <span id="nombre-seccion-activa">Inicio</span>
+                </h2>
+            </div>
+
+            <div class="rejilla-secciones">
+                <article class="tarjeta-seccion" data-categoria="Nacional">
+                    <h3>Nacional</h3>
+                    <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
+                </article>
+
+                <article class="tarjeta-seccion" data-categoria="Tecnología">
+                    <h3>Tecnología</h3>
+                    <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
+                </article>
+
+                <article class="tarjeta-seccion" data-categoria="Cultura">
+                    <h3>Cultura</h3>
+                    <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
+                </article>
+
+                <article class="tarjeta-seccion" data-categoria="Deportes">
+                    <h3>Deportes</h3>
+                    <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
+                </article>
+
+                <article class="tarjeta-seccion" data-categoria="Opinión">
+                    <h3>Opinión</h3>
+                    <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <!-- Pie de página profesional -->
+    <footer class="pie-pagina">
+        <div class="contenedor pie-rejilla">
+            <div class="pie-marca">
+                <strong class="logotipo-pie">News<span>CMS</span></strong>
+                <p>Sistema de gestión de contenidos de noticias desarrollado sin frameworks con HTML5, CSS3, JavaScript, PHP y MySQL.</p>
+            </div>
+
+            <div class="pie-enlaces">
+                <h4>Secciones</h4>
+                <ul>
+                    <li><a href="#inicio">Portada</a></li>
+                    <li><a href="#secciones">Categorías</a></li>
+                    <li><a href="admin/vista_previa.html">Vista previa del panel</a></li>
+                </ul>
+            </div>
+
+            <div class="pie-meta">
+                <h4>Proyecto Académico</h4>
+                <p>&copy; <?php echo date('Y'); ?> NewsCMS. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
