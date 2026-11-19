@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categorías — NewsCMS</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body data-catalogo="categorias">
+    <div id="contenedor-admin" class="contenedor-admin" hidden>
+        <aside id="barra-lateral" class="barra-lateral" aria-label="Módulos del panel administrativo">
+            <div class="marca-admin">
+                <a href="index.html" class="logo-admin">News<span>CMS</span></a>
+                <span id="rol-sidebar" class="rol-usuario"></span>
+            </div>
+
+            <nav class="menu-lateral">
+                <p class="grupo-menu">Módulos disponibles</p>
+                <ul id="lista-modulos" class="lista-modulos"></ul>
+            </nav>
+
+            <div class="pie-sidebar">
+                <a href="../index.html" class="enlace-volver">&larr; Volver al portal público</a>
+            </div>
+        </aside>
+
+        <div class="area-principal">
+            <header class="cabecera-admin">
+                <div class="cabecera-izquierda">
+                    <button
+                        type="button"
+                        id="boton-sidebar"
+                        class="boton-sidebar"
+                        aria-expanded="false"
+                        aria-controls="barra-lateral"
+                        aria-label="Mostrar u ocultar menú lateral"
+                    >
+                        &#9776;
+                    </button>
+                    <h1 class="titulo-modulo">Categorías</h1>
+                </div>
+
+                <div class="cabecera-derecha">
+                    <span id="nombre-usuario" class="perfil-previa"></span>
+                    <span id="rol-usuario" class="rol-usuario"></span>
+                    <button type="button" id="boton-salir" class="boton-salir">Cerrar sesión</button>
+                </div>
+            </header>
+
+            <main class="contenido-admin">
+                <div class="barra-herramientas">
+                    <span class="texto-suave-form">Administra las secciones temáticas del portal.</span>
+                    <button type="button" id="btn-nuevo-catalogo" class="boton-primario-admin">+ Nueva categoría</button>
+                </div>
+
+                <div id="mensaje-catalogo" class="alerta-admin" role="status" hidden></div>
+
+                <!-- Formulario HTML para crear o editar categoría -->
+                <section id="panel-formulario-catalogo" class="tarjeta-form" hidden aria-labelledby="titulo-form-catalogo">
+                    <div class="cabecera-panel">
+                        <h2 id="titulo-form-catalogo">Nueva categoría</h2>
+                        <button type="button" id="btn-cancelar-catalogo" class="boton-secundario-admin">Cancelar</button>
+                    </div>
+
+                    <form id="formulario-catalogo" class="formulario-cambios" novalidate>
+                        <input type="hidden" id="catalogo-id" value="0">
+
+                        <div class="campo-admin">
+                            <label for="catalogo-nombre">Nombre</label>
+                            <input type="text" id="catalogo-nombre" maxlength="80" required>
+                        </div>
+
+                        <div class="campo-admin">
+                            <label for="catalogo-descripcion">Descripción</label>
+                            <textarea id="catalogo-descripcion" rows="2" maxlength="255" placeholder="Descripción breve de la categoría..."></textarea>
+                        </div>
+
+                        <div class="celda-acciones">
+                            <button type="submit" class="boton-primario-admin">Guardar</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="panel-tabla" aria-labelledby="titulo-tabla-categorias">
+                    <div class="cabecera-panel">
+                        <h2 id="titulo-tabla-categorias">Listado de Categorías</h2>
+                        <span id="total-catalogo" class="etiqueta-tabla">0 registros</span>
+                    </div>
+
+                    <div class="contenedor-tabla">
+                        <table class="tabla-datos">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Descripción</th>
+                                    <th>Noticias asociadas</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpo-tabla-catalogo">
+                                <tr>
+                                    <td colspan="4" class="fila-vacia">Cargando categorías...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/catalogos_admin.js"></script>
+</body>
+</html>

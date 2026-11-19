@@ -85,7 +85,25 @@ function renderizarModulos(modulosPermitidos) {
         boton.setAttribute("data-modulo", modulo);
         boton.textContent = modulo;
 
-        boton.addEventListener("click", () => seleccionarModulo(modulo, boton));
+        boton.addEventListener("click", () => {
+            if (modulo === "Noticias") {
+                window.location.href = "noticias.html";
+                return;
+            }
+            if (modulo === "Categorías") {
+                window.location.href = "categorias.html";
+                return;
+            }
+            if (modulo === "Etiquetas") {
+                window.location.href = "etiquetas.html";
+                return;
+            }
+            if (modulo === "Revisión editorial") {
+                window.location.href = "revision.html";
+                return;
+            }
+            seleccionarModulo(modulo, boton);
+        });
 
         li.appendChild(boton);
         lista.appendChild(li);

@@ -424,3 +424,327 @@ a.boton-modulo {
     border-radius: 999px;
     text-transform: capitalize;
 }
+
+/* ==========================================================================
+   Módulo de Noticias (admin/noticias.html y admin/editar_noticia.html)
+   ========================================================================== */
+
+.barra-herramientas {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filtros-noticias {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.entrada-filtro {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background-color: var(--admin-superficie);
+    color: var(--admin-texto);
+}
+
+.boton-primario-admin,
+.boton-secundario-admin,
+.boton-aviso-admin {
+    display: inline-block;
+    padding: 0.55rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid transparent;
+    text-align: center;
+}
+
+.boton-primario-admin {
+    background-color: var(--admin-primario);
+    color: #ffffff;
+}
+
+.boton-secundario-admin {
+    background-color: #e2e8f0;
+    color: var(--admin-texto);
+}
+
+.boton-aviso-admin {
+    background-color: #fef3c7;
+    color: #92400e;
+    border-color: #fde68a;
+}
+
+.enlace-secundario {
+    color: var(--admin-primario);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.celda-acciones {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.enlace-accion {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--admin-primario);
+    text-decoration: none;
+    padding: 0.25rem 0.55rem;
+    border: 1px solid #bfdbfe;
+    border-radius: 4px;
+    background-color: #eff6ff;
+}
+
+.enlace-ver {
+    color: var(--admin-texto-suave);
+    border-color: var(--admin-borde);
+    background-color: #f8fafc;
+}
+
+.estado-badge {
+    display: inline-block;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+}
+
+.estado-borrador {
+    background-color: #e2e8f0;
+    color: #334155;
+}
+
+.estado-pendiente_revision {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.estado-cambios_solicitados {
+    background-color: #ffedd5;
+    color: #9a3412;
+}
+
+.estado-publicada {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.estado-archivada {
+    background-color: #f1f5f9;
+    color: #64748b;
+}
+
+/* Formulario de noticia y editor enriquecido */
+.rejilla-formulario {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.columna-principal-form,
+.columna-lateral-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.tarjeta-form {
+    background-color: var(--admin-superficie);
+    border: 1px solid var(--admin-borde);
+    border-radius: var(--radio);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.campo-admin {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.campo-admin label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--admin-texto);
+}
+
+.campo-admin input[type="text"],
+.campo-admin textarea,
+.campo-admin select {
+    padding: 0.6rem 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.94rem;
+    font-family: inherit;
+    background-color: var(--admin-superficie);
+}
+
+.barra-editor {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding: 0.5rem;
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+}
+
+.boton-editor {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.82rem;
+    cursor: pointer;
+}
+
+.boton-editor:hover {
+    background-color: #e2e8f0;
+}
+
+.area-editor {
+    min-height: 260px;
+    padding: 0.85rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0 0 6px 6px;
+    background-color: #ffffff;
+    line-height: 1.65;
+    outline: none;
+}
+
+.area-editor h2,
+.area-editor h3 {
+    margin: 0.65rem 0 0.35rem;
+}
+
+.area-editor ul,
+.area-editor ol {
+    margin-left: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.lista-etiquetas-form,
+.opciones-editoriales {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.casilla-admin {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+    cursor: pointer;
+}
+
+.texto-suave-form {
+    font-size: 0.84rem;
+    color: var(--admin-texto-suave);
+}
+
+.vista-previa-imagen img {
+    width: 100%;
+    max-height: 180px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--admin-borde);
+    margin-top: 0.5rem;
+}
+
+.alerta-admin {
+    padding: 0.8rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.alerta-admin-exito {
+    background-color: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.alerta-admin-error {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+@media (max-width: 960px) {
+    .rejilla-formulario {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================================
+   Revisión Editorial (admin/revision.html) y observaciones
+   ========================================================================== */
+
+.enlace-cambios {
+    background-color: #fef3c7;
+    color: #92400e;
+    border-color: #fde68a;
+}
+
+.observacion-editorial {
+    margin-top: 0.35rem;
+    font-size: 0.82rem;
+    color: #9a3412;
+    background-color: #ffedd5;
+    padding: 0.35rem 0.55rem;
+    border-radius: 4px;
+}
+
+.alerta-observacion {
+    background-color: #ffedd5;
+    color: #9a3412;
+    border: 1px solid #fed7aa;
+}
+
+.resumen-revision {
+    font-weight: 500;
+    color: var(--admin-texto-suave);
+    border-left: 3px solid var(--admin-primario);
+    padding-left: 0.85rem;
+}
+
+.contenido-revision {
+    line-height: 1.7;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.contenido-revision ul,
+.contenido-revision ol {
+    margin-left: 1.5rem;
+}
+
+.formulario-cambios {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.enlace-eliminar {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border-color: #fecaca;
+}

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Noticia — NewsCMS</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+    <div id="contenedor-admin" class="contenedor-admin" hidden>
+        <aside id="barra-lateral" class="barra-lateral" aria-label="Módulos del panel administrativo">
+            <div class="marca-admin">
+                <a href="index.html" class="logo-admin">News<span>CMS</span></a>
+                <span id="rol-sidebar" class="rol-usuario"></span>
+            </div>
+
+            <nav class="menu-lateral">
+                <p class="grupo-menu">Módulos disponibles</p>
+                <ul id="lista-modulos" class="lista-modulos"></ul>
+            </nav>
+
+            <div class="pie-sidebar">
+                <a href="../index.html" class="enlace-volver">&larr; Volver al portal público</a>
+            </div>
+        </aside>
+
+        <div class="area-principal">
+            <header class="cabecera-admin">
+                <div class="cabecera-izquierda">
+                    <button
+                        type="button"
+                        id="boton-sidebar"
+                        class="boton-sidebar"
+                        aria-expanded="false"
+                        aria-controls="barra-lateral"
+                        aria-label="Mostrar u ocultar menú lateral"
+                    >
+                        &#9776;
+                    </button>
+                    <h1 id="titulo-pagina-editor" class="titulo-modulo">Nueva noticia</h1>
+                </div>
+
+                <div class="cabecera-derecha">
+                    <span id="nombre-usuario" class="perfil-previa"></span>
+                    <span id="rol-usuario" class="rol-usuario"></span>
+                    <button type="button" id="boton-salir" class="boton-salir">Cerrar sesión</button>
+                </div>
+            </header>
+
+            <main class="contenido-admin">
+                <div class="barra-herramientas">
+                    <a href="noticias.html" class="enlace-secundario">&larr; Volver al listado</a>
+                </div>
+
+                <div id="mensaje-editor" class="alerta-admin" role="status" hidden></div>
+
+                <div id="caja-observaciones-editor" class="alerta-admin alerta-observacion" role="note" hidden>
+                    <strong>Observaciones editoriales:</strong>
+                    <p id="texto-observaciones-editor"></p>
+                </div>
+
+                <form id="formulario-noticia" class="formulario-noticia" enctype="multipart/form-data" novalidate>
+                    <input type="hidden" id="noticia-id" name="id" value="0">
+                    <input type="hidden" id="csrf-token" name="csrf_token" value="">
+
+                    <div class="rejilla-formulario">
+                        <div class="columna-principal-form">
+                            <div class="campo-admin">
+                                <label for="titulo">Título de la noticia</label>
+                                <input type="text" id="titulo" name="titulo" maxlength="200" required>
+                            </div>
+
+                            <div class="campo-admin">
+                                <label for="resumen">Resumen</label>
+                                <textarea id="resumen" name="resumen" rows="3" placeholder="Breve descripción de la noticia..."></textarea>
+                            </div>
+
+                            <div class="campo-admin">
+                                <label for="editor-contenido">Contenido</label>
+                                <div class="barra-editor" role="toolbar" aria-label="Formato de texto">
+                                    <button type="button" class="boton-editor" data-formato="p">Párrafo</button>
+                                    <button type="button" class="boton-editor" data-formato="strong"><strong>Negrita</strong></button>
+                                    <button type="button" class="boton-editor" data-formato="em"><em>Cursiva</em></button>
+                                    <button type="button" class="boton-editor" data-formato="h2">H2</button>
+                                    <button type="button" class="boton-editor" data-formato="h3">H3</button>
+                                    <button type="button" class="boton-editor" data-formato="ul">Lista</button>
+                                    <button type="button" class="boton-editor" data-formato="ol">Lista num.</button>
+                                    <button type="button" class="boton-editor" data-formato="a">Enlace</button>
+                                </div>
+                                <div
+                                    id="editor-contenido"
+                                    class="area-editor"
+                                    contenteditable="true"
+                                    role="textbox"
+                                    aria-multiline="true"
+                                    aria-label="Contenido de la noticia"
+                                ><p></p></div>
+                            </div>
+                        </div>
+
+                        <div class="columna-lateral-form">
+                            <div class="tarjeta-form">
+                                <div class="campo-admin">
+                                    <label for="categoria-id">Categoría</label>
+                                    <select id="categoria-id" name="categoria_id" required>
+                                        <option value="">Selecciona una categoría</option>
+                                    </select>
+                                </div>
+
+                                <div class="campo-admin">
+                                    <label>Etiquetas</label>
+                                    <div id="contenedor-etiquetas" class="lista-etiquetas-form">
+                                        <p class="texto-suave-form">Cargando etiquetas...</p>
+                                    </div>
+                                </div>
+
+                                <div class="campo-admin">
+                                    <label for="imagen">Imagen de portada (JPG, PNG, WEBP máx. 2 MB)</label>
+                                    <input type="file" id="imagen" name="imagen" accept="image/jpeg,image/png,image/webp">
+                                    <div id="contenedor-vista-previa" class="vista-previa-imagen" hidden>
+                                        <img id="imagen-previa" src="" alt="Vista previa de portada">
+                                    </div>
+                                </div>
+
+                                <div id="opciones-editoriales" class="opciones-editoriales" hidden>
+                                    <label class="casilla-admin">
+                                        <input type="checkbox" id="es-destacada" name="es_destacada" value="1">
+                                        <span>Marcar como noticia destacada</span>
+                                    </label>
+                                    <label class="casilla-admin">
+                                        <input type="checkbox" id="es-ultima-hora" name="es_ultima_hora" value="1">
+                                        <span>Marcar como última hora</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="tarjeta-form acciones-formulario">
+                                <button type="button" id="btn-borrador" class="boton-secundario-admin" data-accion="borrador">
+                                    Guardar borrador
+                                </button>
+                                <button type="button" id="btn-revision" class="boton-aviso-admin" data-accion="pendiente_revision">
+                                    Enviar a revisión
+                                </button>
+                                <button type="button" id="btn-publicar" class="boton-primario-admin" data-accion="publicada" hidden>
+                                    Publicar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/editar_noticia.js"></script>
+</body>
+</html>

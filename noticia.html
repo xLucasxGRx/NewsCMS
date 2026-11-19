@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noticia — NewsCMS</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+    <div class="barra-superior">
+        <div class="contenedor barra-superior-contenido">
+            <span id="fecha-actual" class="fecha-actual">Cargando fecha...</span>
+            <div class="barra-acciones">
+                <a href="admin/index.html" class="enlace-admin-previa">Panel Administrativo</a>
+            </div>
+        </div>
+    </div>
+
+    <header class="encabezado">
+        <div class="contenedor encabezado-superior">
+            <div class="marca">
+                <a href="index.html" class="logotipo">News<span>CMS</span></a>
+                <p class="lema">Portal informativo universitario</p>
+            </div>
+
+            <div class="acciones-usuario">
+                <a href="noticias.html" class="enlace-admin-previa" style="color: var(--color-primario); margin-right: 0.75rem;">Todas las noticias</a>
+                <a href="acceso.html" id="enlace-acceso" class="boton-login">Iniciar sesión</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="contenedor contenido-principal">
+        <article id="articulo-detalle" class="articulo-detalle">
+            <p class="texto-vacio">Cargando noticia...</p>
+        </article>
+    </main>
+
+    <footer class="pie-pagina">
+        <div class="contenedor pie-rejilla">
+            <div class="pie-marca">
+                <strong class="logotipo-pie">News<span>CMS</span></strong>
+                <p>Sistema de gestión de contenidos de noticias desarrollado sin frameworks con HTML5, CSS3, JavaScript, PHP y MySQL.</p>
+            </div>
+            <div class="pie-enlaces">
+                <h4>Secciones</h4>
+                <ul>
+                    <li><a href="index.html">Portada</a></li>
+                    <li><a href="noticias.html">Todas las noticias</a></li>
+                    <li><a href="archivo.html">Archivo</a></li>
+                    <li><a href="php/rss.php">RSS</a></li>
+                    <li><a href="admin/index.html">Panel administrativo</a></li>
+                </ul>
+            </div>
+            <div class="pie-meta">
+                <h4>Proyecto Académico</h4>
+                <p>&copy; <span id="anio-actual">2026</span> NewsCMS. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/noticia_detalle.js"></script>
+</body>
+</html>

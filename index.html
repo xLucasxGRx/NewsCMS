@@ -58,11 +58,13 @@
             <div class="contenedor">
                 <ul class="lista-navegacion">
                     <li><a href="#inicio" class="enlace-nav activo" data-seccion="Inicio">Inicio</a></li>
-                    <li><a href="#secciones" class="enlace-nav" data-seccion="Nacional">Nacional</a></li>
+                    <li><a href="#secciones" class="enlace-nav" data-seccion="Actualidad">Actualidad</a></li>
                     <li><a href="#secciones" class="enlace-nav" data-seccion="Tecnología">Tecnología</a></li>
-                    <li><a href="#secciones" class="enlace-nav" data-seccion="Cultura">Cultura</a></li>
                     <li><a href="#secciones" class="enlace-nav" data-seccion="Deportes">Deportes</a></li>
-                    <li><a href="#secciones" class="enlace-nav" data-seccion="Opinión">Opinión</a></li>
+                    <li><a href="#secciones" class="enlace-nav" data-seccion="Economía">Economía</a></li>
+                    <li><a href="#secciones" class="enlace-nav" data-seccion="Entretenimiento">Entretenimiento</a></li>
+                    <li><a href="noticias.html" class="enlace-nav">Todas</a></li>
+                    <li><a href="archivo.html" class="enlace-nav">Archivo</a></li>
                 </ul>
             </div>
         </nav>
@@ -80,7 +82,7 @@
     <section class="franja-ultima-hora" aria-label="Noticias de última hora">
         <div class="contenedor ultima-hora-contenido">
             <span class="etiqueta-ultima-hora">Última hora</span>
-            <p class="texto-ultima-hora">
+            <p id="texto-ultima-hora" class="texto-ultima-hora">
                 No hay alertas de última hora registradas en este momento.
             </p>
         </div>
@@ -96,18 +98,20 @@
                     <h1 id="titulo-principal" class="titulo-seccion">Noticia Principal</h1>
                 </div>
 
-                <article class="estado-vacio estado-vacio-destacado">
-                    <div class="marco-imagen-vacio" aria-hidden="true">
-                        <span>Espacio reservado para imagen principal</span>
-                    </div>
-                    <div class="contenido-vacio">
-                        <h2>Aún no hay una noticia principal publicada</h2>
-                        <p>
-                            Cuando se publiquen artículos desde el panel administrativo, la noticia
-                            principal aparecerá aquí con su titular, resumen e imagen destacada.
-                        </p>
-                    </div>
-                </article>
+                <div id="contenedor-noticia-principal">
+                    <article class="estado-vacio estado-vacio-destacado">
+                        <div class="marco-imagen-vacio" aria-hidden="true">
+                            <span>Espacio reservado para imagen principal</span>
+                        </div>
+                        <div class="contenido-vacio">
+                            <h2>Aún no hay una noticia principal publicada</h2>
+                            <p>
+                                Cuando se publiquen artículos desde el panel administrativo, la noticia
+                                principal aparecerá aquí con su titular, resumen e imagen destacada.
+                            </p>
+                        </div>
+                    </article>
+                </div>
             </section>
 
             <!-- Área de últimas noticias -->
@@ -117,7 +121,7 @@
                     <h2 id="titulo-ultimas" class="titulo-seccion">Últimas Noticias</h2>
                 </div>
 
-                <div class="estado-vacio">
+                <div id="contenedor-ultimas-noticias" class="estado-vacio">
                     <p class="titulo-vacio">Sin noticias recientes</p>
                     <p class="texto-vacio">
                         En este bloque se listarán las publicaciones más recientes en orden cronológico.
@@ -133,7 +137,7 @@
                 <h2 id="titulo-destacadas" class="titulo-seccion">Noticias Destacadas</h2>
             </div>
 
-            <div class="rejilla-destacadas">
+            <div id="contenedor-destacadas" class="rejilla-destacadas">
                 <article class="tarjeta-vacia">
                     <span class="marcador-categoria">Destacada 1</span>
                     <p>Espacio disponible para noticia destacada.</p>
@@ -158,9 +162,9 @@
                 </h2>
             </div>
 
-            <div class="rejilla-secciones">
-                <article class="tarjeta-seccion" data-categoria="Nacional">
-                    <h3>Nacional</h3>
+            <div id="rejilla-secciones" class="rejilla-secciones">
+                <article class="tarjeta-seccion" data-categoria="Actualidad">
+                    <h3>Actualidad</h3>
                     <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
                 </article>
 
@@ -169,18 +173,18 @@
                     <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
                 </article>
 
-                <article class="tarjeta-seccion" data-categoria="Cultura">
-                    <h3>Cultura</h3>
-                    <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
-                </article>
-
                 <article class="tarjeta-seccion" data-categoria="Deportes">
                     <h3>Deportes</h3>
                     <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
                 </article>
 
-                <article class="tarjeta-seccion" data-categoria="Opinión">
-                    <h3>Opinión</h3>
+                <article class="tarjeta-seccion" data-categoria="Economía">
+                    <h3>Economía</h3>
+                    <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
+                </article>
+
+                <article class="tarjeta-seccion" data-categoria="Entretenimiento">
+                    <h3>Entretenimiento</h3>
                     <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
                 </article>
             </div>
@@ -200,6 +204,8 @@
                 <ul>
                     <li><a href="#inicio">Portada</a></li>
                     <li><a href="#secciones">Categorías</a></li>
+                    <li><a href="archivo.html">Archivo</a></li>
+                    <li><a href="php/rss.php">RSS</a></li>
                     <li><a href="admin/index.html">Panel administrativo</a></li>
                 </ul>
             </div>

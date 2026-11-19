@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archivo de Noticias — NewsCMS</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+    <div class="barra-superior">
+        <div class="contenedor barra-superior-contenido">
+            <span id="fecha-actual" class="fecha-actual">Cargando fecha...</span>
+            <div class="barra-acciones">
+                <a href="admin/index.html" class="enlace-admin-previa">Panel Administrativo</a>
+            </div>
+        </div>
+    </div>
+
+    <header class="encabezado">
+        <div class="contenedor encabezado-superior">
+            <div class="marca">
+                <a href="index.html" class="logotipo">News<span>CMS</span></a>
+                <p class="lema">Portal informativo universitario</p>
+            </div>
+
+            <div class="acciones-usuario">
+                <a href="acceso.html" id="enlace-acceso" class="boton-login">Iniciar sesión</a>
+            </div>
+        </div>
+
+        <nav class="navegacion" aria-label="Navegación principal">
+            <div class="contenedor">
+                <ul class="lista-navegacion">
+                    <li><a href="index.html" class="enlace-nav">Portada</a></li>
+                    <li><a href="noticias.html" class="enlace-nav">Todas las noticias</a></li>
+                    <li><a href="archivo.html" class="enlace-nav activo">Archivo</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="contenedor contenido-principal">
+        <section aria-labelledby="titulo-archivo">
+            <div class="cabecera-bloque">
+                <span class="etiqueta-bloque">Hemeroteca</span>
+                <h1 id="titulo-archivo" class="titulo-seccion">Archivo de Noticias</h1>
+                <p class="descripcion-archivo">
+                    Consulta las publicaciones históricas del portal filtrando por año, mes o categoría.
+                </p>
+            </div>
+
+            <form id="formulario-archivo" class="barra-filtros-archivo" aria-label="Filtros del archivo histórico">
+                <div class="grupo-filtro-archivo">
+                    <label for="filtro-anio">Año</label>
+                    <select id="filtro-anio" name="anio" class="selector-categoria">
+                        <option value="">Todos los años</option>
+                    </select>
+                </div>
+
+                <div class="grupo-filtro-archivo">
+                    <label for="filtro-mes">Mes</label>
+                    <select id="filtro-mes" name="mes" class="selector-categoria">
+                        <option value="">Todos los meses</option>
+                        <option value="1">Enero</option>
+                        <option value="2">Febrero</option>
+                        <option value="3">Marzo</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Mayo</option>
+                        <option value="6">Junio</option>
+                        <option value="7">Julio</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Septiembre</option>
+                        <option value="10">Octubre</option>
+                        <option value="11">Noviembre</option>
+                        <option value="12">Diciembre</option>
+                    </select>
+                </div>
+
+                <div class="grupo-filtro-archivo">
+                    <label for="filtro-categoria">Categoría</label>
+                    <select id="filtro-categoria" name="categoria" class="selector-categoria">
+                        <option value="">Todas las categorías</option>
+                    </select>
+                </div>
+
+                <div class="acciones-archivo">
+                    <button type="submit" class="boton-buscar boton-archivo">Buscar</button>
+                    <button type="button" id="btn-limpiar-filtros" class="boton-login">Limpiar filtros</button>
+                </div>
+            </form>
+
+            <p id="resumen-resultados-archivo" class="meta-noticia resumen-archivo"></p>
+
+            <div id="contenedor-archivo" class="rejilla-destacadas">
+                <div class="estado-vacio">
+                    <p class="titulo-vacio">Cargando archivo...</p>
+                </div>
+            </div>
+
+            <nav id="paginacion-archivo" class="paginacion-archivo" aria-label="Paginación del archivo" hidden></nav>
+        </section>
+    </main>
+
+    <footer class="pie-pagina">
+        <div class="contenedor pie-rejilla">
+            <div class="pie-marca">
+                <strong class="logotipo-pie">News<span>CMS</span></strong>
+                <p>Sistema de gestión de contenidos de noticias desarrollado sin frameworks con HTML5, CSS3, JavaScript, PHP y MySQL.</p>
+            </div>
+            <div class="pie-enlaces">
+                <h4>Secciones</h4>
+                <ul>
+                    <li><a href="index.html">Portada</a></li>
+                    <li><a href="noticias.html">Todas las noticias</a></li>
+                    <li><a href="archivo.html">Archivo</a></li>
+                    <li><a href="php/rss.php">RSS</a></li>
+                    <li><a href="admin/index.html">Panel administrativo</a></li>
+                </ul>
+            </div>
+            <div class="pie-meta">
+                <h4>Proyecto Académico</h4>
+                <p>&copy; <span id="anio-actual">2026</span> NewsCMS. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/archivo.js"></script>
+</body>
+</html>

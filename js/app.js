@@ -1,42 +1,35 @@
 /**
  * NewsCMS - Script principal del portal público
- * Gestiona fecha actual, estado de sesión, menú móvil, categorías y buscador.
+ * Gestiona fecha actual, estado de sesión, noticias publicadas, menú móvil y buscador.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
     mostrarFechaActual();
     actualizarAnioPie();
     comprobarEstadoSesion();
+    cargarNoticiasPortada();
     inicializarMenuMovil();
     inicializarNavegacionSecciones();
     inicializarBuscador();
     inicializarCierreAviso();
 });
 
-/**
- * Muestra la fecha actual en español en la barra superior.
- */
 function mostrarFechaActual() {
     const elementoFecha = document.getElementById("fecha-actual");
     if (!elementoFecha) {
         return;
     }
 
-    const hoy = new Date();
-    const formato = new Intl.DateTimeFormat("es-ES", {
+    const texto = new Intl.DateTimeFormat("es-ES", {
         weekday: "long",
         year: "numeric",
         month: "long",
         day: "numeric"
-    });
+    }).format(new Date());
 
-    const texto = formato.format(hoy);
     elementoFecha.textContent = texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
-/**
- * Actualiza el año en el pie de página.
- */
 function actualizarAnioPie() {
     const elementoAnio = document.getElementById("anio-actual");
     if (elementoAnio) {
@@ -44,9 +37,6 @@ function actualizarAnioPie() {
     }
 }
 
-/**
- * Consulta si existe una sesión activa para ajustar el botón de acceso.
- */
 async function comprobarEstadoSesion() {
     const enlaceAcceso = document.getElementById("enlace-acceso");
     if (!enlaceAcceso) {
@@ -70,13 +60,211 @@ async function comprobarEstadoSesion() {
             enlaceAcceso.setAttribute("href", "acceso.html");
         }
     } catch {
-        // Si falla la comprobación, se mantiene el enlace predeterminado a acceso.html
+        // Mantener enlace predeterminado
     }
 }
 
-/**
- * Abre o cierra el menú de categorías en dispositivos móviles.
- */
+async function cargarNoticiasPortada() {
+    try {
+        const respuesta = await fetch("php/noticias.php?modo=publico");
+        if (!respuesta.ok) {
+            return;
+        }
+
+        const datos = await respuesta.json();
+        if (!datos.ok) {
+            return;
+        }
+
+        renderizarUltimaHora(datos.ultimas_hora || []);
+        renderizarNoticiaPrincipal(datos.principal || null);
+        renderizarUltimasNoticias(datos.ultimas || []);
+        renderizarDestacadas(datos.destacadas || []);
+        renderizarPorCategoria(datos.por_categoria || []);
+    } catch {
+        // Conservar estados vacíos discretos si no hay conexión
+    }
+}
+
+function renderizarUltimaHora(lista) {
+    const contenedor = document.getElementById("texto-ultima-hora");
+    if (!contenedor || lista.length === 0) {
+        return;
+    }
+
+    contenedor.textContent = "";
+    lista.forEach((n, indice) => {
+        if (indice > 0) {
+            contenedor.appendChild(document.createTextNode("  |  "));
+        }
+        const enlace = document.createElement("a");
+        enlace.href = `noticia.html?id=${encodeURIComponent(n.id)}`;
+        enlace.className = "enlace-ultima-hora";
+        enlace.textContent = n.titulo;
+        contenedor.appendChild(enlace);
+    });
+}
+
+function renderizarNoticiaPrincipal(noticia) {
+    const contenedor = document.getElementById("contenedor-noticia-principal");
+    if (!contenedor || !noticia) {
+        return;
+    }
+
+    contenedor.textContent = "";
+    const articulo = document.createElement("article");
+    articulo.className = "tarjeta-noticia tarjeta-principal";
+
+    if (noticia.imagen) {
+        const img = document.createElement("img");
+        img.src = noticia.imagen;
+        img.alt = noticia.titulo;
+        img.className = "imagen-principal-noticia";
+        articulo.appendChild(img);
+    }
+
+    const cuerpo = document.createElement("div");
+    cuerpo.className = "cuerpo-tarjeta-noticia";
+
+    const cat = document.createElement("span");
+    cat.className = "marcador-categoria";
+    cat.textContent = noticia.categoria;
+
+    const h2 = document.createElement("h2");
+    h2.className = "titulo-principal-noticia";
+    const enlace = document.createElement("a");
+    enlace.href = `noticia.html?id=${encodeURIComponent(noticia.id)}`;
+    enlace.textContent = noticia.titulo;
+    h2.appendChild(enlace);
+
+    cuerpo.appendChild(cat);
+    cuerpo.appendChild(h2);
+
+    if (noticia.resumen) {
+        const resumen = document.createElement("p");
+        resumen.className = "resumen-tarjeta-noticia";
+        resumen.textContent = noticia.resumen;
+        cuerpo.appendChild(resumen);
+    }
+
+    const meta = document.createElement("p");
+    meta.className = "meta-noticia";
+    const fecha = noticia.fecha_publicacion ? noticia.fecha_publicacion.slice(0, 10) : "";
+    meta.textContent = `${noticia.autor}${fecha ? " · " + fecha : ""}`;
+    cuerpo.appendChild(meta);
+
+    articulo.appendChild(cuerpo);
+    contenedor.appendChild(articulo);
+}
+
+function renderizarUltimasNoticias(lista) {
+    const contenedor = document.getElementById("contenedor-ultimas-noticias");
+    if (!contenedor || lista.length === 0) {
+        return;
+    }
+
+    contenedor.className = "lista-ultimas-publicas";
+    contenedor.textContent = "";
+
+    lista.forEach((n) => {
+        const item = document.createElement("article");
+        item.className = "item-ultima-noticia";
+
+        const cat = document.createElement("span");
+        cat.className = "marcador-categoria";
+        cat.textContent = n.categoria;
+
+        const h3 = document.createElement("h3");
+        const enlace = document.createElement("a");
+        enlace.href = `noticia.html?id=${encodeURIComponent(n.id)}`;
+        enlace.textContent = n.titulo;
+        h3.appendChild(enlace);
+
+        const meta = document.createElement("p");
+        meta.className = "meta-noticia";
+        const fecha = n.fecha_publicacion ? n.fecha_publicacion.slice(0, 10) : "";
+        meta.textContent = fecha || n.autor;
+
+        item.appendChild(cat);
+        item.appendChild(h3);
+        item.appendChild(meta);
+        contenedor.appendChild(item);
+    });
+}
+
+function renderizarDestacadas(lista) {
+    const contenedor = document.getElementById("contenedor-destacadas");
+    if (!contenedor || lista.length === 0) {
+        return;
+    }
+
+    contenedor.textContent = "";
+    lista.forEach((n) => {
+        const tarjeta = document.createElement("article");
+        tarjeta.className = "tarjeta-noticia";
+
+        if (n.imagen) {
+            const img = document.createElement("img");
+            img.src = n.imagen;
+            img.alt = n.titulo;
+            img.className = "imagen-tarjeta-noticia";
+            tarjeta.appendChild(img);
+        }
+
+        const cuerpo = document.createElement("div");
+        cuerpo.className = "cuerpo-tarjeta-noticia";
+
+        const cat = document.createElement("span");
+        cat.className = "marcador-categoria";
+        cat.textContent = n.categoria;
+
+        const h3 = document.createElement("h3");
+        h3.className = "titulo-tarjeta-noticia";
+        const enlace = document.createElement("a");
+        enlace.href = `noticia.html?id=${encodeURIComponent(n.id)}`;
+        enlace.textContent = n.titulo;
+        h3.appendChild(enlace);
+
+        cuerpo.appendChild(cat);
+        cuerpo.appendChild(h3);
+
+        if (n.resumen) {
+            const p = document.createElement("p");
+            p.className = "resumen-tarjeta-noticia";
+            p.textContent = n.resumen;
+            cuerpo.appendChild(p);
+        }
+
+        tarjeta.appendChild(cuerpo);
+        contenedor.appendChild(tarjeta);
+    });
+}
+
+function renderizarPorCategoria(noticias) {
+    if (noticias.length === 0) {
+        return;
+    }
+
+    const tarjetas = document.querySelectorAll(".tarjeta-seccion");
+    tarjetas.forEach((tarjeta) => {
+        const catNombre = tarjeta.getAttribute("data-categoria");
+        const coincidencia = noticias.find((n) => n.categoria === catNombre);
+        if (!coincidencia) {
+            return;
+        }
+
+        const estado = tarjeta.querySelector(".estado-tarjeta");
+        if (estado) {
+            estado.textContent = "";
+            const enlace = document.createElement("a");
+            enlace.href = `noticia.html?id=${encodeURIComponent(coincidencia.id)}`;
+            enlace.className = "enlace-categoria-noticia";
+            enlace.textContent = coincidencia.titulo;
+            estado.appendChild(enlace);
+        }
+    });
+}
+
 function inicializarMenuMovil() {
     const botonMenu = document.getElementById("boton-menu");
     const menuPrincipal = document.getElementById("menu-principal");
@@ -91,11 +279,8 @@ function inicializarMenuMovil() {
     });
 }
 
-/**
- * Resalta la categoría seleccionada en el menú y en la rejilla de secciones.
- */
 function inicializarNavegacionSecciones() {
-    const enlaces = document.querySelectorAll(".enlace-nav");
+    const enlaces = document.querySelectorAll(".enlace-nav[data-seccion]");
     const tarjetas = document.querySelectorAll(".tarjeta-seccion");
     const tituloSeccion = document.getElementById("nombre-seccion-activa");
     const menuPrincipal = document.getElementById("menu-principal");
@@ -131,9 +316,6 @@ function inicializarNavegacionSecciones() {
     });
 }
 
-/**
- * Maneja el envío del buscador visual sin simular resultados falsos.
- */
 function inicializarBuscador() {
     const formulario = document.getElementById("formulario-busqueda");
     const campo = document.getElementById("campo-busqueda");
@@ -151,13 +333,10 @@ function inicializarBuscador() {
             return;
         }
 
-        mostrarAviso(`Búsqueda visual para "${consulta}": aún no hay noticias registradas en el sistema.`);
+        window.location.href = `noticias.html?q=${encodeURIComponent(consulta)}`;
     });
 }
 
-/**
- * Muestra un mensaje en el banner discreto del portal.
- */
 function mostrarAviso(mensaje) {
     const aviso = document.getElementById("aviso-portal");
     const texto = document.getElementById("texto-aviso");
@@ -170,9 +349,6 @@ function mostrarAviso(mensaje) {
     aviso.classList.remove("oculto");
 }
 
-/**
- * Permite cerrar el banner de aviso del portal.
- */
 function inicializarCierreAviso() {
     const botonCerrar = document.getElementById("cerrar-aviso");
     const aviso = document.getElementById("aviso-portal");

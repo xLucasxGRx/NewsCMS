@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Noticias — NewsCMS</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+    <div id="contenedor-admin" class="contenedor-admin" hidden>
+        <aside id="barra-lateral" class="barra-lateral" aria-label="Módulos del panel administrativo">
+            <div class="marca-admin">
+                <a href="index.html" class="logo-admin">News<span>CMS</span></a>
+                <span id="rol-sidebar" class="rol-usuario"></span>
+            </div>
+
+            <nav class="menu-lateral">
+                <p class="grupo-menu">Módulos disponibles</p>
+                <ul id="lista-modulos" class="lista-modulos"></ul>
+            </nav>
+
+            <div class="pie-sidebar">
+                <a href="../index.html" class="enlace-volver">&larr; Volver al portal público</a>
+            </div>
+        </aside>
+
+        <div class="area-principal">
+            <header class="cabecera-admin">
+                <div class="cabecera-izquierda">
+                    <button
+                        type="button"
+                        id="boton-sidebar"
+                        class="boton-sidebar"
+                        aria-expanded="false"
+                        aria-controls="barra-lateral"
+                        aria-label="Mostrar u ocultar menú lateral"
+                    >
+                        &#9776;
+                    </button>
+                    <h1 class="titulo-modulo">Noticias</h1>
+                </div>
+
+                <div class="cabecera-derecha">
+                    <span id="nombre-usuario" class="perfil-previa"></span>
+                    <span id="rol-usuario" class="rol-usuario"></span>
+                    <button type="button" id="boton-salir" class="boton-salir">Cerrar sesión</button>
+                </div>
+            </header>
+
+            <main class="contenido-admin">
+                <div class="barra-herramientas">
+                    <div class="filtros-noticias">
+                        <input
+                            type="search"
+                            id="filtro-busqueda"
+                            class="entrada-filtro"
+                            placeholder="Buscar por título..."
+                            aria-label="Buscar noticias por título"
+                        >
+                        <select id="filtro-estado" class="entrada-filtro" aria-label="Filtrar por estado">
+                            <option value="">Todos los estados</option>
+                            <option value="borrador">Borrador</option>
+                            <option value="pendiente_revision">Pendiente de revisión</option>
+                            <option value="cambios_solicitados">Cambios solicitados</option>
+                            <option value="publicada">Publicada</option>
+                            <option value="archivada">Archivada</option>
+                        </select>
+                    </div>
+
+                    <a href="editar_noticia.html" class="boton-primario-admin">+ Nueva noticia</a>
+                </div>
+
+                <section class="panel-tabla" aria-labelledby="titulo-lista-noticias">
+                    <div class="cabecera-panel">
+                        <h2 id="titulo-lista-noticias">Listado de Noticias</h2>
+                        <span id="total-registros" class="etiqueta-tabla">0 registros</span>
+                    </div>
+
+                    <div class="contenedor-tabla">
+                        <table class="tabla-datos">
+                            <thead>
+                                <tr>
+                                    <th>Título</th>
+                                    <th>Categoría</th>
+                                    <th>Autor</th>
+                                    <th>Estado</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpo-tabla-noticias">
+                                <tr>
+                                    <td colspan="6" class="fila-vacia">Cargando noticias...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/admin_noticias.js"></script>
+</body>
+</html>

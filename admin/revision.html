@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revisión Editorial — NewsCMS</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+    <div id="contenedor-admin" class="contenedor-admin" hidden>
+        <aside id="barra-lateral" class="barra-lateral" aria-label="Módulos del panel administrativo">
+            <div class="marca-admin">
+                <a href="index.html" class="logo-admin">News<span>CMS</span></a>
+                <span id="rol-sidebar" class="rol-usuario"></span>
+            </div>
+
+            <nav class="menu-lateral">
+                <p class="grupo-menu">Módulos disponibles</p>
+                <ul id="lista-modulos" class="lista-modulos"></ul>
+            </nav>
+
+            <div class="pie-sidebar">
+                <a href="../index.html" class="enlace-volver">&larr; Volver al portal público</a>
+            </div>
+        </aside>
+
+        <div class="area-principal">
+            <header class="cabecera-admin">
+                <div class="cabecera-izquierda">
+                    <button
+                        type="button"
+                        id="boton-sidebar"
+                        class="boton-sidebar"
+                        aria-expanded="false"
+                        aria-controls="barra-lateral"
+                        aria-label="Mostrar u ocultar menú lateral"
+                    >
+                        &#9776;
+                    </button>
+                    <h1 class="titulo-modulo">Revisión Editorial</h1>
+                </div>
+
+                <div class="cabecera-derecha">
+                    <span id="nombre-usuario" class="perfil-previa"></span>
+                    <span id="rol-usuario" class="rol-usuario"></span>
+                    <button type="button" id="boton-salir" class="boton-salir">Cerrar sesión</button>
+                </div>
+            </header>
+
+            <main class="contenido-admin">
+                <div id="mensaje-revision" class="alerta-admin" role="status" hidden></div>
+
+                <section class="panel-tabla" aria-labelledby="titulo-bandeja-revision">
+                    <div class="cabecera-panel">
+                        <h2 id="titulo-bandeja-revision">Bandeja de Noticias Pendientes</h2>
+                        <span id="contador-pendientes" class="etiqueta-tabla">0 pendientes</span>
+                    </div>
+
+                    <div class="contenedor-tabla">
+                        <table class="tabla-datos">
+                            <thead>
+                                <tr>
+                                    <th>Título</th>
+                                    <th>Redactor</th>
+                                    <th>Categoría</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpo-tabla-revision">
+                                <tr>
+                                    <td colspan="6" class="fila-vacia">Cargando noticias pendientes...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Panel para leer el contenido completo antes de aprobar -->
+                <section id="panel-detalle-revision" class="tarjeta-form" hidden aria-labelledby="detalle-titulo">
+                    <div class="cabecera-panel">
+                        <h2 id="detalle-titulo">Vista previa de la noticia</h2>
+                        <button type="button" id="cerrar-detalle" class="boton-secundario-admin">Cerrar</button>
+                    </div>
+                    <p id="detalle-meta" class="texto-suave-form"></p>
+                    <p id="detalle-resumen" class="resumen-revision"></p>
+                    <div id="detalle-imagen-contenedor" class="vista-previa-imagen" hidden>
+                        <img id="detalle-imagen" src="" alt="Imagen de portada">
+                    </div>
+                    <div id="detalle-contenido" class="contenido-revision"></div>
+                </section>
+
+                <!-- Formulario para solicitar cambios con observaciones obligatorias -->
+                <section id="panel-solicitar-cambios" class="tarjeta-form" hidden aria-labelledby="titulo-solicitar-cambios">
+                    <div class="cabecera-panel">
+                        <h2 id="titulo-solicitar-cambios">Solicitar cambios</h2>
+                        <button type="button" id="cancelar-cambios" class="boton-secundario-admin">Cancelar</button>
+                    </div>
+                    <p id="cambios-noticia-titulo" class="texto-suave-form"></p>
+                    <form id="formulario-cambios" class="formulario-cambios" novalidate>
+                        <input type="hidden" id="cambios-noticia-id" value="0">
+                        <div class="campo-admin">
+                            <label for="campo-observaciones">Observaciones para el redactor (obligatorio)</label>
+                            <textarea
+                                id="campo-observaciones"
+                                rows="4"
+                                placeholder="Escribe claramente qué debe corregir o ampliar el redactor..."
+                                required
+                            ></textarea>
+                        </div>
+                        <div class="celda-acciones">
+                            <button type="submit" class="boton-aviso-admin">Enviar observaciones</button>
+                        </div>
+                    </form>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/revision.js"></script>
+</body>
+</html>
