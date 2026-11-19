@@ -1,7 +1,0 @@
-{
-  "identificador": "tema_demostracion",
-  "nombre": "Tema de Demostración",
-  "descripcion": "Tema sencillo para comprobar el cambio de apariencia del portal.",
-  "version": "1.0.0",
-  "archivo_css": "tema.css"
-}

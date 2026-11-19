@@ -1,9 +1,0 @@
-{
-    "identificador": "aviso_informativo",
-    "nombre": "Aviso Informativo",
-    "descripcion": "Muestra un mensaje en la portada de NewsCMS",
-    "version": "1.0.0",
-    "zona": "portada_inferior",
-    "archivo_js": "principal.js",
-    "archivo_css": "estilos.css"
-}
