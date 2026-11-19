@@ -69,20 +69,22 @@ function responderPortadaPublica(PDO $pdo): void
         $sqlBase . ' ORDER BY n.es_destacada DESC, n.fecha_publicacion DESC, n.id DESC LIMIT 1'
     )->fetch();
 
+    $idPrincipal = $principal ? (int) $principal['id'] : 0;
+
     $destacadas = $pdo->query(
-        $sqlBase . ' AND n.es_destacada = 1 ORDER BY n.fecha_publicacion DESC, n.id DESC LIMIT 3'
+        $sqlBase . ' AND n.es_destacada = 1 AND n.id <> ' . $idPrincipal . ' ORDER BY n.fecha_publicacion DESC, n.id DESC LIMIT 3'
     )->fetchAll();
 
     $ultimasHora = $pdo->query(
-        $sqlBase . ' AND n.es_ultima_hora = 1 ORDER BY n.fecha_publicacion DESC, n.id DESC LIMIT 3'
+        $sqlBase . ' AND n.es_ultima_hora = 1 ORDER BY n.fecha_publicacion DESC, n.id DESC LIMIT 5'
     )->fetchAll();
 
     $ultimas = $pdo->query(
-        $sqlBase . ' ORDER BY n.fecha_publicacion DESC, n.id DESC LIMIT 5'
+        $sqlBase . ' ORDER BY n.fecha_publicacion DESC, n.id DESC LIMIT 6'
     )->fetchAll();
 
     $porCategoria = $pdo->query(
-        $sqlBase . ' ORDER BY n.fecha_publicacion DESC, n.id DESC LIMIT 20'
+        $sqlBase . ' ORDER BY n.fecha_publicacion DESC, n.id DESC LIMIT 30'
     )->fetchAll();
 
     echo json_encode([
