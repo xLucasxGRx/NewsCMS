@@ -48,49 +48,120 @@
             </header>
 
             <main class="contenido-admin">
-                <p class="texto-suave-form">
-                    Administra la información básica que se muestra en el portal NewsCMS.
-                </p>
+                <div class="modulo-configuracion">
+                    <div class="encabezado-modulo-config">
+                        <p class="texto-suave-form">
+                            Administra los datos públicos institucionales de NewsCMS y controla los permisos editoriales de cada rol.
+                        </p>
+                    </div>
 
-                <div id="mensaje-configuracion" class="alerta-admin" role="status" hidden></div>
-
-                <section class="tarjeta-form" aria-labelledby="titulo-form-config">
-                    <h2 id="titulo-form-config">Datos generales del portal</h2>
-
-                    <form id="formulario-configuracion" class="formulario-cambios" novalidate>
-                        <div class="campo-admin">
-                            <label for="nombre-portal">Nombre del portal</label>
-                            <input type="text" id="nombre-portal" name="nombre_portal" maxlength="80" required>
+                    <section class="tarjeta-form tarjeta-config-general" aria-labelledby="titulo-form-config">
+                        <div class="cabecera-bloque-config">
+                            <div>
+                                <h2 id="titulo-form-config">Datos generales del portal</h2>
+                                <p class="descripcion-seccion">
+                                    Información básica de identidad, pie de página y contacto mostrada en el portal público.
+                                </p>
+                            </div>
                         </div>
 
-                        <div class="campo-admin">
-                            <label for="subtitulo-portal">Subtítulo del portal</label>
-                            <input type="text" id="subtitulo-portal" name="subtitulo_portal" maxlength="150">
+                        <div id="mensaje-configuracion" class="alerta-admin" role="status" hidden></div>
+
+                        <form id="formulario-configuracion" class="formulario-cambios" novalidate>
+                            <div class="rejilla-campos-config">
+                                <div class="campo-admin">
+                                    <label for="nombre-portal">Nombre del portal</label>
+                                    <input type="text" id="nombre-portal" name="nombre_portal" maxlength="80" required>
+                                </div>
+
+                                <div class="campo-admin">
+                                    <label for="subtitulo-portal">Subtítulo del portal</label>
+                                    <input type="text" id="subtitulo-portal" name="subtitulo_portal" maxlength="150">
+                                </div>
+
+                                <div class="campo-admin campo-completo">
+                                    <label for="correo-contacto">Correo de contacto (opcional)</label>
+                                    <input type="email" id="correo-contacto" name="correo_contacto" maxlength="150" placeholder="contacto@ejemplo.com">
+                                </div>
+
+                                <div class="campo-admin campo-completo">
+                                    <label for="descripcion-portal">Descripción del sitio</label>
+                                    <textarea id="descripcion-portal" name="descripcion_portal" rows="3" maxlength="300"></textarea>
+                                </div>
+
+                                <div class="campo-admin campo-completo">
+                                    <label for="texto-pie-pagina">Texto del pie de página</label>
+                                    <textarea id="texto-pie-pagina" name="texto_pie_pagina" rows="2" maxlength="300"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="celda-acciones barra-acciones-config">
+                                <button type="submit" id="btn-guardar-config" class="boton-primario-admin">Guardar cambios</button>
+                                <button type="button" id="btn-restaurar-config" class="boton-secundario-admin">
+                                    Restaurar valores del formulario
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+
+                    <section class="panel-tabla seccion-roles-permisos" aria-labelledby="titulo-roles-permisos">
+                        <div class="cabecera-bloque-config cabecera-roles-permisos">
+                            <div>
+                                <h2 id="titulo-roles-permisos">Roles y permisos</h2>
+                                <p class="descripcion-seccion">
+                                    Consulta las capacidades de cada rol y ajusta los permisos editoriales de Editor y Redactor.
+                                    Los permisos administrativos permanecen bloqueados exclusivamente para el Administrador.
+                                </p>
+                            </div>
+                            <div class="leyenda-matriz" aria-label="Leyenda de permisos">
+                                <span class="badge-leyenda badge-editable">Editable</span>
+                                <span class="badge-leyenda badge-fijo">Fijo (Admin)</span>
+                                <span class="badge-leyenda badge-protegido-leyenda">Solo admin</span>
+                            </div>
                         </div>
 
-                        <div class="campo-admin">
-                            <label for="descripcion-portal">Descripción del sitio</label>
-                            <textarea id="descripcion-portal" name="descripcion_portal" rows="3" maxlength="300"></textarea>
+                        <div id="mensaje-roles-permisos" class="alerta-admin alerta-bloque-roles" role="status" hidden></div>
+
+                        <div class="contenedor-tabla">
+                            <table class="tabla-datos tabla-matriz-permisos">
+                                <thead>
+                                    <tr>
+                                        <th class="col-permiso-matriz">Permiso</th>
+                                        <th class="col-rol-matriz">
+                                            <span class="cabecera-rol-nombre">Administrador</span>
+                                            <span class="cabecera-rol-estado">Solo lectura</span>
+                                        </th>
+                                        <th class="col-rol-matriz">
+                                            <span class="cabecera-rol-nombre">Editor</span>
+                                            <span class="cabecera-rol-estado">Configurable</span>
+                                        </th>
+                                        <th class="col-rol-matriz">
+                                            <span class="cabecera-rol-nombre">Redactor</span>
+                                            <span class="cabecera-rol-estado">Configurable</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cuerpo-matriz-permisos">
+                                    <tr>
+                                        <td colspan="4" class="fila-vacia">Cargando matriz de permisos...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
 
-                        <div class="campo-admin">
-                            <label for="texto-pie-pagina">Texto del pie de página</label>
-                            <textarea id="texto-pie-pagina" name="texto_pie_pagina" rows="2" maxlength="300"></textarea>
+                        <div class="barra-acciones-config barra-acciones-roles">
+                            <p class="nota-dependencias-roles">
+                                Los permisos respetan dependencias funcionales y se aplican de forma inmediata al guardar.
+                            </p>
+                            <div class="celda-acciones acciones-matriz-permisos">
+                                <button type="button" id="btn-guardar-permisos" class="boton-primario-admin">Guardar permisos</button>
+                                <button type="button" id="btn-descartar-permisos" class="boton-secundario-admin">
+                                    Descartar cambios
+                                </button>
+                            </div>
                         </div>
-
-                        <div class="campo-admin">
-                            <label for="correo-contacto">Correo de contacto (opcional)</label>
-                            <input type="email" id="correo-contacto" name="correo_contacto" maxlength="150" placeholder="contacto@ejemplo.com">
-                        </div>
-
-                        <div class="celda-acciones">
-                            <button type="submit" id="btn-guardar-config" class="boton-primario-admin">Guardar cambios</button>
-                            <button type="button" id="btn-restaurar-config" class="boton-secundario-admin">
-                                Restaurar valores del formulario
-                            </button>
-                        </div>
-                    </form>
-                </section>
+                    </section>
+                </div>
             </main>
         </div>
     </div>

@@ -3,6 +3,7 @@
  */
 
 let csrfTokenRevision = "";
+let permisosRevision = {};
 
 document.addEventListener("DOMContentLoaded", () => {
     iniciarRevisionEditorial();
@@ -24,8 +25,8 @@ async function iniciarRevisionEditorial() {
             return;
         }
 
-        const rol = datos.usuario.rol || "";
-        if (rol !== "administrador" && rol !== "editor") {
+        permisosRevision = datos.permisos || {};
+        if (!permisosRevision.consultar_revision) {
             window.location.href = "index.html";
             return;
         }
@@ -149,21 +150,25 @@ async function cargarPendientes() {
             btnVer.textContent = "Ver noticia";
             btnVer.addEventListener("click", () => abrirDetalleNoticia(n.id));
 
-            const btnAprobar = document.createElement("button");
-            btnAprobar.type = "button";
-            btnAprobar.className = "enlace-accion";
-            btnAprobar.textContent = "Aprobar y publicar";
-            btnAprobar.addEventListener("click", () => aprobarNoticia(n.id, n.titulo));
-
-            const btnCambios = document.createElement("button");
-            btnCambios.type = "button";
-            btnCambios.className = "enlace-accion enlace-cambios";
-            btnCambios.textContent = "Solicitar cambios";
-            btnCambios.addEventListener("click", () => abrirFormularioCambios(n.id, n.titulo));
-
             tdAcciones.appendChild(btnVer);
-            tdAcciones.appendChild(btnAprobar);
-            tdAcciones.appendChild(btnCambios);
+
+            if (permisosRevision.aprobar_noticias) {
+                const btnAprobar = document.createElement("button");
+                btnAprobar.type = "button";
+                btnAprobar.className = "enlace-accion";
+                btnAprobar.textContent = "Aprobar y publicar";
+                btnAprobar.addEventListener("click", () => aprobarNoticia(n.id, n.titulo));
+                tdAcciones.appendChild(btnAprobar);
+            }
+
+            if (permisosRevision.solicitar_correcciones) {
+                const btnCambios = document.createElement("button");
+                btnCambios.type = "button";
+                btnCambios.className = "enlace-accion enlace-cambios";
+                btnCambios.textContent = "Solicitar cambios";
+                btnCambios.addEventListener("click", () => abrirFormularioCambios(n.id, n.titulo));
+                tdAcciones.appendChild(btnCambios);
+            }
 
             tr.appendChild(tdTitulo);
             tr.appendChild(tdRedactor);

@@ -40,7 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    guardarNoticia($pdo);
+    $accionPost = trim($_POST['accion'] ?? '');
+    if (in_array($accionPost, ['retirar_publicacion', 'restaurar_publicacion'], true)) {
+        cambiarEstadoPublicacion($pdo, $accionPost);
+    } else {
+        guardarNoticia($pdo);
+    }
     exit;
 }
 
@@ -385,8 +390,11 @@ function responderListaAdmin(PDO $pdo): void
     $consulta->execute($parametros);
     $filas = $consulta->fetchAll();
 
+    $puedePublicar = tienePermiso('publicar_noticias');
     foreach ($filas as &$fila) {
         $fila['puede_editar'] = puedeEditarNoticia($usuario, $fila);
+        $fila['puede_retirar'] = $puedePublicar && $fila['estado'] === 'publicada';
+        $fila['puede_restaurar'] = $puedePublicar && $fila['estado'] === 'archivada';
     }
 
     echo json_encode([
@@ -659,6 +667,135 @@ function puedeEditarNoticia(array $usuario, array $noticia): bool
     }
 
     return tienePermiso('editar_noticias_ajenas');
+}
+
+/**
+ * Retira una noticia publicada (estado archivada) o restaura una archivada (estado publicada).
+ */
+function cambiarEstadoPublicacion(PDO $pdo, string $accion): void
+{
+    if (!estaAutenticado()) {
+        http_response_code(401);
+        echo json_encode(['ok' => false, 'mensaje' => 'No autenticado.']);
+        return;
+    }
+
+    if (!tieneRol(['administrador', 'editor', 'redactor']) || !tienePermiso('publicar_noticias')) {
+        http_response_code(403);
+        echo json_encode(['ok' => false, 'mensaje' => 'Tu rol no tiene permiso para retirar o restaurar publicaciones.']);
+        return;
+    }
+
+    if (!validarTokenCsrf($_POST['csrf_token'] ?? '')) {
+        http_response_code(403);
+        echo json_encode(['ok' => false, 'mensaje' => 'Token CSRF inválido. Recarga la página.']);
+        return;
+    }
+
+    $id = (int) ($_POST['id'] ?? $_POST['noticia_id'] ?? 0);
+    if ($id <= 0) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'mensaje' => 'Identificador de noticia no válido.']);
+        return;
+    }
+
+    $usuario = obtenerUsuarioActual();
+
+    try {
+        $pdo->beginTransaction();
+
+        $stmt = $pdo->prepare(
+            'SELECT id, autor_id, estado, fecha_publicacion
+             FROM noticias
+             WHERE id = ?
+             LIMIT 1
+             FOR UPDATE'
+        );
+        $stmt->execute([$id]);
+        $noticia = $stmt->fetch();
+
+        if (!$noticia) {
+            $pdo->rollBack();
+            http_response_code(404);
+            echo json_encode(['ok' => false, 'mensaje' => 'Noticia no encontrada.']);
+            return;
+        }
+
+        $esAutor = (int) $noticia['autor_id'] === (int) $usuario['id'];
+        if (!$esAutor && !tienePermiso('consultar_noticias_ajenas') && !tienePermiso('editar_noticias_ajenas')) {
+            $pdo->rollBack();
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'mensaje' => 'No tienes autorización sobre esta noticia.']);
+            return;
+        }
+
+        if ($accion === 'retirar_publicacion') {
+            if ($noticia['estado'] !== 'publicada') {
+                $pdo->rollBack();
+                http_response_code(409);
+                echo json_encode(['ok' => false, 'mensaje' => 'Solo se pueden retirar noticias que estén actualmente publicadas.']);
+                return;
+            }
+
+            $upd = $pdo->prepare("UPDATE noticias SET estado = 'archivada' WHERE id = ? AND estado = 'publicada'");
+            $upd->execute([$id]);
+
+            if ($upd->rowCount() !== 1) {
+                $pdo->rollBack();
+                http_response_code(409);
+                echo json_encode(['ok' => false, 'mensaje' => 'El estado de la noticia cambió concurrentemente.']);
+                return;
+            }
+
+            $pdo->commit();
+            echo json_encode([
+                'ok'      => true,
+                'mensaje' => 'Publicación retirada del portal correctamente.',
+                'id'      => $id,
+                'estado'  => 'archivada',
+            ]);
+            return;
+        }
+
+        // Acción: restaurar_publicacion
+        if ($noticia['estado'] !== 'archivada') {
+            $pdo->rollBack();
+            http_response_code(409);
+            echo json_encode(['ok' => false, 'mensaje' => 'Solo se pueden restaurar noticias archivadas.']);
+            return;
+        }
+
+        $fechaOriginal = trim((string) ($noticia['fecha_publicacion'] ?? ''));
+        $tieneFechaValida = $fechaOriginal !== ''
+            && strpos($fechaOriginal, '0000-00-00') !== 0
+            && strtotime($fechaOriginal) !== false;
+        $fechaPublicacion = $tieneFechaValida ? $fechaOriginal : date('Y-m-d H:i:s');
+
+        $upd = $pdo->prepare("UPDATE noticias SET estado = 'publicada', fecha_publicacion = ? WHERE id = ? AND estado = 'archivada'");
+        $upd->execute([$fechaPublicacion, $id]);
+
+        if ($upd->rowCount() !== 1) {
+            $pdo->rollBack();
+            http_response_code(409);
+            echo json_encode(['ok' => false, 'mensaje' => 'El estado de la noticia cambió concurrentemente.']);
+            return;
+        }
+
+        $pdo->commit();
+        echo json_encode([
+            'ok'                => true,
+            'mensaje'           => 'Publicación restaurada en el portal correctamente.',
+            'id'                => $id,
+            'estado'            => 'publicada',
+            'fecha_publicacion' => $fechaPublicacion,
+        ]);
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        http_response_code(500);
+        echo json_encode(['ok' => false, 'mensaje' => 'No se pudo actualizar el estado de la publicación.']);
+    }
 }
 
 /**

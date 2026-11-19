@@ -212,6 +212,26 @@ async function cargarNoticiasAdmin() {
             btnVer.textContent = "Ver";
             tdAcciones.appendChild(btnVer);
 
+            if (n.estado === "publicada" && n.puede_retirar) {
+                const btnRetirar = document.createElement("button");
+                btnRetirar.type = "button";
+                btnRetirar.className = "enlace-accion enlace-retirar";
+                btnRetirar.textContent = "Retirar publicación";
+                btnRetirar.addEventListener("click", () => {
+                    cambiarEstadoPublicacion(n.id, n.titulo, "retirar_publicacion");
+                });
+                tdAcciones.appendChild(btnRetirar);
+            } else if (n.estado === "archivada" && n.puede_restaurar) {
+                const btnRestaurar = document.createElement("button");
+                btnRestaurar.type = "button";
+                btnRestaurar.className = "enlace-accion enlace-restaurar";
+                btnRestaurar.textContent = "Restaurar publicación";
+                btnRestaurar.addEventListener("click", () => {
+                    cambiarEstadoPublicacion(n.id, n.titulo, "restaurar_publicacion");
+                });
+                tdAcciones.appendChild(btnRestaurar);
+            }
+
             tr.appendChild(tdTitulo);
             tr.appendChild(tdCategoria);
             tr.appendChild(tdAutor);
@@ -252,4 +272,52 @@ function inicializarSalirNoticias() {
         });
         window.location.href = "../acceso.html";
     });
+}
+
+async function cambiarEstadoPublicacion(id, titulo, accion) {
+    const esRetiro = accion === "retirar_publicacion";
+    const textoConfirmacion = esRetiro
+        ? `¿Deseas retirar del portal público la noticia "${titulo}"?\n\nLa noticia se conservará como archivada en el panel administrativo.`
+        : `¿Deseas restaurar la publicación "${titulo}" en el portal público?`;
+
+    if (!window.confirm(textoConfirmacion)) {
+        return;
+    }
+
+    const form = new FormData();
+    form.append("csrf_token", csrfTokenNoticias);
+    form.append("accion", accion);
+    form.append("id", String(id));
+
+    try {
+        const respuesta = await fetch("../php/noticias.php", {
+            method: "POST",
+            body: form,
+            credentials: "same-origin"
+        });
+        const resultado = await respuesta.json();
+
+        if (respuesta.ok && resultado.ok) {
+            mostrarMensajeNoticias(resultado.mensaje || "Estado actualizado correctamente.", false);
+            await cargarNoticiasAdmin();
+            return;
+        }
+
+        mostrarMensajeNoticias(resultado.mensaje || "No se pudo cambiar el estado de la publicación.", true);
+        if (respuesta.status === 409) {
+            await cargarNoticiasAdmin();
+        }
+    } catch {
+        mostrarMensajeNoticias("Error de comunicación con el servidor.", true);
+    }
+}
+
+function mostrarMensajeNoticias(texto, esError) {
+    const alerta = document.getElementById("mensaje-noticias");
+    if (!alerta) {
+        return;
+    }
+    alerta.textContent = texto;
+    alerta.className = esError ? "alerta-admin alerta-admin-error" : "alerta-admin alerta-admin-exito";
+    alerta.hidden = false;
 }

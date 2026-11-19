@@ -1,10 +1,13 @@
 /**
  * NewsCMS - Script del formulario de creación y edición de noticias
- * Incluye editor enriquecido nativo con Selection/Range APIs.
+ * Integra TinyMCE 8 Community local como editor enriquecido WYSIWYG.
  */
 
 let csrfTokenEditor = "";
 let rolUsuarioEditor = "";
+let tinyMceListo = false;
+let tinyMceErrorCarga = false;
+let envioEnCurso = false;
 
 document.addEventListener("DOMContentLoaded", () => {
     iniciarEditorNoticia();
@@ -43,17 +46,17 @@ async function iniciarEditorNoticia() {
         configurarPermisosVisuales(permisos);
         inicializarSidebarMovilEditor();
         inicializarSalirEditor();
-        inicializarEditorEnriquecido();
         inicializarVistaPreviaImagen();
         inicializarBotonesGuardado();
 
+        document.getElementById("contenedor-admin").hidden = false;
+
         await cargarCatalogos();
+        await inicializarEditorTinyMce();
 
         if (idNoticia > 0) {
             await cargarNoticiaExistente(idNoticia);
         }
-
-        document.getElementById("contenedor-admin").hidden = false;
     } catch {
         window.location.href = "../acceso.html";
     }
@@ -101,16 +104,21 @@ function renderizarSidebarEditor(modulos) {
     });
 }
 
-function configurarPermisosVisuales(rol) {
+function configurarPermisosVisuales(permisos) {
     const btnPublicar = document.getElementById("btn-publicar");
     const opcionesEditoriales = document.getElementById("opciones-editoriales");
-    const puedePublicar = rol === "administrador" || rol === "editor";
+    const btnRevision = document.querySelector('.acciones-formulario button[data-accion="pendiente_revision"]');
+    const puedePublicar = Boolean(permisos && permisos.publicar_noticias);
+    const puedeEnviarRevision = Boolean(permisos && permisos.enviar_revision);
 
     if (btnPublicar) {
         btnPublicar.hidden = !puedePublicar;
     }
     if (opcionesEditoriales) {
         opcionesEditoriales.hidden = !puedePublicar;
+    }
+    if (btnRevision) {
+        btnRevision.hidden = !puedeEnviarRevision;
     }
 }
 
@@ -181,8 +189,17 @@ async function cargarNoticiaExistente(id) {
     document.getElementById("resumen").value = n.resumen || "";
     document.getElementById("categoria-id").value = String(n.categoria_id || "");
 
-    const editor = document.getElementById("editor-contenido");
-    editor.innerHTML = n.contenido || "<p></p>";
+    const instanciaTiny = obtenerInstanciaTinyMce();
+    if (!tinyMceListo || !instanciaTiny) {
+        deshabilitarBotonesGuardado(true);
+        mostrarMensajeEditor("No se pudo cargar el contenido porque TinyMCE no está inicializado.", true);
+        return;
+    }
+
+    instanciaTiny.setContent(n.contenido || "<p></p>");
+    if (instanciaTiny.undoManager) {
+        instanciaTiny.undoManager.clear();
+    }
 
     document.getElementById("es-destacada").checked = Number(n.es_destacada) === 1;
     document.getElementById("es-ultima-hora").checked = Number(n.es_ultima_hora) === 1;
@@ -228,87 +245,84 @@ async function cargarObservacionesNoticia(id) {
 }
 
 /**
- * Inicializa la barra de herramientas del editor contenteditable con APIs nativas.
+ * Devuelve la instancia activa de TinyMCE para el cuerpo de la noticia.
  */
-function inicializarEditorEnriquecido() {
-    const editor = document.getElementById("editor-contenido");
-    const botones = document.querySelectorAll(".boton-editor");
+function obtenerInstanciaTinyMce() {
+    if (typeof window.tinymce === "undefined") {
+        return null;
+    }
+    return window.tinymce.get("editor-contenido") || null;
+}
 
-    botones.forEach((boton) => {
-        boton.addEventListener("click", () => {
-            const formato = boton.getAttribute("data-formato");
-            editor.focus();
-            aplicarFormatoNativo(editor, formato);
-        });
+/**
+ * Deshabilita o habilita los botones de guardado si el editor no está listo.
+ */
+function deshabilitarBotonesGuardado(deshabilitar) {
+    document.querySelectorAll(".acciones-formulario button[data-accion]").forEach((boton) => {
+        boton.disabled = deshabilitar;
     });
 }
 
-function aplicarFormatoNativo(editor, formato) {
-    const seleccion = window.getSelection();
-    if (!seleccion || seleccion.rangeCount === 0) {
+/**
+ * Inicializa TinyMCE 8 Community local configurado para coincidir con el sanitizador PHP.
+ */
+async function inicializarEditorTinyMce() {
+    if (typeof window.tinymce === "undefined") {
+        tinyMceErrorCarga = true;
+        tinyMceListo = false;
+        deshabilitarBotonesGuardado(true);
+        mostrarMensajeEditor(
+            "No se pudo cargar el editor TinyMCE local. Recarga la página antes de intentar guardar.",
+            true
+        );
         return;
     }
 
-    const rango = seleccion.getRangeAt(0);
-    if (!editor.contains(rango.commonAncestorContainer)) {
-        return;
-    }
+    try {
+        const editores = await window.tinymce.init({
+            selector: "#editor-contenido",
+            license_key: "gpl",
+            language: "es",
+            language_url: "../vendor/tinymce/js/tinymce/langs/es.js",
+            plugins: "lists link autolink",
+            menubar: false,
+            statusbar: false,
+            branding: false,
+            promotion: false,
+            height: 380,
+            min_height: 300,
+            width: "100%",
+            resize: true,
+            toolbar_mode: "wrap",
+            toolbar: "undo redo | blocks | bold italic | bullist numlist | link unlink | removeformat",
+            block_formats: "Párrafo=p; Encabezado 2=h2; Encabezado 3=h3",
+            valid_elements: "p,br,strong/b,em/i,h2,h3,ul,ol,li,a[href|rel]",
+            formats: {
+                bold: { inline: "strong" },
+                italic: { inline: "em" }
+            },
+            link_assume_external_targets: "https",
+            link_default_target: "_blank",
+            allow_unsafe_link_target: false,
+            convert_urls: false,
+            content_style:
+                "body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.65; color: #0f172a; margin: 0.85rem; } h2, h3 { margin: 0.75rem 0 0.4rem; color: #0f172a; } p { margin: 0 0 0.75rem; } ul, ol { margin: 0 0 0.75rem 1.4rem; } a { color: #1d4ed8; }"
+        });
 
-    if (formato === "strong" || formato === "em") {
-        const elemento = document.createElement(formato);
-        if (rango.collapsed) {
-            elemento.textContent = formato === "strong" ? "texto en negrita" : "texto en cursiva";
-            rango.insertNode(elemento);
-        } else {
-            elemento.appendChild(rango.extractContents());
-            rango.insertNode(elemento);
+        if (!editores || editores.length === 0) {
+            throw new Error("Sin instancias inicializadas");
         }
-        seleccion.removeAllRanges();
-        const nuevoRango = document.createRange();
-        nuevoRango.selectNodeContents(elemento);
-        seleccion.addRange(nuevoRango);
-        return;
-    }
 
-    if (formato === "p" || formato === "h2" || formato === "h3") {
-        const bloque = document.createElement(formato);
-        if (rango.collapsed) {
-            bloque.textContent = formato === "p" ? "Nuevo párrafo" : "Subtítulo";
-            editor.appendChild(bloque);
-        } else {
-            bloque.appendChild(rango.extractContents());
-            rango.insertNode(bloque);
-        }
-        return;
-    }
-
-    if (formato === "ul" || formato === "ol") {
-        const lista = document.createElement(formato);
-        const item = document.createElement("li");
-        if (rango.collapsed) {
-            item.textContent = "Elemento de lista";
-        } else {
-            item.appendChild(rango.extractContents());
-        }
-        lista.appendChild(item);
-        rango.insertNode(lista);
-        return;
-    }
-
-    if (formato === "a") {
-        const url = window.prompt("Ingresa la dirección del enlace (https://...):", "https://");
-        if (!url || !/^https?:\/\//i.test(url.trim())) {
-            return;
-        }
-        const enlace = document.createElement("a");
-        enlace.href = url.trim();
-        enlace.rel = "noopener noreferrer";
-        if (rango.collapsed) {
-            enlace.textContent = url.trim();
-        } else {
-            enlace.appendChild(rango.extractContents());
-        }
-        rango.insertNode(enlace);
+        tinyMceListo = true;
+        tinyMceErrorCarga = false;
+    } catch {
+        tinyMceErrorCarga = true;
+        tinyMceListo = false;
+        deshabilitarBotonesGuardado(true);
+        mostrarMensajeEditor(
+            "Ocurrió un error al inicializar TinyMCE. Se bloqueó el guardado para proteger el contenido.",
+            true
+        );
     }
 }
 
@@ -346,13 +360,35 @@ function inicializarBotonesGuardado() {
 }
 
 async function enviarFormularioNoticia(accion) {
-    const formulario = document.getElementById("formulario-noticia");
-    const editor = document.getElementById("editor-contenido");
-    const datosFormulario = new FormData(formulario);
+    if (envioEnCurso) {
+        return;
+    }
 
-    datosFormulario.set("contenido", editor.innerHTML);
+    const instanciaTiny = obtenerInstanciaTinyMce();
+    if (tinyMceErrorCarga || !tinyMceListo || !instanciaTiny) {
+        mostrarMensajeEditor(
+            "TinyMCE no está disponible. No se realizó el guardado para evitar pérdida de contenido.",
+            true
+        );
+        return;
+    }
+
+    const textoPlano = instanciaTiny.getContent({ format: "text" }).replace(/\u00a0/g, " ").trim();
+    if (!textoPlano) {
+        mostrarMensajeEditor("El contenido de la noticia es obligatorio.", true);
+        instanciaTiny.focus();
+        return;
+    }
+
+    const contenidoHtml = instanciaTiny.getContent();
+    instanciaTiny.save();
+
+    const formulario = document.getElementById("formulario-noticia");
+    const datosFormulario = new FormData(formulario);
+    datosFormulario.set("contenido", contenidoHtml);
     datosFormulario.set("accion", accion);
 
+    envioEnCurso = true;
     try {
         const respuesta = await fetch("../php/noticias.php", {
             method: "POST",
@@ -370,6 +406,8 @@ async function enviarFormularioNoticia(accion) {
         mostrarMensajeEditor(resultado.mensaje || "No se pudo guardar la noticia.", true);
     } catch {
         mostrarMensajeEditor("Error de comunicación con el servidor.", true);
+    } finally {
+        envioEnCurso = false;
     }
 }
 

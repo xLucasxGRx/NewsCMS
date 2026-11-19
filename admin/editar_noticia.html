@@ -77,24 +77,12 @@
 
                             <div class="campo-admin">
                                 <label for="editor-contenido">Contenido</label>
-                                <div class="barra-editor" role="toolbar" aria-label="Formato de texto">
-                                    <button type="button" class="boton-editor" data-formato="p">Párrafo</button>
-                                    <button type="button" class="boton-editor" data-formato="strong"><strong>Negrita</strong></button>
-                                    <button type="button" class="boton-editor" data-formato="em"><em>Cursiva</em></button>
-                                    <button type="button" class="boton-editor" data-formato="h2">H2</button>
-                                    <button type="button" class="boton-editor" data-formato="h3">H3</button>
-                                    <button type="button" class="boton-editor" data-formato="ul">Lista</button>
-                                    <button type="button" class="boton-editor" data-formato="ol">Lista num.</button>
-                                    <button type="button" class="boton-editor" data-formato="a">Enlace</button>
-                                </div>
-                                <div
+                                <textarea
                                     id="editor-contenido"
-                                    class="area-editor"
-                                    contenteditable="true"
-                                    role="textbox"
-                                    aria-multiline="true"
+                                    name="contenido"
+                                    rows="12"
                                     aria-label="Contenido de la noticia"
-                                ><p></p></div>
+                                ></textarea>
                             </div>
                         </div>
 
@@ -152,6 +140,7 @@
         </div>
     </div>
 
+    <script src="../vendor/tinymce/js/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
     <script src="../js/editar_noticia.js"></script>
 </body>
 </html>

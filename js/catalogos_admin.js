@@ -26,8 +26,9 @@ async function iniciarCatalogosAdmin() {
             return;
         }
 
-        const rol = datos.usuario.rol || "";
-        if (rol !== "administrador" && rol !== "editor") {
+        const permisos = datos.permisos || {};
+        const permisoRequerido = tipoCatalogo === "etiquetas" ? "gestionar_etiquetas" : "gestionar_categorias";
+        if (!permisos[permisoRequerido]) {
             window.location.href = "index.html";
             return;
         }

@@ -39,11 +39,18 @@ body {
 /* Barra lateral */
 .barra-lateral {
     width: 260px;
+    min-width: 260px;
+    max-width: 260px;
+    flex: 0 0 260px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    align-self: flex-start;
+    overflow: hidden;
     background-color: var(--admin-sidebar);
     color: var(--admin-sidebar-texto);
     display: flex;
     flex-direction: column;
-    flex-shrink: 0;
 }
 
 .marca-admin {
@@ -53,6 +60,7 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
+    flex-shrink: 0;
 }
 
 .logo-admin {
@@ -61,6 +69,7 @@ body {
     font-weight: 700;
     color: #ffffff;
     text-decoration: none;
+    white-space: nowrap;
 }
 
 .logo-admin span {
@@ -80,13 +89,17 @@ body {
 }
 
 .menu-lateral {
-    flex: 1;
+    flex: 1 1 auto;
+    min-height: 0;
     padding: 1rem 0.75rem;
     overflow-y: auto;
+    font-family: inherit;
 }
 
 .grupo-menu {
+    font-family: inherit;
     font-size: 0.72rem;
+    line-height: 1.3;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: #64748b;
@@ -98,19 +111,27 @@ body {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 0.25rem;
 }
 
 .boton-modulo {
+    display: block;
     width: 100%;
+    box-sizing: border-box;
     text-align: left;
+    text-decoration: none;
     background: transparent;
     border: none;
     color: var(--admin-sidebar-texto);
-    padding: 0.6rem 0.85rem;
+    padding: 0.625rem 0.85rem;
     border-radius: 6px;
+    font-family: inherit;
     font-size: 0.92rem;
     font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: normal;
+    appearance: none;
+    -webkit-appearance: none;
     cursor: pointer;
     transition: background-color 0.2s ease, color 0.2s ease;
 }
@@ -129,13 +150,17 @@ body {
 .pie-sidebar {
     padding: 1rem 1.25rem;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
 }
 
 .enlace-volver {
+    display: inline-block;
     color: #93c5fd;
     text-decoration: none;
+    font-family: inherit;
     font-size: 0.88rem;
     font-weight: 600;
+    line-height: 1.4;
 }
 
 .enlace-volver:hover {
@@ -370,12 +395,24 @@ body {
     }
 
     .barra-lateral {
+        position: static;
+        top: auto;
+        align-self: stretch;
         width: 100%;
+        min-width: 0;
+        max-width: none;
+        height: auto;
+        flex: none;
+        overflow: visible;
         display: none;
     }
 
     .barra-lateral.abierta {
         display: flex;
+    }
+
+    .menu-lateral {
+        overflow-y: visible;
     }
 }
 
@@ -389,12 +426,7 @@ body {
     }
 }
 
-/* Ajustes para enlaces de módulos y botón de cierre de sesión en admin/index.php */
-a.boton-modulo {
-    display: block;
-    text-decoration: none;
-}
-
+/* Ajustes para botón de cierre de sesión en el panel administrativo */
 .formulario-salir {
     display: inline-block;
 }
@@ -497,20 +529,35 @@ a.boton-modulo {
 }
 
 .enlace-accion {
+    font-family: inherit;
     font-size: 0.82rem;
     font-weight: 600;
+    line-height: 1.3;
     color: var(--admin-primario);
     text-decoration: none;
     padding: 0.25rem 0.55rem;
     border: 1px solid #bfdbfe;
     border-radius: 4px;
     background-color: #eff6ff;
+    cursor: pointer;
 }
 
 .enlace-ver {
     color: var(--admin-texto-suave);
     border-color: var(--admin-borde);
     background-color: #f8fafc;
+}
+
+.enlace-retirar {
+    color: #92400e;
+    border-color: #fde68a;
+    background-color: #fef3c7;
+}
+
+.enlace-restaurar {
+    color: #166534;
+    border-color: #bbf7d0;
+    background-color: #dcfce7;
 }
 
 .estado-badge {
@@ -559,6 +606,7 @@ a.boton-modulo {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    min-width: 0;
 }
 
 .tarjeta-form {
@@ -594,49 +642,15 @@ a.boton-modulo {
     background-color: var(--admin-superficie);
 }
 
-.barra-editor {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    padding: 0.5rem;
-    background-color: #f8fafc;
+.formulario-noticia .tox.tox-tinymce {
+    width: 100%;
+    max-width: 100%;
     border: 1px solid #cbd5e1;
-    border-bottom: none;
-    border-radius: 6px 6px 0 0;
+    border-radius: 6px;
 }
 
-.boton-editor {
-    background-color: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-radius: 4px;
-    padding: 0.3rem 0.6rem;
-    font-size: 0.82rem;
-    cursor: pointer;
-}
-
-.boton-editor:hover {
-    background-color: #e2e8f0;
-}
-
-.area-editor {
-    min-height: 260px;
-    padding: 0.85rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 0 0 6px 6px;
-    background-color: #ffffff;
-    line-height: 1.65;
-    outline: none;
-}
-
-.area-editor h2,
-.area-editor h3 {
-    margin: 0.65rem 0 0.35rem;
-}
-
-.area-editor ul,
-.area-editor ol {
-    margin-left: 1.5rem;
-    margin-bottom: 0.5rem;
+.formulario-noticia textarea#editor-contenido {
+    min-height: 320px;
 }
 
 .lista-etiquetas-form,
@@ -763,4 +777,373 @@ a.boton-modulo {
     border-radius: 4px;
     border: 1px solid var(--admin-borde);
     display: block;
+}
+
+/* ==========================================================================
+   Módulo Configuración General y Roles y Permisos (admin/configuracion.html)
+   ========================================================================== */
+
+.modulo-configuracion {
+    width: 100%;
+    max-width: 1120px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.encabezado-modulo-config .texto-suave-form {
+    font-size: 0.95rem;
+    color: var(--admin-texto-suave);
+}
+
+.tarjeta-config-general {
+    padding: 0;
+    gap: 0;
+    overflow: hidden;
+}
+
+.cabecera-bloque-config {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--admin-borde);
+    background-color: #f8fafc;
+}
+
+.cabecera-bloque-config h2 {
+    font-size: 1.12rem;
+    font-weight: 700;
+    color: var(--admin-texto);
+    line-height: 1.3;
+}
+
+.descripcion-seccion {
+    color: var(--admin-texto-suave);
+    font-size: 0.9rem;
+    margin-top: 0.35rem;
+    line-height: 1.5;
+}
+
+.tarjeta-config-general .alerta-admin {
+    margin: 1.25rem 1.5rem 0;
+}
+
+.tarjeta-config-general .formulario-cambios {
+    padding: 1.5rem;
+    gap: 1.25rem;
+}
+
+.rejilla-campos-config {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.15rem 1.25rem;
+}
+
+.campo-completo {
+    grid-column: 1 / -1;
+}
+
+.modulo-configuracion .campo-admin label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--admin-texto);
+}
+
+.modulo-configuracion .campo-admin input[type="text"],
+.modulo-configuracion .campo-admin input[type="email"],
+.modulo-configuracion .campo-admin textarea,
+.modulo-configuracion .campo-admin select {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.94rem;
+    font-family: inherit;
+    color: var(--admin-texto);
+    background-color: var(--admin-superficie);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.modulo-configuracion .campo-admin textarea {
+    resize: vertical;
+    min-height: 76px;
+}
+
+.modulo-configuracion .campo-admin input:focus,
+.modulo-configuracion .campo-admin textarea:focus,
+.modulo-configuracion .campo-admin select:focus {
+    outline: none;
+    border-color: var(--admin-primario);
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
+}
+
+.barra-acciones-config {
+    padding-top: 1.15rem;
+    border-top: 1px solid var(--admin-borde);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.modulo-configuracion .boton-primario-admin {
+    transition: background-color 0.15s ease;
+}
+
+.modulo-configuracion .boton-primario-admin:hover {
+    background-color: #1e40af;
+}
+
+.modulo-configuracion .boton-secundario-admin {
+    border: 1px solid #cbd5e1;
+    transition: background-color 0.15s ease;
+}
+
+.modulo-configuracion .boton-secundario-admin:hover {
+    background-color: #cbd5e1;
+}
+
+/* Tarjeta y matriz de Roles y permisos */
+.seccion-roles-permisos {
+    margin-top: 0;
+}
+
+.cabecera-roles-permisos {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.leyenda-matriz {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.badge-leyenda {
+    font-size: 0.76rem;
+    font-weight: 600;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+.badge-editable {
+    background-color: #eff6ff;
+    color: #1e40af;
+    border-color: #bfdbfe;
+}
+
+.badge-fijo {
+    background-color: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+.badge-protegido-leyenda {
+    background-color: #fef2f2;
+    color: #991b1b;
+    border-color: #fecaca;
+}
+
+.alerta-bloque-roles {
+    margin: 1rem 1.5rem;
+}
+
+.tabla-matriz-permisos {
+    width: 100%;
+    min-width: 720px;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.tabla-matriz-permisos th.col-permiso-matriz,
+.tabla-matriz-permisos td.col-permiso-matriz {
+    width: auto;
+    padding: 0.9rem 1.25rem;
+    vertical-align: middle;
+}
+
+.tabla-matriz-permisos thead th {
+    background-color: #f8fafc;
+    border-top: 1px solid var(--admin-borde);
+    border-bottom: 2px solid var(--admin-borde);
+    padding: 0.85rem 1rem;
+    vertical-align: middle;
+}
+
+.tabla-matriz-permisos thead th.col-permiso-matriz {
+    padding-left: 1.5rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--admin-texto-suave);
+}
+
+.tabla-matriz-permisos th.col-rol-matriz,
+.tabla-matriz-permisos td.col-rol-matriz {
+    width: 140px;
+    text-align: center;
+    padding: 0.85rem 0.75rem;
+    vertical-align: middle;
+}
+
+.tabla-matriz-permisos td.col-rol-fija {
+    background-color: #f8fafc;
+}
+
+.cabecera-rol-nombre {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--admin-texto);
+}
+
+.cabecera-rol-estado {
+    display: block;
+    font-size: 0.73rem;
+    font-weight: 500;
+    color: #64748b;
+    margin-top: 0.1rem;
+}
+
+.tabla-matriz-permisos tbody td.col-permiso-matriz {
+    padding-left: 1.5rem;
+}
+
+.fila-permiso {
+    transition: background-color 0.12s ease;
+}
+
+.fila-permiso:hover td:not(.col-rol-fija) {
+    background-color: #f8fafc;
+}
+
+.cabecera-permiso {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.titulo-permiso {
+    font-size: 0.93rem;
+    font-weight: 600;
+    color: var(--admin-texto);
+    line-height: 1.35;
+}
+
+.descripcion-permiso {
+    margin: 0.25rem 0 0;
+    font-size: 0.83rem;
+    color: var(--admin-texto-suave);
+    line-height: 1.45;
+}
+
+.fila-grupo-matriz td {
+    background-color: #f1f5f9;
+    padding: 0.55rem 1.5rem;
+    border-top: 1px solid var(--admin-borde);
+    border-bottom: 1px solid var(--admin-borde);
+}
+
+.texto-grupo-matriz {
+    display: inline-block;
+    font-weight: 700;
+    font-size: 0.78rem;
+    color: var(--admin-primario);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.fila-grupo-protegido td {
+    background-color: #fef2f2;
+    border-top-color: #fecaca;
+    border-bottom-color: #fecaca;
+}
+
+.fila-grupo-protegido .texto-grupo-matriz {
+    color: #991b1b;
+}
+
+.fila-permiso-protegido td {
+    background-color: #fffafa;
+}
+
+.fila-permiso-protegido:hover td {
+    background-color: #fef2f2;
+}
+
+.etiqueta-protegido {
+    display: inline-block;
+    padding: 0.14rem 0.55rem;
+    border-radius: 999px;
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+.celda-control-permiso {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 28px;
+}
+
+.checkbox-permiso {
+    width: 19px;
+    height: 19px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--admin-primario);
+}
+
+.checkbox-permiso:focus-visible {
+    outline: 2px solid var(--admin-primario);
+    outline-offset: 2px;
+}
+
+.checkbox-permiso:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.barra-acciones-roles {
+    padding: 1.15rem 1.5rem;
+    background-color: #f8fafc;
+    justify-content: space-between;
+}
+
+.nota-dependencias-roles {
+    font-size: 0.84rem;
+    color: var(--admin-texto-suave);
+}
+
+.acciones-matriz-permisos {
+    margin-top: 0;
+}
+
+@media (max-width: 760px) {
+    .rejilla-campos-config {
+        grid-template-columns: 1fr;
+    }
+
+    .cabecera-bloque-config,
+    .tarjeta-config-general .formulario-cambios,
+    .barra-acciones-roles {
+        padding: 1rem 1.1rem;
+    }
+
+    .tarjeta-config-general .alerta-admin,
+    .alerta-bloque-roles {
+        margin-left: 1.1rem;
+        margin-right: 1.1rem;
+    }
 }

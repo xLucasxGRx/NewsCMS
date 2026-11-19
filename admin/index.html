@@ -27,7 +27,7 @@
 
         <!-- Área principal del panel -->
         <div class="area-principal">
-            <header class="cabecera-admin">
+            <header class="cabecera-admin cabecera-dashboard">
                 <div class="cabecera-izquierda">
                     <button
                         type="button"
@@ -39,65 +39,120 @@
                     >
                         &#9776;
                     </button>
-                    <h1 id="titulo-modulo" class="titulo-modulo">Dashboard</h1>
+                    <div class="titulo-cabecera-bloque">
+                        <h1 id="titulo-modulo" class="titulo-modulo">Dashboard</h1>
+                        <p class="subtitulo-modulo">Resumen general y actividad editorial reciente</p>
+                    </div>
                 </div>
 
-                <div class="cabecera-derecha">
-                    <span id="nombre-usuario" class="perfil-previa"></span>
-                    <span id="rol-usuario" class="rol-usuario"></span>
+                <div class="cabecera-derecha cabecera-usuario-dashboard">
+                    <div class="ficha-usuario-cabecera">
+                        <span id="nombre-usuario" class="perfil-previa"></span>
+                        <span id="rol-usuario" class="rol-usuario"></span>
+                    </div>
                     <button type="button" id="boton-salir" class="boton-salir">Cerrar sesión</button>
                 </div>
             </header>
 
-            <main class="contenido-admin">
+            <main class="contenido-admin contenido-dashboard">
                 <!-- Vista del Dashboard -->
-                <section id="vista-dashboard" class="vista-modulo">
-                    <div class="rejilla-estadisticas" aria-label="Estadísticas desde MySQL">
-                        <article class="tarjeta-estadistica">
-                            <span class="etiqueta-estadistica">Total de noticias</span>
-                            <strong id="stat-total-noticias" class="valor-estadistica">0</strong>
-                            <span class="nota-estadistica">Consultado en MySQL</span>
-                        </article>
+                <section id="vista-dashboard" class="vista-modulo modulo-dashboard">
+                    <section id="bloque-estadisticas" class="bloque-estadisticas" aria-labelledby="titulo-resumen-kpi">
+                        <div class="cabecera-bloque-dashboard">
+                            <h2 id="titulo-resumen-kpi" class="titulo-bloque-dashboard">Indicadores del portal</h2>
+                            <span class="etiqueta-fuente-datos" title="Cifras actualizadas directamente desde la base de datos">
+                                Datos en vivo · MySQL
+                            </span>
+                        </div>
 
-                        <article class="tarjeta-estadistica">
-                            <span class="etiqueta-estadistica">Noticias publicadas</span>
-                            <strong id="stat-noticias-publicadas" class="valor-estadistica">0</strong>
-                            <span class="nota-estadistica">Consultado en MySQL</span>
-                        </article>
+                        <div class="rejilla-estadisticas rejilla-kpi-dashboard" aria-label="Estadísticas desde MySQL">
+                            <article class="tarjeta-estadistica tarjeta-kpi kpi-total">
+                                <div class="cabecera-kpi">
+                                    <span class="etiqueta-estadistica">Total de noticias</span>
+                                    <span class="icono-kpi" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M4 5a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5z"/>
+                                            <path d="M14 3v5h5"/>
+                                            <path d="M8 13h8"/>
+                                            <path d="M8 17h5"/>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <strong id="stat-total-noticias" class="valor-estadistica">0</strong>
+                                <span class="nota-kpi">Artículos registrados en el CMS</span>
+                            </article>
 
-                        <article class="tarjeta-estadistica">
-                            <span class="etiqueta-estadistica">Pendientes de revisión</span>
-                            <strong id="stat-noticias-pendientes" class="valor-estadistica">0</strong>
-                            <span class="nota-estadistica">Consultado en MySQL</span>
-                        </article>
+                            <article class="tarjeta-estadistica tarjeta-kpi kpi-publicadas">
+                                <div class="cabecera-kpi">
+                                    <span class="etiqueta-estadistica">Noticias publicadas</span>
+                                    <span class="icono-kpi" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="9"/>
+                                            <path d="m8.5 12.5 2.5 2.5 4.5-5"/>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <strong id="stat-noticias-publicadas" class="valor-estadistica">0</strong>
+                                <span class="nota-kpi">Visibles en el portal público</span>
+                            </article>
 
-                        <article class="tarjeta-estadistica">
-                            <span class="etiqueta-estadistica">Total de usuarios</span>
-                            <strong id="stat-total-usuarios" class="valor-estadistica">0</strong>
-                            <span class="nota-estadistica">Consultado en MySQL</span>
-                        </article>
-                    </div>
+                            <article class="tarjeta-estadistica tarjeta-kpi kpi-pendientes">
+                                <div class="cabecera-kpi">
+                                    <span class="etiqueta-estadistica">Pendientes de revisión</span>
+                                    <span class="icono-kpi" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="9"/>
+                                            <path d="M12 7v5l3 2"/>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <strong id="stat-noticias-pendientes" class="valor-estadistica">0</strong>
+                                <span class="nota-kpi">En cola de aprobación editorial</span>
+                            </article>
 
-                    <!-- Tabla de noticias -->
-                    <section class="panel-tabla" aria-labelledby="titulo-tabla-noticias">
-                        <div class="cabecera-panel">
-                            <h2 id="titulo-tabla-noticias">Tabla de Noticias</h2>
-                            <div class="acciones-panel">
+                            <article class="tarjeta-estadistica tarjeta-kpi kpi-usuarios">
+                                <div class="cabecera-kpi">
+                                    <span class="etiqueta-estadistica">Total de usuarios</span>
+                                    <span class="icono-kpi" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="9" cy="7" r="4"/>
+                                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <strong id="stat-total-usuarios" class="valor-estadistica">0</strong>
+                                <span class="nota-kpi">Cuentas editoriales del sistema</span>
+                            </article>
+                        </div>
+                    </section>
+
+                    <!-- Tabla de noticias recientes -->
+                    <section class="panel-tabla panel-noticias-dashboard" aria-labelledby="titulo-tabla-noticias">
+                        <div class="cabecera-panel cabecera-panel-dashboard">
+                            <div class="cabecera-panel-texto">
+                                <h2 id="titulo-tabla-noticias">Noticias recientes</h2>
+                                <p class="subtitulo-panel">Últimos artículos creados o actualizados</p>
+                            </div>
+                            <div class="acciones-panel acciones-panel-dashboard">
                                 <span id="etiqueta-tabla" class="etiqueta-tabla">Estado: vacía</span>
-                                <a href="editar_noticia.html" class="boton-primario-admin">+ Nueva noticia</a>
+                                <a href="editar_noticia.html" class="boton-primario-admin boton-nueva-dashboard">
+                                    <span aria-hidden="true">+</span> Nueva noticia
+                                </a>
                             </div>
                         </div>
 
                         <div class="contenedor-tabla">
-                            <table class="tabla-datos">
+                            <table class="tabla-datos tabla-dashboard">
                                 <thead>
                                     <tr>
-                                        <th>Título</th>
-                                        <th>Categoría</th>
-                                        <th>Autor</th>
-                                        <th>Estado</th>
-                                        <th>Fecha</th>
-                                        <th>Acciones</th>
+                                        <th class="col-titulo-dash">Título</th>
+                                        <th class="col-categoria-dash">Categoría</th>
+                                        <th class="col-autor-dash">Autor</th>
+                                        <th class="col-estado-dash">Estado</th>
+                                        <th class="col-fecha-dash">Fecha</th>
+                                        <th class="col-acciones-dash">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="cuerpo-tabla-dashboard">
