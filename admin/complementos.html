@@ -25,7 +25,7 @@
         </aside>
 
         <div class="area-principal">
-            <header class="cabecera-admin">
+            <header class="cabecera-admin cabecera-complementos-admin">
                 <div class="cabecera-izquierda">
                     <button
                         type="button"
@@ -37,57 +37,67 @@
                     >
                         &#9776;
                     </button>
-                    <h1 class="titulo-modulo">Gestión de Complementos</h1>
+                    <div class="titulo-cabecera-bloque">
+                        <h1 class="titulo-modulo">Gestión de Complementos</h1>
+                        <p class="subtitulo-modulo">Instala paquetes ZIP, activa extensiones y accede a su configuración</p>
+                    </div>
                 </div>
 
-                <div class="cabecera-derecha">
-                    <span id="nombre-usuario" class="perfil-previa"></span>
-                    <span id="rol-usuario" class="rol-usuario"></span>
+                <div class="cabecera-derecha cabecera-usuario-complementos">
+                    <div class="ficha-usuario-cabecera">
+                        <span id="nombre-usuario" class="perfil-previa"></span>
+                        <span id="rol-usuario" class="rol-usuario"></span>
+                    </div>
                     <button type="button" id="boton-salir" class="boton-salir">Cerrar sesión</button>
                 </div>
             </header>
 
-            <main class="contenido-admin">
-                <div id="mensaje-complementos" class="alerta-admin" role="status" hidden></div>
+            <main class="contenido-admin contenido-complementos-admin">
+                <div class="modulo-complementos">
+                    <div id="mensaje-complementos" class="alerta-admin" role="status" hidden></div>
 
-                <!-- Formulario de instalación de complemento ZIP -->
-                <section class="tarjeta-form" aria-labelledby="titulo-instalar-zip">
-                    <h2 id="titulo-instalar-zip">Instalar complemento desde archivo ZIP</h2>
-                    <form id="formulario-instalar-zip" class="formulario-zip" enctype="multipart/form-data" novalidate>
-                        <div class="campo-admin">
-                            <label for="archivo-zip">Seleccionar paquete ZIP (máximo 5 MB)</label>
-                            <input type="file" id="archivo-zip" name="archivo_zip" accept=".zip,application/zip" required>
+                    <!-- Área compacta de instalación de complemento ZIP -->
+                    <section class="barra-instalacion-zip" aria-labelledby="titulo-instalar-zip">
+                        <div class="info-instalacion-zip">
+                            <span class="icono-caja-zip" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                    <path d="M3.27 6.96 12 12.01l8.73-5.05"/>
+                                    <path d="M12 22.08V12"/>
+                                </svg>
+                            </span>
+                            <div class="texto-instalacion-zip">
+                                <h2 id="titulo-instalar-zip">Instalar complemento desde archivo ZIP</h2>
+                                <p>Sube un paquete <code>.zip</code> compatible con <code>plugin.json</code> (máximo 5 MB).</p>
+                            </div>
                         </div>
-                        <button type="submit" id="btn-instalar-zip" class="boton-primario-admin">Instalar complemento</button>
-                    </form>
-                </section>
 
-                <!-- Tabla de complementos instalados -->
-                <section class="panel-tabla" aria-labelledby="titulo-tabla-complementos">
-                    <div class="cabecera-panel">
-                        <h2 id="titulo-tabla-complementos">Complementos instalados</h2>
-                        <span id="total-complementos" class="etiqueta-tabla">0 instalados</span>
-                    </div>
+                        <form id="formulario-instalar-zip" class="formulario-zip formulario-zip-compacto" enctype="multipart/form-data" novalidate>
+                            <div class="campo-admin campo-archivo-zip">
+                                <label for="archivo-zip" class="etiqueta-accesible">Seleccionar paquete ZIP (máximo 5 MB)</label>
+                                <input type="file" id="archivo-zip" name="archivo_zip" class="entrada-archivo-zip" accept=".zip,application/zip" required>
+                            </div>
+                            <button type="submit" id="btn-instalar-zip" class="boton-primario-admin boton-instalar-compacto">
+                                Instalar complemento
+                            </button>
+                        </form>
+                    </section>
 
-                    <div class="contenedor-tabla">
-                        <table class="tabla-datos">
-                            <thead>
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>Descripción</th>
-                                    <th>Versión</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="cuerpo-tabla-complementos">
-                                <tr>
-                                    <td colspan="5" class="fila-vacia">Cargando complementos...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
+                    <!-- Catálogo de complementos instalados -->
+                    <section class="panel-extensiones-instaladas" aria-labelledby="titulo-tabla-complementos">
+                        <div class="cabecera-extensiones">
+                            <div class="cabecera-extensiones-texto">
+                                <h2 id="titulo-tabla-complementos">Complementos instalados</h2>
+                                <p>Administra el estado activo o inactivo y la configuración de cada extensión registrada.</p>
+                            </div>
+                            <span id="total-complementos" class="etiqueta-tabla contador-extensiones">0 instalados</span>
+                        </div>
+
+                        <div id="cuerpo-tabla-complementos" class="grid-extensiones">
+                            <div class="estado-vacio-complementos">Cargando complementos...</div>
+                        </div>
+                    </section>
+                </div>
             </main>
         </div>
     </div>

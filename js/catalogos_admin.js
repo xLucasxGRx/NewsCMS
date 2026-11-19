@@ -102,6 +102,7 @@ async function cargarListaCatalogo() {
             credentials: "same-origin"
         });
         if (!respuesta.ok) {
+            mostrarMensajeCatalogo("No se pudieron cargar los registros.", true);
             return;
         }
 
@@ -111,56 +112,78 @@ async function cargarListaCatalogo() {
             : (datos.categorias || []);
 
         if (totalEl) {
-            totalEl.textContent = `${registros.length} registros`;
+            const total = registros.length;
+            if (tipoCatalogo === "etiquetas") {
+                totalEl.textContent = total === 1 ? "1 etiqueta" : `${total} etiquetas`;
+            } else {
+                totalEl.textContent = total === 1 ? "1 categoría" : `${total} categorías`;
+            }
         }
 
         cuerpo.textContent = "";
         if (registros.length === 0) {
-            const tr = document.createElement("tr");
-            const td = document.createElement("td");
-            td.colSpan = tipoCatalogo === "etiquetas" ? 3 : 4;
-            td.className = "fila-vacia";
-            td.textContent = tipoCatalogo === "etiquetas"
-                ? "Aún no hay etiquetas registradas."
-                : "Aún no hay categorías registradas.";
-            tr.appendChild(td);
-            cuerpo.appendChild(tr);
+            renderizarEstadoVacioCatalogo(cuerpo);
             return;
         }
 
         registros.forEach((item) => {
             const tr = document.createElement("tr");
+            tr.dataset.catalogoId = String(item.id);
 
             const tdNombre = document.createElement("td");
-            tdNombre.textContent = item.nombre;
+            tdNombre.className = tipoCatalogo === "etiquetas" ? "celda-etiq-nombre" : "celda-cat-nombre";
+            tdNombre.setAttribute("data-etiqueta", tipoCatalogo === "etiquetas" ? "Etiqueta" : "Nombre");
+            const spanNombre = document.createElement("span");
+            spanNombre.className = tipoCatalogo === "etiquetas" ? "chip-etiqueta-catalogo" : "nombre-categoria-catalogo";
+            spanNombre.textContent = item.nombre;
+            tdNombre.appendChild(spanNombre);
             tr.appendChild(tdNombre);
 
             if (tipoCatalogo === "categorias") {
                 const tdDesc = document.createElement("td");
-                tdDesc.textContent = item.descripcion || "—";
+                tdDesc.className = "celda-cat-desc";
+                tdDesc.setAttribute("data-etiqueta", "Descripción");
+                const spanDesc = document.createElement("span");
+                spanDesc.className = "descripcion-categoria-catalogo";
+                spanDesc.textContent = item.descripcion || "—";
+                tdDesc.appendChild(spanDesc);
                 tr.appendChild(tdDesc);
             }
 
             const totalAsociadas = Number(item.total_noticias || 0);
             const tdTotal = document.createElement("td");
-            tdTotal.textContent = String(totalAsociadas);
+            tdTotal.className = "celda-catalogo-total";
+            tdTotal.setAttribute("data-etiqueta", tipoCatalogo === "etiquetas" ? "Noticias relacionadas" : "Noticias");
+            const badgeTotal = document.createElement("span");
+            badgeTotal.className = totalAsociadas > 0
+                ? "badge-conteo-catalogo con-noticias"
+                : "badge-conteo-catalogo";
+            badgeTotal.textContent = String(totalAsociadas);
+            tdTotal.appendChild(badgeTotal);
             tr.appendChild(tdTotal);
 
             const tdAcciones = document.createElement("td");
-            tdAcciones.className = "celda-acciones";
+            tdAcciones.className = "celda-acciones celda-acciones-catalogo";
+            tdAcciones.setAttribute("data-etiqueta", "Acciones");
 
             const btnEditar = document.createElement("button");
             btnEditar.type = "button";
-            btnEditar.className = "enlace-accion";
-            btnEditar.textContent = "Editar";
+            btnEditar.className = "enlace-accion boton-accion-catalogo";
+            btnEditar.appendChild(crearIconoCatalogoSvg("editar"));
+            const lblEditar = document.createElement("span");
+            lblEditar.textContent = "Editar";
+            btnEditar.appendChild(lblEditar);
             btnEditar.addEventListener("click", () => abrirFormularioEdicion(item));
             tdAcciones.appendChild(btnEditar);
 
             if (totalAsociadas === 0) {
                 const btnEliminar = document.createElement("button");
                 btnEliminar.type = "button";
-                btnEliminar.className = "enlace-accion enlace-eliminar";
-                btnEliminar.textContent = "Eliminar";
+                btnEliminar.className = "enlace-accion enlace-eliminar boton-accion-catalogo";
+                btnEliminar.appendChild(crearIconoCatalogoSvg("eliminar"));
+                const lblEliminar = document.createElement("span");
+                lblEliminar.textContent = "Eliminar";
+                btnEliminar.appendChild(lblEliminar);
                 btnEliminar.addEventListener("click", () => eliminarRegistro(item));
                 tdAcciones.appendChild(btnEliminar);
             }
@@ -179,19 +202,11 @@ function inicializarFormularioCatalogo() {
     const formulario = document.getElementById("formulario-catalogo");
 
     btnNuevo?.addEventListener("click", () => {
-        document.getElementById("catalogo-id").value = "0";
-        document.getElementById("catalogo-nombre").value = "";
-        const desc = document.getElementById("catalogo-descripcion");
-        if (desc) {
-            desc.value = "";
-        }
-        document.getElementById("titulo-form-catalogo").textContent =
-            tipoCatalogo === "etiquetas" ? "Nueva etiqueta" : "Nueva categoría";
-        document.getElementById("panel-formulario-catalogo").hidden = false;
+        restablecerFormularioCatalogo(true);
     });
 
     btnCancelar?.addEventListener("click", () => {
-        document.getElementById("panel-formulario-catalogo").hidden = true;
+        restablecerFormularioCatalogo(false);
     });
 
     formulario?.addEventListener("submit", async (e) => {
@@ -231,7 +246,7 @@ function inicializarFormularioCatalogo() {
 
             if (respuesta.ok && resultado.ok) {
                 mostrarMensajeCatalogo(resultado.mensaje || "Guardado correctamente.", false);
-                document.getElementById("panel-formulario-catalogo").hidden = true;
+                restablecerFormularioCatalogo(false);
                 await cargarListaCatalogo();
                 return;
             }
@@ -243,16 +258,60 @@ function inicializarFormularioCatalogo() {
     });
 }
 
+function restablecerFormularioCatalogo(enfocar) {
+    document.getElementById("catalogo-id").value = "0";
+    const nombreEl = document.getElementById("catalogo-nombre");
+    if (nombreEl) {
+        nombreEl.value = "";
+        if (enfocar) {
+            nombreEl.focus();
+        }
+    }
+    const desc = document.getElementById("catalogo-descripcion");
+    if (desc) {
+        desc.value = "";
+    }
+    const titulo = document.getElementById("titulo-form-catalogo");
+    if (titulo) {
+        titulo.textContent = tipoCatalogo === "etiquetas" ? "Nueva etiqueta" : "Nueva categoría";
+    }
+    const btnCancelar = document.getElementById("btn-cancelar-catalogo");
+    if (btnCancelar) {
+        btnCancelar.hidden = true;
+    }
+    const panel = document.getElementById("panel-formulario-catalogo");
+    if (panel) {
+        panel.hidden = false;
+        panel.classList.remove("modo-edicion");
+    }
+    resaltarFilaCatalogo(0);
+}
+
 function abrirFormularioEdicion(item) {
     document.getElementById("catalogo-id").value = String(item.id);
-    document.getElementById("catalogo-nombre").value = item.nombre || "";
+    const nombreEl = document.getElementById("catalogo-nombre");
+    if (nombreEl) {
+        nombreEl.value = item.nombre || "";
+        nombreEl.focus();
+    }
     const desc = document.getElementById("catalogo-descripcion");
     if (desc) {
         desc.value = item.descripcion || "";
     }
-    document.getElementById("titulo-form-catalogo").textContent =
-        tipoCatalogo === "etiquetas" ? "Editar etiqueta" : "Editar categoría";
-    document.getElementById("panel-formulario-catalogo").hidden = false;
+    const titulo = document.getElementById("titulo-form-catalogo");
+    if (titulo) {
+        titulo.textContent = tipoCatalogo === "etiquetas" ? "Editar etiqueta" : "Editar categoría";
+    }
+    const btnCancelar = document.getElementById("btn-cancelar-catalogo");
+    if (btnCancelar) {
+        btnCancelar.hidden = false;
+    }
+    const panel = document.getElementById("panel-formulario-catalogo");
+    if (panel) {
+        panel.hidden = false;
+        panel.classList.add("modo-edicion");
+    }
+    resaltarFilaCatalogo(item.id);
 }
 
 async function eliminarRegistro(item) {
@@ -276,6 +335,9 @@ async function eliminarRegistro(item) {
 
         if (respuesta.ok && resultado.ok) {
             mostrarMensajeCatalogo(resultado.mensaje || "Eliminado correctamente.", false);
+            if (Number(document.getElementById("catalogo-id")?.value || 0) === Number(item.id)) {
+                restablecerFormularioCatalogo(false);
+            }
             await cargarListaCatalogo();
             return;
         }
@@ -323,4 +385,69 @@ function inicializarSalirCatalogo() {
         });
         window.location.href = "../acceso.html";
     });
+}
+
+function renderizarEstadoVacioCatalogo(cuerpo) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = tipoCatalogo === "etiquetas" ? 3 : 4;
+    td.className = "fila-vacia";
+
+    const caja = document.createElement("div");
+    caja.className = "estado-vacio-catalogo";
+
+    const titulo = document.createElement("strong");
+    titulo.className = "titulo-estado-vacio";
+    titulo.textContent = tipoCatalogo === "etiquetas"
+        ? "Aún no hay etiquetas registradas."
+        : "Aún no hay categorías registradas.";
+
+    const nota = document.createElement("p");
+    nota.className = "descripcion-estado-vacio";
+    nota.textContent = tipoCatalogo === "etiquetas"
+        ? "Escribe un nombre en el campo superior y pulsa Guardar para crear la primera etiqueta."
+        : "Completa el formulario lateral para registrar la primera categoría editorial.";
+
+    caja.appendChild(titulo);
+    caja.appendChild(nota);
+    td.appendChild(caja);
+    tr.appendChild(td);
+    cuerpo.appendChild(tr);
+}
+
+function resaltarFilaCatalogo(id) {
+    const objetivo = String(id || "");
+    document.querySelectorAll("#cuerpo-tabla-catalogo tr[data-catalogo-id]").forEach((fila) => {
+        fila.classList.toggle("fila-catalogo-activa", objetivo !== "0" && fila.dataset.catalogoId === objetivo);
+    });
+}
+
+function crearIconoCatalogoSvg(tipo) {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.setAttribute("class", "icono-accion-tabla");
+    svg.setAttribute("aria-hidden", "true");
+
+    const agregar = (tag, attrs) => {
+        const el = document.createElementNS(ns, tag);
+        Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+        svg.appendChild(el);
+    };
+
+    if (tipo === "editar") {
+        agregar("path", { d: "M12 20h9" });
+        agregar("path", { d: "M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" });
+    } else if (tipo === "eliminar") {
+        agregar("path", { d: "M3 6h18" });
+        agregar("path", { d: "M8 6V4h8v2" });
+        agregar("path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" });
+    }
+
+    return svg;
 }

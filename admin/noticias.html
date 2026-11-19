@@ -25,7 +25,7 @@
         </aside>
 
         <div class="area-principal">
-            <header class="cabecera-admin">
+            <header class="cabecera-admin cabecera-noticias-admin">
                 <div class="cabecera-izquierda">
                     <button
                         type="button"
@@ -40,64 +40,85 @@
                     <h1 class="titulo-modulo">Noticias</h1>
                 </div>
 
-                <div class="cabecera-derecha">
-                    <span id="nombre-usuario" class="perfil-previa"></span>
-                    <span id="rol-usuario" class="rol-usuario"></span>
+                <div class="cabecera-derecha cabecera-usuario-noticias">
+                    <div class="ficha-usuario-cabecera">
+                        <span id="nombre-usuario" class="perfil-previa"></span>
+                        <span id="rol-usuario" class="rol-usuario"></span>
+                    </div>
                     <button type="button" id="boton-salir" class="boton-salir">Cerrar sesión</button>
                 </div>
             </header>
 
-            <main class="contenido-admin">
-                <div class="barra-herramientas">
-                    <div class="filtros-noticias">
-                        <input
-                            type="search"
-                            id="filtro-busqueda"
-                            class="entrada-filtro"
-                            placeholder="Buscar por título..."
-                            aria-label="Buscar noticias por título"
-                        >
-                        <select id="filtro-estado" class="entrada-filtro" aria-label="Filtrar por estado">
-                            <option value="">Todos los estados</option>
-                            <option value="borrador">Borrador</option>
-                            <option value="pendiente_revision">Pendiente de revisión</option>
-                            <option value="cambios_solicitados">Cambios solicitados</option>
-                            <option value="publicada">Publicada</option>
-                            <option value="archivada">Archivada</option>
-                        </select>
+            <main class="contenido-admin contenido-noticias">
+                <div class="modulo-noticias">
+                    <div class="encabezado-modulo-noticias">
+                        <div class="texto-encabezado-noticias">
+                            <h2 id="titulo-lista-noticias" class="titulo-modulo-editorial">Gestión de Noticias</h2>
+                            <p class="descripcion-modulo-editorial">
+                                Consulta, filtra y administra el estado editorial de las noticias del portal.
+                            </p>
+                        </div>
+
+                        <a href="editar_noticia.html" class="boton-primario-admin boton-nueva-noticia-lista">
+                            <span aria-hidden="true">+</span> Nueva noticia
+                        </a>
                     </div>
 
-                    <a href="editar_noticia.html" class="boton-primario-admin">+ Nueva noticia</a>
+                    <div id="mensaje-noticias" class="alerta-admin" role="status" hidden></div>
+
+                    <section class="panel-tabla panel-listado-noticias" aria-labelledby="titulo-lista-noticias">
+                        <div class="barra-filtros-noticias">
+                            <div class="controles-filtros-noticias">
+                                <div class="campo-busqueda-noticias">
+                                    <span class="icono-busqueda-noticias" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="11" cy="11" r="7"/>
+                                            <path d="m20 20-3.5-3.5"/>
+                                        </svg>
+                                    </span>
+                                    <input
+                                        type="search"
+                                        id="filtro-busqueda"
+                                        class="entrada-filtro entrada-busqueda-noticias"
+                                        placeholder="Buscar por título..."
+                                        aria-label="Buscar noticias por título"
+                                    >
+                                </div>
+
+                                <select id="filtro-estado" class="entrada-filtro selector-estado-noticias" aria-label="Filtrar por estado">
+                                    <option value="">Todos los estados</option>
+                                    <option value="borrador">Borrador</option>
+                                    <option value="pendiente_revision">Pendiente de revisión</option>
+                                    <option value="cambios_solicitados">Cambios solicitados</option>
+                                    <option value="publicada">Publicada</option>
+                                    <option value="archivada">Archivada</option>
+                                </select>
+                            </div>
+
+                            <span id="total-registros" class="etiqueta-tabla contador-noticias">0 registros</span>
+                        </div>
+
+                        <div class="contenedor-tabla">
+                            <table class="tabla-datos tabla-noticias-admin">
+                                <thead>
+                                    <tr>
+                                        <th class="col-titulo-noticias">Título</th>
+                                        <th class="col-categoria-noticias">Categoría</th>
+                                        <th class="col-autor-noticias">Autor</th>
+                                        <th class="col-estado-noticias">Estado</th>
+                                        <th class="col-fecha-noticias">Fecha</th>
+                                        <th class="col-acciones-noticias">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cuerpo-tabla-noticias">
+                                    <tr>
+                                        <td colspan="6" class="fila-vacia">Cargando noticias...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
                 </div>
-
-                <div id="mensaje-noticias" class="alerta-admin" role="status" hidden></div>
-
-                <section class="panel-tabla" aria-labelledby="titulo-lista-noticias">
-                    <div class="cabecera-panel">
-                        <h2 id="titulo-lista-noticias">Listado de Noticias</h2>
-                        <span id="total-registros" class="etiqueta-tabla">0 registros</span>
-                    </div>
-
-                    <div class="contenedor-tabla">
-                        <table class="tabla-datos">
-                            <thead>
-                                <tr>
-                                    <th>Título</th>
-                                    <th>Categoría</th>
-                                    <th>Autor</th>
-                                    <th>Estado</th>
-                                    <th>Fecha</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="cuerpo-tabla-noticias">
-                                <tr>
-                                    <td colspan="6" class="fila-vacia">Cargando noticias...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
             </main>
         </div>
     </div>

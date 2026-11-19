@@ -3,6 +3,7 @@
  */
 
 let csrfTokenComplementos = "";
+let permisosComplementos = {};
 
 document.addEventListener("DOMContentLoaded", () => {
     iniciarComplementosAdmin();
@@ -30,6 +31,7 @@ async function iniciarComplementosAdmin() {
         }
 
         csrfTokenComplementos = datos.csrf_token || "";
+        permisosComplementos = datos.permisos || {};
         mostrarCabeceraComplementos(datos.usuario);
         renderizarSidebarComplementos(datos.modulos_permitidos || ["Dashboard"]);
         inicializarSidebarMovilComplementos();
@@ -88,7 +90,7 @@ function renderizarSidebarComplementos(modulos) {
 }
 
 async function cargarComplementosInstalados() {
-    const cuerpo = document.getElementById("cuerpo-tabla-complementos");
+    const contenedor = document.getElementById("cuerpo-tabla-complementos");
     const totalEl = document.getElementById("total-complementos");
 
     try {
@@ -96,6 +98,7 @@ async function cargarComplementosInstalados() {
             credentials: "same-origin"
         });
         if (!respuesta.ok) {
+            mostrarMensajeComplemento("No se pudo cargar la lista de complementos.", true);
             return;
         }
 
@@ -103,85 +106,125 @@ async function cargarComplementosInstalados() {
         const lista = datos.complementos || [];
 
         if (totalEl) {
-            totalEl.textContent = `${lista.length} instalados`;
+            totalEl.textContent = lista.length === 1 ? "1 instalado" : `${lista.length} instalados`;
         }
 
-        cuerpo.textContent = "";
+        contenedor.textContent = "";
         if (lista.length === 0) {
-            const tr = document.createElement("tr");
-            const td = document.createElement("td");
-            td.colSpan = 5;
-            td.className = "fila-vacia";
-            td.textContent = "Aún no hay complementos instalados.";
-            tr.appendChild(td);
-            cuerpo.appendChild(tr);
+            renderizarEstadoVacioComplementos(contenedor);
             return;
         }
 
+        const rutasConfig = {
+            feed_redes_sociales: "redes_sociales.html",
+            gestor_publicidad: "publicidad.html",
+            newsletter: "newsletter.html",
+            comentarios_sociales: "comentarios.html"
+        };
+
+        const etiquetasZona = {
+            portada_superior: "Portada superior",
+            portada_inferior: "Portada inferior",
+            detalle_noticia: "Detalle de noticia"
+        };
+
         lista.forEach((item) => {
-            const tr = document.createElement("tr");
-
-            const tdNombre = document.createElement("td");
-            tdNombre.textContent = item.nombre;
-
-            const tdDesc = document.createElement("td");
-            tdDesc.textContent = item.descripcion || "—";
-
-            const tdVersion = document.createElement("td");
-            tdVersion.textContent = item.version;
-
             const estaActivo = Number(item.activo) === 1;
-            const tdEstado = document.createElement("td");
-            const badge = document.createElement("span");
-            badge.className = estaActivo ? "estado-badge estado-publicada" : "estado-badge estado-borrador";
-            badge.textContent = estaActivo ? "Activo" : "Inactivo";
-            tdEstado.appendChild(badge);
 
-            const tdAcciones = document.createElement("td");
-            tdAcciones.className = "celda-acciones";
+            const tarjeta = document.createElement("article");
+            tarjeta.className = estaActivo
+                ? "tarjeta-extension extension-activa"
+                : "tarjeta-extension extension-inactiva";
+
+            const cabecera = document.createElement("div");
+            cabecera.className = "cabecera-extension";
+
+            const identidad = document.createElement("div");
+            identidad.className = "identidad-extension";
+
+            const icono = document.createElement("span");
+            icono.className = "icono-extension";
+            icono.appendChild(crearIconoComplementoSvg(item.identificador));
+
+            const titulos = document.createElement("div");
+            titulos.className = "titulos-extension";
+
+            const nombre = document.createElement("h3");
+            nombre.className = "nombre-extension";
+            nombre.textContent = item.nombre;
+
+            const meta = document.createElement("div");
+            meta.className = "meta-extension";
+
+            const version = document.createElement("span");
+            version.className = "version-extension";
+            version.textContent = `v${item.version}`;
+            meta.appendChild(version);
+
+            if (item.zona) {
+                const zona = document.createElement("span");
+                zona.className = "zona-extension";
+                zona.textContent = etiquetasZona[item.zona] || item.zona;
+                meta.appendChild(zona);
+            }
+
+            titulos.appendChild(nombre);
+            titulos.appendChild(meta);
+            identidad.appendChild(icono);
+            identidad.appendChild(titulos);
+
+            const badge = document.createElement("span");
+            badge.className = estaActivo
+                ? "estado-extension estado-ext-activo"
+                : "estado-extension estado-ext-inactivo";
+            badge.textContent = estaActivo ? "Activo" : "Inactivo";
+
+            cabecera.appendChild(identidad);
+            cabecera.appendChild(badge);
+
+            const desc = document.createElement("p");
+            desc.className = "descripcion-extension";
+            desc.textContent = item.descripcion || "Sin descripción disponible.";
+
+            const pie = document.createElement("div");
+            pie.className = "pie-extension";
+
+            const acciones = document.createElement("div");
+            acciones.className = "acciones-extension";
+
+            const rutaConfig = rutasConfig[item.identificador];
+            const puedeConfigurar = permisosComplementos.configurar_complementos !== false;
+            if (rutaConfig && puedeConfigurar) {
+                const enlaceConfig = document.createElement("a");
+                enlaceConfig.href = rutaConfig;
+                enlaceConfig.className = "enlace-accion enlace-ver boton-extension boton-config-extension";
+                enlaceConfig.appendChild(crearIconoComplementoAccion("config"));
+                const lblConfig = document.createElement("span");
+                lblConfig.textContent = "Configurar";
+                enlaceConfig.appendChild(lblConfig);
+                acciones.appendChild(enlaceConfig);
+            }
 
             const botonEstado = document.createElement("button");
             botonEstado.type = "button";
-            botonEstado.className = estaActivo ? "enlace-accion enlace-eliminar" : "enlace-accion";
-            botonEstado.textContent = estaActivo ? "Desactivar" : "Activar";
+            botonEstado.className = estaActivo
+                ? "enlace-accion boton-extension boton-desactivar-extension"
+                : "enlace-accion boton-extension boton-activar-extension";
+            botonEstado.appendChild(crearIconoComplementoAccion(estaActivo ? "desactivar" : "activar"));
+            const lblEstado = document.createElement("span");
+            lblEstado.textContent = estaActivo ? "Desactivar" : "Activar";
+            botonEstado.appendChild(lblEstado);
             botonEstado.addEventListener("click", () => {
                 cambiarEstado(item.id, estaActivo ? "desactivar" : "activar");
             });
 
-            tdAcciones.appendChild(botonEstado);
+            acciones.appendChild(botonEstado);
+            pie.appendChild(acciones);
 
-            if (item.identificador === "feed_redes_sociales") {
-                const enlaceConfig = document.createElement("a");
-                enlaceConfig.href = "redes_sociales.html";
-                enlaceConfig.className = "enlace-accion enlace-ver";
-                enlaceConfig.textContent = "Configurar";
-                tdAcciones.appendChild(enlaceConfig);
-            } else if (item.identificador === "gestor_publicidad") {
-                const enlaceConfig = document.createElement("a");
-                enlaceConfig.href = "publicidad.html";
-                enlaceConfig.className = "enlace-accion enlace-ver";
-                enlaceConfig.textContent = "Configurar";
-                tdAcciones.appendChild(enlaceConfig);
-            } else if (item.identificador === "newsletter") {
-                const enlaceConfig = document.createElement("a");
-                enlaceConfig.href = "newsletter.html";
-                enlaceConfig.className = "enlace-accion enlace-ver";
-                enlaceConfig.textContent = "Configurar";
-                tdAcciones.appendChild(enlaceConfig);
-            } else if (item.identificador === "comentarios_sociales") {
-                const enlaceConfig = document.createElement("a");
-                enlaceConfig.href = "comentarios.html";
-                enlaceConfig.className = "enlace-accion enlace-ver";
-                enlaceConfig.textContent = "Configurar";
-                tdAcciones.appendChild(enlaceConfig);
-            }
-
-            tr.appendChild(tdNombre);
-            tr.appendChild(tdDesc);
-            tr.appendChild(tdVersion);
-            tr.appendChild(tdEstado);
-            tr.appendChild(tdAcciones);
-            cuerpo.appendChild(tr);
+            tarjeta.appendChild(cabecera);
+            tarjeta.appendChild(desc);
+            tarjeta.appendChild(pie);
+            contenedor.appendChild(tarjeta);
         });
     } catch {
         mostrarMensajeComplemento("No se pudo cargar la lista de complementos.", true);
@@ -298,4 +341,103 @@ function inicializarSalirComplementos() {
         });
         window.location.href = "../acceso.html";
     });
+}
+
+function renderizarEstadoVacioComplementos(contenedor) {
+    const caja = document.createElement("div");
+    caja.className = "estado-vacio-complementos";
+
+    const titulo = document.createElement("strong");
+    titulo.className = "titulo-estado-vacio";
+    titulo.textContent = "Aún no hay complementos instalados.";
+
+    const nota = document.createElement("p");
+    nota.className = "descripcion-estado-vacio";
+    nota.textContent = "Utiliza el cargador superior para instalar un complemento oficial desde su paquete ZIP.";
+
+    caja.appendChild(titulo);
+    caja.appendChild(nota);
+    contenedor.appendChild(caja);
+}
+
+function crearIconoComplementoSvg(identificador) {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "1.9");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.setAttribute("aria-hidden", "true");
+
+    const agregar = (tag, attrs) => {
+        const el = document.createElementNS(ns, tag);
+        Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+        svg.appendChild(el);
+    };
+
+    if (identificador === "ticker_ultima_hora") {
+        agregar("polygon", { points: "13 2 3 14 12 14 11 22 21 10 12 10 13 2" });
+    } else if (identificador === "nube_etiquetas") {
+        agregar("path", { d: "M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l6.59-6.59a1 1 0 0 0 0-1.41Z" });
+        agregar("circle", { cx: "7", cy: "7", r: "1.5" });
+    } else if (identificador === "feed_redes_sociales") {
+        agregar("circle", { cx: "18", cy: "5", r: "3" });
+        agregar("circle", { cx: "6", cy: "12", r: "3" });
+        agregar("circle", { cx: "18", cy: "19", r: "3" });
+        agregar("path", { d: "m8.59 13.51 6.83 3.98" });
+        agregar("path", { d: "m15.41 6.51-6.82 3.98" });
+    } else if (identificador === "gestor_publicidad") {
+        agregar("path", { d: "m3 11 18-5v12L3 14v-3Z" });
+        agregar("path", { d: "M11.6 16.8a3 3 0 1 1-5.8-1.6" });
+    } else if (identificador === "newsletter") {
+        agregar("rect", { x: "3", y: "5", width: "18", height: "14", rx: "2" });
+        agregar("path", { d: "m3 7 9 6 9-6" });
+    } else if (identificador === "comentarios_sociales") {
+        agregar("path", { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" });
+    } else if (identificador === "aviso_informativo") {
+        agregar("circle", { cx: "12", cy: "12", r: "9" });
+        agregar("path", { d: "M12 16v-4" });
+        agregar("path", { d: "M12 8h.01" });
+    } else {
+        agregar("path", { d: "M12 2v4" });
+        agregar("path", { d: "m6.8 6.8 2.8 2.8" });
+        agregar("path", { d: "M20 12h-4" });
+        agregar("rect", { x: "6", y: "6", width: "12", height: "12", rx: "3" });
+    }
+
+    return svg;
+}
+
+function crearIconoComplementoAccion(tipo) {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.setAttribute("class", "icono-accion-tabla");
+    svg.setAttribute("aria-hidden", "true");
+
+    const agregar = (tag, attrs) => {
+        const el = document.createElementNS(ns, tag);
+        Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+        svg.appendChild(el);
+    };
+
+    if (tipo === "config") {
+        agregar("circle", { cx: "12", cy: "12", r: "3" });
+        agregar("path", { d: "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" });
+    } else if (tipo === "activar") {
+        agregar("circle", { cx: "12", cy: "12", r: "9" });
+        agregar("path", { d: "m8.5 12.5 2.5 2.5 4.5-5" });
+    } else if (tipo === "desactivar") {
+        agregar("circle", { cx: "12", cy: "12", r: "9" });
+        agregar("path", { d: "m4.9 4.9 14.2 14.2" });
+    }
+
+    return svg;
 }

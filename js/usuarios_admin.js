@@ -115,6 +115,7 @@ async function cargarTablaUsuarios() {
             credentials: "same-origin"
         });
         if (!respuesta.ok) {
+            mostrarMensajeUsuarios("No se pudo cargar la lista de usuarios.", true);
             return;
         }
 
@@ -122,77 +123,121 @@ async function cargarTablaUsuarios() {
         const usuarios = datos.usuarios || [];
 
         if (totalEl) {
-            totalEl.textContent = `${usuarios.length} usuarios`;
+            totalEl.textContent = usuarios.length === 1 ? "1 usuario" : `${usuarios.length} usuarios`;
         }
 
         cuerpo.textContent = "";
         if (usuarios.length === 0) {
-            const tr = document.createElement("tr");
-            const td = document.createElement("td");
-            td.colSpan = 7;
-            td.className = "fila-vacia";
-            td.textContent = "No hay usuarios que coincidan con la búsqueda.";
-            tr.appendChild(td);
-            cuerpo.appendChild(tr);
+            renderizarEstadoVacioUsuarios(cuerpo, q !== "" || rol !== "" || estado !== "");
             return;
         }
 
+        const etiquetasRol = {
+            administrador: "Administrador",
+            editor: "Editor",
+            redactor: "Redactor"
+        };
+
         usuarios.forEach((u) => {
             const tr = document.createElement("tr");
+            tr.dataset.usuarioId = String(u.id);
 
-            const tdNombre = document.createElement("td");
-            tdNombre.textContent = u.nombre;
+            const tdIdentidad = document.createElement("td");
+            tdIdentidad.className = "celda-identidad-usuario";
+            tdIdentidad.setAttribute("data-etiqueta", "Usuario");
 
-            const tdUsuario = document.createElement("td");
-            tdUsuario.textContent = u.usuario;
+            const cajaIdentidad = document.createElement("div");
+            cajaIdentidad.className = "identidad-usuario-tabla";
+
+            const filaNombre = document.createElement("div");
+            filaNombre.className = "fila-nombre-usuario";
+
+            const spanNombre = document.createElement("span");
+            spanNombre.className = "nombre-usuario-tabla";
+            spanNombre.textContent = u.nombre;
+            filaNombre.appendChild(spanNombre);
+
+            if (u.es_actual) {
+                const badgeTu = document.createElement("span");
+                badgeTu.className = "insignia-tu";
+                badgeTu.textContent = "Tú";
+                filaNombre.appendChild(badgeTu);
+            }
+
+            const spanLogin = document.createElement("span");
+            spanLogin.className = "login-usuario-tabla";
+            spanLogin.textContent = `@${u.usuario}`;
+
+            cajaIdentidad.appendChild(filaNombre);
+            cajaIdentidad.appendChild(spanLogin);
+            tdIdentidad.appendChild(cajaIdentidad);
 
             const tdCorreo = document.createElement("td");
+            tdCorreo.className = "celda-correo-usuario";
+            tdCorreo.setAttribute("data-etiqueta", "Correo electrónico");
             tdCorreo.textContent = u.correo;
 
             const tdRol = document.createElement("td");
+            tdRol.setAttribute("data-etiqueta", "Rol");
             const badgeRol = document.createElement("span");
-            badgeRol.className = "rol-usuario";
-            badgeRol.textContent = u.rol;
+            badgeRol.className = `badge-rol-usuario rol-${u.rol}`;
+            badgeRol.textContent = etiquetasRol[u.rol] || u.rol;
             tdRol.appendChild(badgeRol);
 
             const estaActivo = u.estado === "activo";
             const tdEstado = document.createElement("td");
+            tdEstado.setAttribute("data-etiqueta", "Estado");
             const badgeEstado = document.createElement("span");
-            badgeEstado.className = estaActivo ? "estado-badge estado-publicada" : "estado-badge estado-borrador";
+            badgeEstado.className = estaActivo
+                ? "estado-cuenta-badge estado-cuenta-activo"
+                : "estado-cuenta-badge estado-cuenta-inactivo";
             badgeEstado.textContent = estaActivo ? "Activo" : "Inactivo";
             tdEstado.appendChild(badgeEstado);
 
             const tdFecha = document.createElement("td");
+            tdFecha.className = "celda-fecha-usuario";
+            tdFecha.setAttribute("data-etiqueta", "Registro");
             tdFecha.textContent = (u.fecha_creacion || "").slice(0, 10) || "-";
 
             const tdAcciones = document.createElement("td");
-            tdAcciones.className = "celda-acciones";
+            tdAcciones.className = "celda-acciones celda-acciones-usuario";
+            tdAcciones.setAttribute("data-etiqueta", "Acciones");
 
             const btnEditar = document.createElement("button");
             btnEditar.type = "button";
-            btnEditar.className = "enlace-accion";
-            btnEditar.textContent = "Editar";
+            btnEditar.className = "enlace-accion boton-accion-usuario";
+            btnEditar.appendChild(crearIconoUsuarioSvg("editar"));
+            const lblEditar = document.createElement("span");
+            lblEditar.textContent = "Editar";
+            btnEditar.appendChild(lblEditar);
             btnEditar.addEventListener("click", () => abrirEdicionUsuario(u));
             tdAcciones.appendChild(btnEditar);
 
             if (!u.es_actual) {
                 const btnEstado = document.createElement("button");
                 btnEstado.type = "button";
-                btnEstado.className = estaActivo ? "enlace-accion enlace-eliminar" : "enlace-accion enlace-ver";
-                btnEstado.textContent = estaActivo ? "Desactivar" : "Activar";
+                btnEstado.className = estaActivo
+                    ? "enlace-accion boton-accion-usuario boton-desactivar-usuario"
+                    : "enlace-accion boton-accion-usuario boton-activar-usuario";
+                btnEstado.appendChild(crearIconoUsuarioSvg(estaActivo ? "desactivar" : "activar"));
+                const lblEstado = document.createElement("span");
+                lblEstado.textContent = estaActivo ? "Desactivar" : "Activar";
+                btnEstado.appendChild(lblEstado);
                 btnEstado.addEventListener("click", () => cambiarEstadoCuenta(u));
                 tdAcciones.appendChild(btnEstado);
             }
 
             const btnReset = document.createElement("button");
             btnReset.type = "button";
-            btnReset.className = "enlace-accion enlace-cambios";
-            btnReset.textContent = "Restablecer contraseña";
+            btnReset.className = "enlace-accion enlace-cambios boton-accion-usuario";
+            btnReset.appendChild(crearIconoUsuarioSvg("llave"));
+            const lblReset = document.createElement("span");
+            lblReset.textContent = "Restablecer contraseña";
+            btnReset.appendChild(lblReset);
             btnReset.addEventListener("click", () => abrirResetContrasena(u));
             tdAcciones.appendChild(btnReset);
 
-            tr.appendChild(tdNombre);
-            tr.appendChild(tdUsuario);
+            tr.appendChild(tdIdentidad);
             tr.appendChild(tdCorreo);
             tr.appendChild(tdRol);
             tr.appendChild(tdEstado);
@@ -224,15 +269,27 @@ function inicializarFormulariosUsuarios() {
         document.getElementById("usuario-estado").value = "activo";
         document.getElementById("bloque-contrasena-crear").hidden = false;
         document.getElementById("titulo-form-usuario").textContent = "Nuevo usuario";
-        document.getElementById("panel-formulario-usuario").hidden = false;
+        const subtitulo = document.getElementById("subtitulo-form-usuario");
+        if (subtitulo) {
+            subtitulo.textContent = "Completa los datos de acceso y asigna un rol editorial.";
+        }
+        const panel = document.getElementById("panel-formulario-usuario");
+        panel.classList.remove("modo-edicion");
+        panel.hidden = false;
+        resaltarFilaUsuario(0);
+        document.getElementById("usuario-nombre")?.focus();
     });
 
     btnCancelarUsuario?.addEventListener("click", () => {
-        document.getElementById("panel-formulario-usuario").hidden = true;
+        const panel = document.getElementById("panel-formulario-usuario");
+        panel.classList.remove("modo-edicion");
+        panel.hidden = true;
+        resaltarFilaUsuario(0);
     });
 
     btnCancelarReset?.addEventListener("click", () => {
         document.getElementById("panel-reset-contrasena").hidden = true;
+        resaltarFilaUsuario(0);
     });
 
     formUsuario?.addEventListener("submit", async (e) => {
@@ -285,7 +342,10 @@ function inicializarFormulariosUsuarios() {
 
             if (respuesta.ok && resultado.ok) {
                 mostrarMensajeUsuarios(resultado.mensaje || "Usuario guardado.", false);
-                document.getElementById("panel-formulario-usuario").hidden = true;
+                const panel = document.getElementById("panel-formulario-usuario");
+                panel.classList.remove("modo-edicion");
+                panel.hidden = true;
+                resaltarFilaUsuario(0);
                 formUsuario.reset();
                 await cargarTablaUsuarios();
                 return;
@@ -330,6 +390,7 @@ function inicializarFormulariosUsuarios() {
             if (respuesta.ok && resultado.ok) {
                 mostrarMensajeUsuarios(resultado.mensaje || "Contraseña actualizada.", false);
                 document.getElementById("panel-reset-contrasena").hidden = true;
+                resaltarFilaUsuario(0);
                 formReset.reset();
                 return;
             }
@@ -351,16 +412,29 @@ function abrirEdicionUsuario(u) {
     document.getElementById("usuario-estado").value = u.estado || "activo";
     document.getElementById("bloque-contrasena-crear").hidden = true;
     document.getElementById("titulo-form-usuario").textContent = "Editar usuario";
-    document.getElementById("panel-formulario-usuario").hidden = false;
+    const subtitulo = document.getElementById("subtitulo-form-usuario");
+    if (subtitulo) {
+        subtitulo.textContent = `Editando la cuenta de ${u.nombre} (@${u.usuario}).`;
+    }
+    const panel = document.getElementById("panel-formulario-usuario");
+    panel.classList.add("modo-edicion");
+    panel.hidden = false;
+    resaltarFilaUsuario(u.id);
+    panel.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function abrirResetContrasena(u) {
-    document.getElementById("panel-formulario-usuario").hidden = true;
+    const panelUsuario = document.getElementById("panel-formulario-usuario");
+    panelUsuario.classList.remove("modo-edicion");
+    panelUsuario.hidden = true;
     document.getElementById("reset-usuario-id").value = String(u.id);
-    document.getElementById("reset-usuario-destino").textContent = `Cuenta: ${u.nombre} (${u.usuario})`;
+    document.getElementById("reset-usuario-destino").textContent = `Cuenta objetivo: ${u.nombre} (@${u.usuario})`;
     document.getElementById("reset-nueva").value = "";
     document.getElementById("reset-confirmar").value = "";
-    document.getElementById("panel-reset-contrasena").hidden = false;
+    const panelReset = document.getElementById("panel-reset-contrasena");
+    panelReset.hidden = false;
+    resaltarFilaUsuario(u.id);
+    panelReset.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function cambiarEstadoCuenta(u) {
@@ -433,4 +507,93 @@ function inicializarSalirUsuarios() {
         });
         window.location.href = "../acceso.html";
     });
+}
+
+function renderizarEstadoVacioUsuarios(cuerpo, hayFiltros) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 6;
+    td.className = "fila-vacia";
+
+    const caja = document.createElement("div");
+    caja.className = "estado-vacio-usuarios";
+
+    const titulo = document.createElement("strong");
+    titulo.className = "titulo-estado-vacio";
+    titulo.textContent = hayFiltros
+        ? "No hay usuarios que coincidan con la búsqueda."
+        : "No hay cuentas de usuarios registradas.";
+
+    const nota = document.createElement("p");
+    nota.className = "descripcion-estado-vacio";
+    nota.textContent = hayFiltros
+        ? "Prueba modificando el texto buscado o los filtros de rol y estado."
+        : "Pulsa «+ Nuevo usuario» para registrar una cuenta administrativa.";
+
+    caja.appendChild(titulo);
+    caja.appendChild(nota);
+
+    if (hayFiltros) {
+        const btnLimpiar = document.createElement("button");
+        btnLimpiar.type = "button";
+        btnLimpiar.className = "boton-secundario-admin boton-limpiar-filtros";
+        btnLimpiar.textContent = "Limpiar filtros";
+        btnLimpiar.addEventListener("click", () => {
+            const busq = document.getElementById("filtro-busqueda-usuario");
+            const rolSel = document.getElementById("filtro-rol-usuario");
+            const estSel = document.getElementById("filtro-estado-usuario");
+            if (busq) busq.value = "";
+            if (rolSel) rolSel.value = "";
+            if (estSel) estSel.value = "";
+            cargarTablaUsuarios();
+        });
+        caja.appendChild(btnLimpiar);
+    }
+
+    td.appendChild(caja);
+    tr.appendChild(td);
+    cuerpo.appendChild(tr);
+}
+
+function resaltarFilaUsuario(id) {
+    const objetivo = String(id || "");
+    document.querySelectorAll("#cuerpo-tabla-usuarios tr[data-usuario-id]").forEach((fila) => {
+        fila.classList.toggle("fila-usuario-activa", objetivo !== "0" && fila.dataset.usuarioId === objetivo);
+    });
+}
+
+function crearIconoUsuarioSvg(tipo) {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.setAttribute("class", "icono-accion-tabla");
+    svg.setAttribute("aria-hidden", "true");
+
+    const agregar = (tag, attrs) => {
+        const el = document.createElementNS(ns, tag);
+        Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+        svg.appendChild(el);
+    };
+
+    if (tipo === "editar") {
+        agregar("path", { d: "M12 20h9" });
+        agregar("path", { d: "M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" });
+    } else if (tipo === "desactivar") {
+        agregar("circle", { cx: "12", cy: "12", r: "9" });
+        agregar("path", { d: "m4.9 4.9 14.2 14.2" });
+    } else if (tipo === "activar") {
+        agregar("circle", { cx: "12", cy: "12", r: "9" });
+        agregar("path", { d: "m8.5 12.5 2.5 2.5 4.5-5" });
+    } else if (tipo === "llave") {
+        agregar("circle", { cx: "7.5", cy: "15.5", r: "4.5" });
+        agregar("path", { d: "m21 2-9.6 9.6" });
+        agregar("path", { d: "m15.5 7.5 3 3L22 7l-3-3" });
+    }
+
+    return svg;
 }

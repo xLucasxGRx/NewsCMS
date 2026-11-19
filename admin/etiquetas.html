@@ -25,7 +25,7 @@
         </aside>
 
         <div class="area-principal">
-            <header class="cabecera-admin">
+            <header class="cabecera-admin cabecera-catalogos-admin">
                 <div class="cabecera-izquierda">
                     <button
                         type="button"
@@ -37,68 +37,83 @@
                     >
                         &#9776;
                     </button>
-                    <h1 class="titulo-modulo">Etiquetas</h1>
+                    <div class="titulo-cabecera-bloque">
+                        <h1 class="titulo-modulo">Etiquetas</h1>
+                        <p class="subtitulo-modulo">Palabras clave rápidas para clasificar las noticias</p>
+                    </div>
                 </div>
 
-                <div class="cabecera-derecha">
-                    <span id="nombre-usuario" class="perfil-previa"></span>
-                    <span id="rol-usuario" class="rol-usuario"></span>
+                <div class="cabecera-derecha cabecera-usuario-catalogos">
+                    <div class="ficha-usuario-cabecera">
+                        <span id="nombre-usuario" class="perfil-previa"></span>
+                        <span id="rol-usuario" class="rol-usuario"></span>
+                    </div>
                     <button type="button" id="boton-salir" class="boton-salir">Cerrar sesión</button>
                 </div>
             </header>
 
-            <main class="contenido-admin">
-                <div class="barra-herramientas">
-                    <span class="texto-suave-form">Administra las palabras clave para clasificar noticias.</span>
-                    <button type="button" id="btn-nuevo-catalogo" class="boton-primario-admin">+ Nueva etiqueta</button>
+            <main class="contenido-admin contenido-catalogos-admin">
+                <div class="modulo-etiquetas">
+                    <div class="encabezado-catalogo">
+                        <div>
+                            <h2 class="titulo-modulo-editorial">Etiquetas del portal</h2>
+                            <p class="descripcion-modulo-editorial">
+                                Agrega nuevas etiquetas en una línea o edita las existentes de forma rápida.
+                            </p>
+                        </div>
+                        <span id="total-catalogo" class="etiqueta-tabla contador-catalogo">0 registros</span>
+                    </div>
+
+                    <div id="mensaje-catalogo" class="alerta-admin" role="status" hidden></div>
+
+                    <!-- Barra compacta horizontal para crear o editar etiqueta -->
+                    <section id="panel-formulario-catalogo" class="barra-form-etiquetas" aria-labelledby="titulo-form-catalogo">
+                        <div class="cabecera-inline-etiquetas">
+                            <h3 id="titulo-form-catalogo">Nueva etiqueta</h3>
+                        </div>
+
+                        <form id="formulario-catalogo" class="form-horizontal-etiquetas" novalidate>
+                            <input type="hidden" id="catalogo-id" value="0">
+
+                            <div class="campo-admin campo-nombre-etiqueta">
+                                <label for="catalogo-nombre" class="etiqueta-accesible">Nombre de la etiqueta</label>
+                                <input
+                                    type="text"
+                                    id="catalogo-nombre"
+                                    maxlength="80"
+                                    placeholder="Nombre de la etiqueta (ej. Inteligencia Artificial)"
+                                    required
+                                >
+                            </div>
+
+                            <div class="acciones-inline-etiquetas">
+                                <button type="submit" class="boton-primario-admin boton-guardar-etiqueta">Guardar</button>
+                                <button type="button" id="btn-cancelar-catalogo" class="boton-secundario-admin boton-cancelar-inline" hidden>
+                                    Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+
+                    <section class="panel-tabla panel-listado-etiquetas" aria-labelledby="titulo-tabla-etiquetas">
+                        <div class="contenedor-tabla">
+                            <table class="tabla-datos tabla-etiquetas-admin">
+                                <thead>
+                                    <tr>
+                                        <th class="col-etiq-nombre">Etiqueta</th>
+                                        <th class="col-etiq-total">Noticias relacionadas</th>
+                                        <th class="col-etiq-acciones">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cuerpo-tabla-catalogo">
+                                    <tr>
+                                        <td colspan="3" class="fila-vacia">Cargando etiquetas...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
                 </div>
-
-                <div id="mensaje-catalogo" class="alerta-admin" role="status" hidden></div>
-
-                <!-- Formulario HTML para crear o editar etiqueta -->
-                <section id="panel-formulario-catalogo" class="tarjeta-form" hidden aria-labelledby="titulo-form-catalogo">
-                    <div class="cabecera-panel">
-                        <h2 id="titulo-form-catalogo">Nueva etiqueta</h2>
-                        <button type="button" id="btn-cancelar-catalogo" class="boton-secundario-admin">Cancelar</button>
-                    </div>
-
-                    <form id="formulario-catalogo" class="formulario-cambios" novalidate>
-                        <input type="hidden" id="catalogo-id" value="0">
-
-                        <div class="campo-admin">
-                            <label for="catalogo-nombre">Nombre</label>
-                            <input type="text" id="catalogo-nombre" maxlength="80" required>
-                        </div>
-
-                        <div class="celda-acciones">
-                            <button type="submit" class="boton-primario-admin">Guardar</button>
-                        </div>
-                    </form>
-                </section>
-
-                <section class="panel-tabla" aria-labelledby="titulo-tabla-etiquetas">
-                    <div class="cabecera-panel">
-                        <h2 id="titulo-tabla-etiquetas">Listado de Etiquetas</h2>
-                        <span id="total-catalogo" class="etiqueta-tabla">0 registros</span>
-                    </div>
-
-                    <div class="contenedor-tabla">
-                        <table class="tabla-datos">
-                            <thead>
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>Noticias relacionadas</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="cuerpo-tabla-catalogo">
-                                <tr>
-                                    <td colspan="3" class="fila-vacia">Cargando etiquetas...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
             </main>
         </div>
     </div>

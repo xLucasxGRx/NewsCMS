@@ -184,6 +184,11 @@ async function cargarNoticiaExistente(id) {
 
     const n = datos.noticia;
     document.getElementById("titulo-pagina-editor").textContent = "Editar noticia";
+    const subtituloEditor = document.getElementById("subtitulo-pagina-editor");
+    if (subtituloEditor) {
+        subtituloEditor.textContent = "Modifica el artículo y guarda cambios o actualiza su publicación";
+    }
+    actualizarInsigniaEstadoEditor(n.estado || "borrador");
     document.getElementById("noticia-id").value = String(n.id);
     document.getElementById("titulo").value = n.titulo || "";
     document.getElementById("resumen").value = n.resumen || "";
@@ -209,6 +214,9 @@ async function cargarNoticiaExistente(id) {
         const cont = document.getElementById("contenedor-vista-previa");
         img.src = `../${n.imagen}`;
         cont.hidden = false;
+        actualizarEstadoVisualImagen(true);
+    } else {
+        actualizarEstadoVisualImagen(false);
     }
 
     const idsEtiquetas = n.etiquetas_ids || [];
@@ -289,8 +297,8 @@ async function inicializarEditorTinyMce() {
             statusbar: false,
             branding: false,
             promotion: false,
-            height: 380,
-            min_height: 300,
+            height: 460,
+            min_height: 360,
             width: "100%",
             resize: true,
             toolbar_mode: "wrap",
@@ -344,9 +352,33 @@ function inicializarVistaPreviaImagen() {
         lector.onload = (e) => {
             img.src = e.target.result;
             cont.hidden = false;
+            actualizarEstadoVisualImagen(true);
         };
         lector.readAsDataURL(archivo);
     });
+}
+
+function actualizarEstadoVisualImagen(tieneImagen) {
+    const aviso = document.getElementById("aviso-sin-imagen");
+    if (aviso) {
+        aviso.hidden = Boolean(tieneImagen);
+    }
+}
+
+function actualizarInsigniaEstadoEditor(estado) {
+    const badge = document.getElementById("badge-estado-editor");
+    if (!badge) {
+        return;
+    }
+    const etiquetas = {
+        borrador: "Borrador",
+        pendiente_revision: "Pendiente de revisión",
+        cambios_solicitados: "Cambios solicitados",
+        publicada: "Publicada",
+        archivada: "Archivada"
+    };
+    badge.className = `estado-badge estado-${estado || "borrador"}`;
+    badge.textContent = etiquetas[estado] || "Nueva noticia";
 }
 
 function inicializarBotonesGuardado() {
@@ -399,6 +431,7 @@ async function enviarFormularioNoticia(accion) {
         const resultado = await respuesta.json();
         if (respuesta.ok && resultado.ok) {
             document.getElementById("noticia-id").value = String(resultado.id);
+            actualizarInsigniaEstadoEditor(accion);
             mostrarMensajeEditor(resultado.mensaje || "Noticia guardada.", false);
             return;
         }

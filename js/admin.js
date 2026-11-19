@@ -63,14 +63,19 @@ async function iniciarPanel() {
         if (!datos.permisos || permisos.ver_dashboard) {
             await cargarEstadisticas();
         } else {
-            const tarjetas = document.querySelector(".cuadricula-tarjetas");
-            if (tarjetas) {
-                tarjetas.hidden = true;
+            const bloqueStats = document.getElementById("bloque-estadisticas") || document.querySelector(".rejilla-estadisticas");
+            if (bloqueStats) {
+                bloqueStats.hidden = true;
             }
         }
 
         if (!datos.permisos || permisos.consultar_noticias_propias || permisos.consultar_noticias_ajenas) {
             await cargarTablaDashboard();
+        } else {
+            const panelTabla = document.querySelector(".panel-noticias-dashboard");
+            if (panelTabla) {
+                panelTabla.hidden = true;
+            }
         }
     } catch {
         window.location.href = "../acceso.html";
@@ -288,26 +293,42 @@ async function cargarTablaDashboard() {
             const tr = document.createElement("tr");
 
             const tdTitulo = document.createElement("td");
-            tdTitulo.textContent = n.titulo;
+            tdTitulo.className = "celda-titulo-dash";
+            tdTitulo.setAttribute("data-etiqueta", "Título");
+            const spanTitulo = document.createElement("span");
+            spanTitulo.className = "titulo-noticia-dash";
+            spanTitulo.textContent = n.titulo;
+            tdTitulo.appendChild(spanTitulo);
 
             const tdCategoria = document.createElement("td");
-            tdCategoria.textContent = n.categoria;
+            tdCategoria.setAttribute("data-etiqueta", "Categoría");
+            const chipCat = document.createElement("span");
+            chipCat.className = "chip-categoria-dash";
+            chipCat.textContent = n.categoria;
+            tdCategoria.appendChild(chipCat);
 
             const tdAutor = document.createElement("td");
+            tdAutor.className = "celda-autor-dash";
+            tdAutor.setAttribute("data-etiqueta", "Autor");
             tdAutor.textContent = n.autor;
 
             const tdEstado = document.createElement("td");
+            tdEstado.className = "celda-estado-dash";
+            tdEstado.setAttribute("data-etiqueta", "Estado");
             const badge = document.createElement("span");
             badge.className = `estado-badge estado-${n.estado}`;
             badge.textContent = etiquetasEstado[n.estado] || n.estado;
             tdEstado.appendChild(badge);
 
             const tdFecha = document.createElement("td");
+            tdFecha.className = "celda-fecha-dash";
+            tdFecha.setAttribute("data-etiqueta", "Fecha");
             const fechaBase = n.fecha_publicacion || n.fecha_creacion || "";
             tdFecha.textContent = fechaBase ? fechaBase.slice(0, 10) : "-";
 
             const tdAcciones = document.createElement("td");
-            tdAcciones.className = "celda-acciones";
+            tdAcciones.className = "celda-acciones celda-acciones-dash";
+            tdAcciones.setAttribute("data-etiqueta", "Acciones");
             if (n.puede_editar) {
                 const aEdit = document.createElement("a");
                 aEdit.href = `editar_noticia.html?id=${encodeURIComponent(n.id)}`;

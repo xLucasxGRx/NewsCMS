@@ -142,17 +142,11 @@ async function cargarNoticiasAdmin() {
         cuerpo.textContent = "";
 
         if (totalEl) {
-            totalEl.textContent = `${noticias.length} registros`;
+            totalEl.textContent = noticias.length === 1 ? "1 noticia" : `${noticias.length} noticias`;
         }
 
         if (noticias.length === 0) {
-            const tr = document.createElement("tr");
-            const td = document.createElement("td");
-            td.colSpan = 6;
-            td.className = "fila-vacia";
-            td.textContent = "No hay noticias que coincidan con la búsqueda.";
-            tr.appendChild(td);
-            cuerpo.appendChild(tr);
+            renderizarEstadoVacioNoticias(cuerpo, q !== "" || estado !== "");
             return;
         }
 
@@ -168,55 +162,78 @@ async function cargarNoticiasAdmin() {
             const tr = document.createElement("tr");
 
             const tdTitulo = document.createElement("td");
+            tdTitulo.className = "celda-titulo-noticias";
+            tdTitulo.setAttribute("data-etiqueta", "Título");
             const spanTitulo = document.createElement("span");
+            spanTitulo.className = "titulo-noticia-lista";
             spanTitulo.textContent = n.titulo;
             tdTitulo.appendChild(spanTitulo);
 
             if (n.estado === "cambios_solicitados" && n.ultima_observacion) {
                 const obs = document.createElement("p");
-                obs.className = "observacion-editorial";
-                obs.textContent = `Observación del editor: ${n.ultima_observacion}`;
+                obs.className = "observacion-editorial observacion-compacta";
+                obs.textContent = `Observación: ${n.ultima_observacion}`;
                 tdTitulo.appendChild(obs);
             }
 
             const tdCategoria = document.createElement("td");
-            tdCategoria.textContent = n.categoria;
+            tdCategoria.setAttribute("data-etiqueta", "Categoría");
+            const chipCat = document.createElement("span");
+            chipCat.className = "chip-categoria-noticias";
+            chipCat.textContent = n.categoria;
+            tdCategoria.appendChild(chipCat);
 
             const tdAutor = document.createElement("td");
+            tdAutor.className = "celda-autor-noticias";
+            tdAutor.setAttribute("data-etiqueta", "Autor");
             tdAutor.textContent = n.autor;
 
             const tdEstado = document.createElement("td");
+            tdEstado.className = "celda-estado-noticias";
+            tdEstado.setAttribute("data-etiqueta", "Estado");
             const insignia = document.createElement("span");
             insignia.className = `estado-badge estado-${n.estado}`;
             insignia.textContent = etiquetasEstado[n.estado] || n.estado;
             tdEstado.appendChild(insignia);
 
             const tdFecha = document.createElement("td");
+            tdFecha.className = "celda-fecha-noticias";
+            tdFecha.setAttribute("data-etiqueta", "Fecha");
             const fechaBase = n.fecha_publicacion || n.fecha_creacion || "";
             tdFecha.textContent = fechaBase ? fechaBase.slice(0, 10) : "-";
 
             const tdAcciones = document.createElement("td");
-            tdAcciones.className = "celda-acciones";
+            tdAcciones.className = "celda-acciones celda-acciones-noticias";
+            tdAcciones.setAttribute("data-etiqueta", "Acciones");
 
             if (n.puede_editar) {
                 const btnEditar = document.createElement("a");
                 btnEditar.href = `editar_noticia.html?id=${encodeURIComponent(n.id)}`;
-                btnEditar.className = "enlace-accion";
-                btnEditar.textContent = "Editar";
+                btnEditar.className = "enlace-accion boton-accion-tabla";
+                btnEditar.appendChild(crearIconoAccionSvg("editar"));
+                const lblEditar = document.createElement("span");
+                lblEditar.textContent = "Editar";
+                btnEditar.appendChild(lblEditar);
                 tdAcciones.appendChild(btnEditar);
             }
 
             const btnVer = document.createElement("a");
             btnVer.href = `../noticia.html?id=${encodeURIComponent(n.id)}`;
-            btnVer.className = "enlace-accion enlace-ver";
-            btnVer.textContent = "Ver";
+            btnVer.className = "enlace-accion enlace-ver boton-accion-tabla";
+            btnVer.appendChild(crearIconoAccionSvg("ver"));
+            const lblVer = document.createElement("span");
+            lblVer.textContent = "Ver";
+            btnVer.appendChild(lblVer);
             tdAcciones.appendChild(btnVer);
 
             if (n.estado === "publicada" && n.puede_retirar) {
                 const btnRetirar = document.createElement("button");
                 btnRetirar.type = "button";
-                btnRetirar.className = "enlace-accion enlace-retirar";
-                btnRetirar.textContent = "Retirar publicación";
+                btnRetirar.className = "enlace-accion enlace-retirar boton-accion-tabla";
+                btnRetirar.appendChild(crearIconoAccionSvg("retirar"));
+                const lblRetirar = document.createElement("span");
+                lblRetirar.textContent = "Retirar publicación";
+                btnRetirar.appendChild(lblRetirar);
                 btnRetirar.addEventListener("click", () => {
                     cambiarEstadoPublicacion(n.id, n.titulo, "retirar_publicacion");
                 });
@@ -224,8 +241,11 @@ async function cargarNoticiasAdmin() {
             } else if (n.estado === "archivada" && n.puede_restaurar) {
                 const btnRestaurar = document.createElement("button");
                 btnRestaurar.type = "button";
-                btnRestaurar.className = "enlace-accion enlace-restaurar";
-                btnRestaurar.textContent = "Restaurar publicación";
+                btnRestaurar.className = "enlace-accion enlace-restaurar boton-accion-tabla";
+                btnRestaurar.appendChild(crearIconoAccionSvg("restaurar"));
+                const lblRestaurar = document.createElement("span");
+                lblRestaurar.textContent = "Restaurar publicación";
+                btnRestaurar.appendChild(lblRestaurar);
                 btnRestaurar.addEventListener("click", () => {
                     cambiarEstadoPublicacion(n.id, n.titulo, "restaurar_publicacion");
                 });
@@ -320,4 +340,84 @@ function mostrarMensajeNoticias(texto, esError) {
     alerta.textContent = texto;
     alerta.className = esError ? "alerta-admin alerta-admin-error" : "alerta-admin alerta-admin-exito";
     alerta.hidden = false;
+}
+
+function renderizarEstadoVacioNoticias(cuerpo, hayFiltrosActivos) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 6;
+    td.className = "fila-vacia";
+
+    const caja = document.createElement("div");
+    caja.className = "estado-vacio-noticias";
+
+    const titulo = document.createElement("strong");
+    titulo.className = "titulo-estado-vacio";
+    titulo.textContent = hayFiltrosActivos
+        ? "No se encontraron noticias"
+        : "No hay noticias registradas";
+
+    const descripcion = document.createElement("p");
+    descripcion.className = "descripcion-estado-vacio";
+    descripcion.textContent = hayFiltrosActivos
+        ? "No existen artículos que coincidan con el término buscado o el estado seleccionado."
+        : "Todavía no hay publicaciones disponibles para mostrar en tu listado.";
+
+    caja.appendChild(titulo);
+    caja.appendChild(descripcion);
+
+    if (hayFiltrosActivos) {
+        const btnLimpiar = document.createElement("button");
+        btnLimpiar.type = "button";
+        btnLimpiar.className = "boton-secundario-admin boton-limpiar-filtros";
+        btnLimpiar.textContent = "Limpiar filtros";
+        btnLimpiar.addEventListener("click", () => {
+            const busq = document.getElementById("filtro-busqueda");
+            const est = document.getElementById("filtro-estado");
+            if (busq) busq.value = "";
+            if (est) est.value = "";
+            cargarNoticiasAdmin();
+        });
+        caja.appendChild(btnLimpiar);
+    }
+
+    td.appendChild(caja);
+    tr.appendChild(td);
+    cuerpo.appendChild(tr);
+}
+
+function crearIconoAccionSvg(tipo) {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.setAttribute("class", "icono-accion-tabla");
+    svg.setAttribute("aria-hidden", "true");
+
+    const agregarTrazo = (tag, attrs) => {
+        const el = document.createElementNS(ns, tag);
+        Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+        svg.appendChild(el);
+    };
+
+    if (tipo === "editar") {
+        agregarTrazo("path", { d: "M12 20h9" });
+        agregarTrazo("path", { d: "M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" });
+    } else if (tipo === "ver") {
+        agregarTrazo("path", { d: "M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" });
+        agregarTrazo("circle", { cx: "12", cy: "12", r: "3" });
+    } else if (tipo === "retirar") {
+        agregarTrazo("rect", { x: "3", y: "4", width: "18", height: "4", rx: "1" });
+        agregarTrazo("path", { d: "M4 8h16v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z" });
+        agregarTrazo("path", { d: "M10 13h4" });
+    } else if (tipo === "restaurar") {
+        agregarTrazo("path", { d: "M3 12a9 9 0 1 0 3-6.7L3 8" });
+        agregarTrazo("path", { d: "M3 3v5h5" });
+    }
+
+    return svg;
 }
