@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Noticias — NewsCMS</title>
-    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/admin.css?v=20261119c">
 </head>
 <body>
     <div id="contenedor-admin" class="contenedor-admin" hidden>
@@ -66,6 +66,27 @@
 
                     <div id="mensaje-noticias" class="alerta-admin" role="status" hidden></div>
 
+                    <div id="resumen-contadores-noticias" class="resumen-contadores-noticias" aria-label="Resumen de noticias por estado">
+                        <span class="pill-contador-noticia pill-total">
+                            Total accesible <strong id="cnt-noticias-total">0</strong>
+                        </span>
+                        <span class="pill-contador-noticia pill-publicada">
+                            Publicadas <strong id="cnt-noticias-publicada">0</strong>
+                        </span>
+                        <span class="pill-contador-noticia pill-borrador">
+                            Borradores <strong id="cnt-noticias-borrador">0</strong>
+                        </span>
+                        <span class="pill-contador-noticia pill-pendiente">
+                            Pendientes <strong id="cnt-noticias-pendiente_revision">0</strong>
+                        </span>
+                        <span id="pill-noticias-cambios_solicitados" class="pill-contador-noticia pill-cambios" hidden>
+                            Cambios solicitados <strong id="cnt-noticias-cambios_solicitados">0</strong>
+                        </span>
+                        <span class="pill-contador-noticia pill-archivada">
+                            Archivadas <strong id="cnt-noticias-archivada">0</strong>
+                        </span>
+                    </div>
+
                     <section class="panel-tabla panel-listado-noticias" aria-labelledby="titulo-lista-noticias">
                         <div class="barra-filtros-noticias">
                             <div class="controles-filtros-noticias">
@@ -85,6 +106,22 @@
                                     >
                                 </div>
 
+                                <div class="campo-busqueda-noticias campo-busqueda-autor">
+                                    <span class="icono-busqueda-noticias" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M20 21a8 8 0 0 0-16 0"/>
+                                            <circle cx="12" cy="8" r="4"/>
+                                        </svg>
+                                    </span>
+                                    <input
+                                        type="search"
+                                        id="filtro-autor"
+                                        class="entrada-filtro entrada-busqueda-noticias"
+                                        placeholder="Buscar por autor..."
+                                        aria-label="Buscar noticias por autor"
+                                    >
+                                </div>
+
                                 <select id="filtro-estado" class="entrada-filtro selector-estado-noticias" aria-label="Filtrar por estado">
                                     <option value="">Todos los estados</option>
                                     <option value="borrador">Borrador</option>
@@ -95,7 +132,7 @@
                                 </select>
                             </div>
 
-                            <span id="total-registros" class="etiqueta-tabla contador-noticias">0 registros</span>
+                            <span id="total-registros" class="etiqueta-tabla contador-noticias">0 noticias</span>
                         </div>
 
                         <div class="contenedor-tabla">
@@ -117,12 +154,25 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        <div id="paginacion-noticias" class="paginacion-noticias" hidden>
+                            <div class="resumen-paginacion-noticias">
+                                <span id="info-paginacion-noticias" class="info-paginacion-noticias">Mostrando 0–0 de 0 noticias</span>
+                                <span id="detalle-pagina-noticias" class="detalle-pagina-noticias">Página 1 de 1</span>
+                            </div>
+
+                            <div class="controles-paginacion-noticias" aria-label="Paginación de noticias">
+                                <button type="button" id="btn-noticias-anterior" class="boton-secundario-admin boton-nav-paginacion">Anterior</button>
+                                <div id="numeros-paginacion-noticias" class="numeros-paginacion-noticias"></div>
+                                <button type="button" id="btn-noticias-siguiente" class="boton-secundario-admin boton-nav-paginacion">Siguiente</button>
+                            </div>
+                        </div>
                     </section>
                 </div>
             </main>
         </div>
     </div>
 
-    <script src="../js/admin_noticias.js"></script>
+    <script src="../js/admin_noticias.js?v=20261119c"></script>
 </body>
 </html>

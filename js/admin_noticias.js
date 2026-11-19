@@ -3,6 +3,12 @@
  */
 
 let csrfTokenNoticias = "";
+let paginaActualNoticias = 1;
+const POR_PAGINA_NOTICIAS = 10;
+let totalPaginasNoticias = 0;
+let secuenciaConsultaNoticias = 0;
+let temporizadorFiltroNoticias = null;
+let controladorConsultaNoticias = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     iniciarListadoNoticias();
@@ -43,6 +49,14 @@ async function iniciarListadoNoticias() {
         }
 
         if (datos.permisos && !permisos.consultar_noticias_propias && !permisos.consultar_noticias_ajenas) {
+            const resumen = document.getElementById("resumen-contadores-noticias");
+            if (resumen) {
+                resumen.hidden = true;
+            }
+            const paginacion = document.getElementById("paginacion-noticias");
+            if (paginacion) {
+                paginacion.hidden = true;
+            }
             const cuerpo = document.getElementById("cuerpo-tabla-noticias");
             if (cuerpo) {
                 cuerpo.textContent = "";
@@ -58,13 +72,58 @@ async function iniciarListadoNoticias() {
         }
 
         const filtroBusqueda = document.getElementById("filtro-busqueda");
+        const filtroAutor = document.getElementById("filtro-autor");
         const filtroEstado = document.getElementById("filtro-estado");
+        const btnAnterior = document.getElementById("btn-noticias-anterior");
+        const btnSiguiente = document.getElementById("btn-noticias-siguiente");
+
+        const recargarInmediatoDesdePagina1 = () => {
+            if (temporizadorFiltroNoticias) {
+                clearTimeout(temporizadorFiltroNoticias);
+                temporizadorFiltroNoticias = null;
+            }
+            paginaActualNoticias = 1;
+            cargarNoticiasAdmin();
+        };
+
+        const programarRecargaFiltros = () => {
+            if (temporizadorFiltroNoticias) {
+                clearTimeout(temporizadorFiltroNoticias);
+            }
+            paginaActualNoticias = 1;
+            temporizadorFiltroNoticias = setTimeout(() => {
+                temporizadorFiltroNoticias = null;
+                cargarNoticiasAdmin();
+            }, 240);
+        };
 
         if (filtroBusqueda) {
-            filtroBusqueda.addEventListener("input", () => cargarNoticiasAdmin());
+            filtroBusqueda.addEventListener("input", programarRecargaFiltros);
+            filtroBusqueda.addEventListener("search", recargarInmediatoDesdePagina1);
+        }
+        if (filtroAutor) {
+            filtroAutor.addEventListener("input", programarRecargaFiltros);
+            filtroAutor.addEventListener("search", recargarInmediatoDesdePagina1);
         }
         if (filtroEstado) {
-            filtroEstado.addEventListener("change", () => cargarNoticiasAdmin());
+            filtroEstado.addEventListener("change", recargarInmediatoDesdePagina1);
+        }
+
+        if (btnAnterior) {
+            btnAnterior.addEventListener("click", () => {
+                if (paginaActualNoticias > 1) {
+                    paginaActualNoticias--;
+                    cargarNoticiasAdmin();
+                }
+            });
+        }
+        if (btnSiguiente) {
+            btnSiguiente.addEventListener("click", () => {
+                if (paginaActualNoticias < totalPaginasNoticias) {
+                    paginaActualNoticias++;
+                    cargarNoticiasAdmin();
+                }
+            });
         }
 
         await cargarNoticiasAdmin();
@@ -115,15 +174,198 @@ function renderizarSidebarNoticias(modulos) {
     });
 }
 
+function actualizarContadoresNoticias(contadores) {
+    const mapa = contadores || {};
+    const claves = [
+        "total",
+        "publicada",
+        "borrador",
+        "pendiente_revision",
+        "cambios_solicitados",
+        "archivada"
+    ];
+    claves.forEach((clave) => {
+        const el = document.getElementById(`cnt-noticias-${clave}`);
+        if (el) {
+            el.textContent = String(Number(mapa[clave] ?? 0));
+        }
+    });
+
+    const pillCambios = document.getElementById("pill-noticias-cambios_solicitados");
+    if (pillCambios) {
+        pillCambios.hidden = Number(mapa.cambios_solicitados ?? 0) <= 0;
+    }
+}
+
+function construirVentanaPaginas(paginaActual, totalPaginas) {
+    if (totalPaginas <= 1) {
+        return totalPaginas === 1 ? [1] : [];
+    }
+    const seleccionadas = new Set([1, totalPaginas]);
+    for (let i = paginaActual - 1; i <= paginaActual + 1; i++) {
+        if (i >= 1 && i <= totalPaginas) {
+            seleccionadas.add(i);
+        }
+    }
+    const ordenadas = Array.from(seleccionadas).sort((a, b) => a - b);
+    const salida = [];
+    ordenadas.forEach((num, idx) => {
+        if (idx > 0 && num - ordenadas[idx - 1] > 1) {
+            salida.push("...");
+        }
+        salida.push(num);
+    });
+    return salida;
+}
+
+function actualizarPaginacionNoticias(totalFiltrado, pagina, porPagina, totalPaginas) {
+    const bloque = document.getElementById("paginacion-noticias");
+    const infoEl = document.getElementById("info-paginacion-noticias");
+    const detalleEl = document.getElementById("detalle-pagina-noticias");
+    const numerosEl = document.getElementById("numeros-paginacion-noticias");
+    const btnAnt = document.getElementById("btn-noticias-anterior");
+    const btnSig = document.getElementById("btn-noticias-siguiente");
+
+    if (!bloque) {
+        return;
+    }
+
+    if (totalFiltrado <= 0 || totalPaginas <= 0) {
+        bloque.hidden = true;
+        if (numerosEl) {
+            numerosEl.textContent = "";
+        }
+        return;
+    }
+
+    bloque.hidden = false;
+    const inicio = (pagina - 1) * porPagina + 1;
+    const fin = Math.min(pagina * porPagina, totalFiltrado);
+    const palabraNoticia = totalFiltrado === 1 ? "noticia" : "noticias";
+
+    if (infoEl) {
+        infoEl.textContent = `Mostrando ${inicio}\u2013${fin} de ${totalFiltrado} ${palabraNoticia}`;
+    }
+    if (detalleEl) {
+        detalleEl.textContent = `Página ${pagina} de ${totalPaginas}`;
+    }
+    if (btnAnt) {
+        btnAnt.disabled = pagina <= 1;
+    }
+    if (btnSig) {
+        btnSig.disabled = pagina >= totalPaginas;
+    }
+
+    if (numerosEl) {
+        numerosEl.textContent = "";
+        const items = construirVentanaPaginas(pagina, totalPaginas);
+        items.forEach((item) => {
+            if (item === "...") {
+                const span = document.createElement("span");
+                span.className = "elipsis-paginacion-noticias";
+                span.setAttribute("aria-hidden", "true");
+                span.textContent = "...";
+                numerosEl.appendChild(span);
+                return;
+            }
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = item === pagina ? "btn-pagina-noticias activa" : "btn-pagina-noticias";
+            btn.textContent = String(item);
+            btn.setAttribute("aria-label", `Ir a la página ${item}`);
+            if (item === pagina) {
+                btn.setAttribute("aria-current", "page");
+                btn.disabled = true;
+            } else {
+                btn.addEventListener("click", () => {
+                    paginaActualNoticias = item;
+                    cargarNoticiasAdmin();
+                });
+            }
+            numerosEl.appendChild(btn);
+        });
+    }
+}
+
+function renderizarEstadoCargandoNoticias(cuerpo) {
+    if (!cuerpo) {
+        return;
+    }
+    cuerpo.textContent = "";
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 6;
+    td.className = "fila-vacia";
+    td.textContent = "Cargando noticias...";
+    tr.appendChild(td);
+    cuerpo.appendChild(tr);
+}
+
+function renderizarEstadoErrorNoticias(cuerpo, detalle) {
+    if (!cuerpo) {
+        return;
+    }
+    cuerpo.textContent = "";
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 6;
+    td.className = "fila-vacia";
+
+    const caja = document.createElement("div");
+    caja.className = "estado-vacio-noticias";
+
+    const titulo = document.createElement("strong");
+    titulo.className = "titulo-estado-vacio";
+    titulo.textContent = "No se pudieron cargar las noticias";
+
+    const descripcion = document.createElement("p");
+    descripcion.className = "descripcion-estado-vacio";
+    descripcion.textContent = detalle || "Ocurrió un problema al consultar el servidor.";
+
+    const btnReintentar = document.createElement("button");
+    btnReintentar.type = "button";
+    btnReintentar.className = "boton-secundario-admin boton-limpiar-filtros";
+    btnReintentar.textContent = "Reintentar";
+    btnReintentar.addEventListener("click", () => cargarNoticiasAdmin());
+
+    caja.appendChild(titulo);
+    caja.appendChild(descripcion);
+    caja.appendChild(btnReintentar);
+    td.appendChild(caja);
+    tr.appendChild(td);
+    cuerpo.appendChild(tr);
+
+    const pag = document.getElementById("paginacion-noticias");
+    if (pag) {
+        pag.hidden = true;
+    }
+}
+
 async function cargarNoticiasAdmin() {
     const q = (document.getElementById("filtro-busqueda")?.value || "").trim();
+    const autor = (document.getElementById("filtro-autor")?.value || "").trim();
     const estado = document.getElementById("filtro-estado")?.value || "";
     const cuerpo = document.getElementById("cuerpo-tabla-noticias");
     const totalEl = document.getElementById("total-registros");
 
-    const params = new URLSearchParams({ modo: "admin_lista" });
+    const miSecuencia = ++secuenciaConsultaNoticias;
+    if (controladorConsultaNoticias) {
+        controladorConsultaNoticias.abort();
+    }
+    controladorConsultaNoticias = typeof AbortController !== "undefined" ? new AbortController() : null;
+
+    renderizarEstadoCargandoNoticias(cuerpo);
+
+    const params = new URLSearchParams({
+        modo: "admin_lista",
+        pagina: String(paginaActualNoticias),
+        por_pagina: String(POR_PAGINA_NOTICIAS)
+    });
     if (q) {
         params.set("q", q);
+    }
+    if (autor) {
+        params.set("autor", autor);
     }
     if (estado) {
         params.set("estado", estado);
@@ -131,22 +373,52 @@ async function cargarNoticiasAdmin() {
 
     try {
         const respuesta = await fetch(`../php/noticias.php?${params.toString()}`, {
-            credentials: "same-origin"
+            credentials: "same-origin",
+            signal: controladorConsultaNoticias ? controladorConsultaNoticias.signal : undefined
         });
-        if (!respuesta.ok) {
+
+        let datos = null;
+        try {
+            datos = await respuesta.json();
+        } catch {
+            datos = null;
+        }
+
+        if (miSecuencia !== secuenciaConsultaNoticias) {
             return;
         }
 
-        const datos = await respuesta.json();
-        const noticias = datos.noticias || [];
-        cuerpo.textContent = "";
-
-        if (totalEl) {
-            totalEl.textContent = noticias.length === 1 ? "1 noticia" : `${noticias.length} noticias`;
+        if (!respuesta.ok || !datos || datos.ok !== true || !Array.isArray(datos.noticias)) {
+            const msgError = (datos && datos.mensaje) ? datos.mensaje : `Error HTTP ${respuesta.status} al cargar noticias.`;
+            renderizarEstadoErrorNoticias(cuerpo, msgError);
+            return;
         }
 
+        const noticias = datos.noticias;
+        const contadores = datos.contadores || {};
+        const totalFiltrado = Number(datos.total ?? noticias.length);
+        const totalGlobal = Number(contadores.total ?? totalFiltrado);
+        const porPagina = Number(datos.por_pagina ?? POR_PAGINA_NOTICIAS);
+        totalPaginasNoticias = Number(datos.total_paginas ?? 0);
+        paginaActualNoticias = Number(datos.pagina ?? 1);
+
+        actualizarContadoresNoticias(contadores);
+
+        const hayFiltros = q !== "" || autor !== "" || estado !== "";
+        if (totalEl) {
+            if (hayFiltros) {
+                const palabra = totalGlobal === 1 ? "noticia" : "noticias";
+                totalEl.textContent = `${totalFiltrado} de ${totalGlobal} ${palabra}`;
+            } else {
+                totalEl.textContent = totalFiltrado === 1 ? "1 noticia" : `${totalFiltrado} noticias`;
+            }
+        }
+
+        cuerpo.textContent = "";
+        actualizarPaginacionNoticias(totalFiltrado, paginaActualNoticias, porPagina, totalPaginasNoticias);
+
         if (noticias.length === 0) {
-            renderizarEstadoVacioNoticias(cuerpo, q !== "" || estado !== "");
+            renderizarEstadoVacioNoticias(cuerpo, hayFiltros);
             return;
         }
 
@@ -260,8 +532,13 @@ async function cargarNoticiasAdmin() {
             tr.appendChild(tdAcciones);
             cuerpo.appendChild(tr);
         });
-    } catch {
-        // Sin acción adicional si falla la red
+    } catch (error) {
+        if (error && error.name === "AbortError") {
+            return;
+        }
+        if (miSecuencia === secuenciaConsultaNoticias) {
+            renderizarEstadoErrorNoticias(cuerpo, "No se pudo conectar con el servidor para cargar las noticias.");
+        }
     }
 }
 
@@ -354,13 +631,13 @@ function renderizarEstadoVacioNoticias(cuerpo, hayFiltrosActivos) {
     const titulo = document.createElement("strong");
     titulo.className = "titulo-estado-vacio";
     titulo.textContent = hayFiltrosActivos
-        ? "No se encontraron noticias"
+        ? "No se encontraron noticias con los filtros seleccionados"
         : "No hay noticias registradas";
 
     const descripcion = document.createElement("p");
     descripcion.className = "descripcion-estado-vacio";
     descripcion.textContent = hayFiltrosActivos
-        ? "No existen artículos que coincidan con el término buscado o el estado seleccionado."
+        ? "Prueba ajustando el título, el autor o el estado seleccionado."
         : "Todavía no hay publicaciones disponibles para mostrar en tu listado.";
 
     caja.appendChild(titulo);
@@ -373,9 +650,12 @@ function renderizarEstadoVacioNoticias(cuerpo, hayFiltrosActivos) {
         btnLimpiar.textContent = "Limpiar filtros";
         btnLimpiar.addEventListener("click", () => {
             const busq = document.getElementById("filtro-busqueda");
+            const aut = document.getElementById("filtro-autor");
             const est = document.getElementById("filtro-estado");
             if (busq) busq.value = "";
+            if (aut) aut.value = "";
             if (est) est.value = "";
+            paginaActualNoticias = 1;
             cargarNoticiasAdmin();
         });
         caja.appendChild(btnLimpiar);

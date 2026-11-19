@@ -257,11 +257,41 @@ function construirEstadoVacioPublicidad() {
 
 function construirMarcadorSoloTextoAdmin(marco) {
     marco.textContent = "";
+    marco.classList.remove("marco-error-imagen");
     marco.classList.add("marco-solo-texto");
     const chip = document.createElement("span");
     chip.className = "badge-solo-texto-admin";
     chip.textContent = "Solo texto";
     marco.appendChild(chip);
+}
+
+function construirMarcadorErrorImagenAdmin(marco) {
+    marco.textContent = "";
+    marco.classList.remove("marco-solo-texto");
+    marco.classList.add("marco-error-imagen");
+    const chip = document.createElement("span");
+    chip.className = "badge-error-imagen-admin";
+    chip.textContent = "Imagen no disponible";
+    marco.appendChild(chip);
+}
+
+function asignarImagenConRespaldoAdmin(img, rutaImagen, idAnuncio, onFalloTotal) {
+    const urlRespaldo = `../php/complementos.php?canal=patrocinios&modo=imagen&id=${encodeURIComponent(idAnuncio)}`;
+    let intentoRespaldo = false;
+
+    img.onerror = () => {
+        if (!intentoRespaldo) {
+            intentoRespaldo = true;
+            img.src = urlRespaldo;
+            return;
+        }
+        img.onerror = null;
+        if (typeof onFalloTotal === "function") {
+            onFalloTotal();
+        }
+    };
+
+    img.src = `../${rutaImagen}`;
 }
 
 function construirFilaAnuncio(item) {
@@ -279,11 +309,10 @@ function construirFilaAnuncio(item) {
 
     if (rutaImagen !== "") {
         const img = document.createElement("img");
-        img.src = `../${rutaImagen}`;
         img.alt = item.titulo || "Banner publicitario";
         img.className = "miniatura-publicidad";
         img.loading = "lazy";
-        img.addEventListener("error", () => construirMarcadorSoloTextoAdmin(marco), { once: true });
+        asignarImagenConRespaldoAdmin(img, rutaImagen, item.id, () => construirMarcadorErrorImagenAdmin(marco));
         marco.appendChild(img);
     } else {
         construirMarcadorSoloTextoAdmin(marco);
@@ -519,12 +548,18 @@ function abrirEdicionAnuncio(item) {
     const rutaImagen = typeof item.imagen === "string" ? item.imagen.trim() : "";
 
     if (rutaImagen !== "") {
-        imgPrevia.src = `../${rutaImagen}`;
+        asignarImagenConRespaldoAdmin(imgPrevia, rutaImagen, item.id, () => {
+            contPrevia.hidden = true;
+            if (nombreArchivo) {
+                nombreArchivo.textContent = "Archivo registrado no disponible. Puedes subir uno nuevo.";
+            }
+        });
         contPrevia.hidden = false;
         if (nombreArchivo) {
             nombreArchivo.textContent = "Imagen actual conservada (opcional reemplazar)";
         }
     } else {
+        imgPrevia.onerror = null;
         imgPrevia.src = "";
         contPrevia.hidden = true;
         if (nombreArchivo) {

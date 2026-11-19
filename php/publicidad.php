@@ -21,6 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         listarAnunciosPublicos($pdo);
     } elseif ($modo === 'admin_lista') {
         listarAnunciosAdmin($pdo);
+    } elseif ($modo === 'imagen') {
+        servirImagenAnuncio($pdo);
     } else {
         http_response_code(400);
         echo json_encode(['ok' => false, 'mensaje' => 'Modo no válido.']);
@@ -100,6 +102,78 @@ function listarAnunciosAdmin(PDO $pdo): void
         'ok'       => true,
         'anuncios' => $anuncios,
     ]);
+}
+
+/**
+ * Entrega de forma segura la imagen registrada de un anuncio (visible o para administrador).
+ */
+function servirImagenAnuncio(PDO $pdo): void
+{
+    $id = (int) ($_GET['id'] ?? 0);
+    if ($id <= 0) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'mensaje' => 'Anuncio no válido.']);
+        return;
+    }
+
+    $stmt = $pdo->prepare('SELECT imagen, visible FROM anuncios WHERE id = ? LIMIT 1');
+    $stmt->execute([$id]);
+    $anuncio = $stmt->fetch();
+
+    if (!$anuncio) {
+        http_response_code(404);
+        echo json_encode(['ok' => false, 'mensaje' => 'Anuncio no encontrado.']);
+        return;
+    }
+
+    if ((int) ($anuncio['visible'] ?? 0) !== 1) {
+        iniciarSesionSegura();
+        if (!estaAutenticado() || !tieneRol(['administrador'])) {
+            http_response_code(404);
+            echo json_encode(['ok' => false, 'mensaje' => 'Recurso no disponible.']);
+            return;
+        }
+    }
+
+    $rutaRelativa = trim((string) ($anuncio['imagen'] ?? ''));
+    if ($rutaRelativa === '' || strpos($rutaRelativa, 'uploads/publicidad/') !== 0 || strpos($rutaRelativa, '..') !== false) {
+        http_response_code(404);
+        echo json_encode(['ok' => false, 'mensaje' => 'El anuncio no posee imagen válida.']);
+        return;
+    }
+
+    $dirPermitido = realpath(__DIR__ . '/../uploads/publicidad');
+    $archivoReal = realpath(__DIR__ . '/../' . $rutaRelativa);
+
+    if (
+        $dirPermitido === false
+        || $archivoReal === false
+        || strpos($archivoReal, $dirPermitido . DIRECTORY_SEPARATOR) !== 0
+        || !is_file($archivoReal)
+    ) {
+        http_response_code(404);
+        echo json_encode(['ok' => false, 'mensaje' => 'Archivo de imagen no encontrado.']);
+        return;
+    }
+
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mime = $finfo ? (string) finfo_file($finfo, $archivoReal) : '';
+    if ($finfo) {
+        finfo_close($finfo);
+    }
+
+    $mimesPermitidos = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!in_array($mime, $mimesPermitidos, true)) {
+        http_response_code(415);
+        echo json_encode(['ok' => false, 'mensaje' => 'Formato de imagen no permitido.']);
+        return;
+    }
+
+    header('Content-Type: ' . $mime);
+    header('X-Content-Type-Options: nosniff');
+    header('Cache-Control: private, max-age=300');
+    header('Content-Length: ' . filesize($archivoReal));
+    readfile($archivoReal);
 }
 
 /**

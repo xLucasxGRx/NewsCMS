@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Revisión Editorial — NewsCMS</title>
-    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/admin.css?v=20261119e">
 </head>
 <body>
     <div id="contenedor-admin" class="contenedor-admin" hidden>
@@ -39,7 +39,7 @@
                     </button>
                     <div class="titulo-cabecera-bloque">
                         <h1 class="titulo-modulo">Revisión Editorial</h1>
-                        <p class="subtitulo-modulo">Evalúa artículos pendientes, revisa su contenido y decide su publicación</p>
+                        <p class="subtitulo-modulo">Centro de lectura y evaluación para artículos en espera de aprobación</p>
                     </div>
                 </div>
 
@@ -53,12 +53,12 @@
             </header>
 
             <main class="contenido-admin contenido-revision-modulo">
-                <div class="modulo-revision">
+                <div class="modulo-revision modulo-centro-revision">
                     <div class="encabezado-bandeja-revision">
                         <div class="texto-encabezado-revision">
-                            <h2 id="titulo-bandeja-revision" class="titulo-bandeja-editorial">Bandeja de noticias pendientes</h2>
+                            <h2 id="titulo-bandeja-revision" class="titulo-bandeja-editorial">Centro de Revisión de Contenidos</h2>
                             <p class="descripcion-bandeja-editorial">
-                                Artículos enviados por los redactores en espera de lectura, aprobación o corrección.
+                                Selecciona un artículo de la bandeja para leer su contenido completo y decidir su publicación o corrección.
                             </p>
                         </div>
                         <span id="contador-pendientes" class="etiqueta-tabla contador-bandeja-revision">0 pendientes</span>
@@ -66,80 +66,141 @@
 
                     <div id="mensaje-revision" class="alerta-admin" role="status" hidden></div>
 
-                    <section class="panel-tabla panel-bandeja-revision" aria-labelledby="titulo-bandeja-revision">
-                        <div class="contenedor-tabla">
-                            <table class="tabla-datos tabla-revision-admin">
-                                <thead>
-                                    <tr>
-                                        <th class="col-titulo-revision">Título</th>
-                                        <th class="col-redactor-revision">Redactor</th>
-                                        <th class="col-categoria-revision">Categoría</th>
-                                        <th class="col-fecha-revision">Fecha</th>
-                                        <th class="col-estado-revision">Estado</th>
-                                        <th class="col-acciones-revision">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="cuerpo-tabla-revision">
-                                    <tr>
-                                        <td colspan="6" class="fila-vacia">Cargando noticias pendientes...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
+                    <div id="estado-cargando-revision" class="panel-estado-centro-revision">
+                        <p class="texto-estado-centro">Cargando bandeja de revisión editorial...</p>
+                    </div>
 
-                    <!-- Panel para leer el contenido completo antes de decidir -->
-                    <section id="panel-detalle-revision" class="panel-lector-revision" hidden aria-labelledby="detalle-titulo">
-                        <div class="cabecera-lector-revision">
-                            <div class="cabecera-lector-texto">
-                                <span class="etiqueta-contexto-revision">Lectura previa para evaluación</span>
-                                <h2 id="detalle-titulo">Vista previa de la noticia</h2>
+                    <div id="estado-error-revision" class="panel-estado-centro-revision panel-estado-error-revision" hidden>
+                        <strong class="titulo-estado-vacio">No se pudo cargar la bandeja de revisión</strong>
+                        <p id="texto-error-revision" class="descripcion-estado-vacio">Ocurrió un problema al consultar las noticias pendientes.</p>
+                        <button type="button" id="btn-reintentar-revision" class="boton-secundario-admin">Reintentar</button>
+                    </div>
+
+                    <div id="estado-vacio-centro-revision" class="panel-estado-centro-revision" hidden>
+                        <span class="etiqueta-vacio-revision">Al día</span>
+                        <strong class="titulo-estado-vacio">No hay noticias pendientes de revisión en este momento.</strong>
+                        <p class="descripcion-estado-vacio">
+                            Cuando un redactor envíe un artículo a revisión editorial, aparecerá en esta bandeja para su evaluación.
+                        </p>
+                    </div>
+
+                    <div id="centro-revision-layout" class="centro-revision-layout" hidden>
+                        <!-- Área izquierda: bandeja compacta de artículos pendientes -->
+                        <aside class="bandeja-pendientes-panel" aria-label="Bandeja de noticias pendientes">
+                            <div class="cabecera-panel-bandeja">
+                                <h3 class="titulo-panel-bandeja">Pendientes por revisar</h3>
+                                <span class="etiqueta-orden-bandeja">Orden de envío</span>
+                            </div>
+
+                            <div
+                                id="cuerpo-tabla-revision"
+                                class="lista-bandeja-revision"
+                                role="listbox"
+                                aria-labelledby="titulo-bandeja-revision"
+                            ></div>
+                        </aside>
+
+                        <!-- Área derecha: panel amplio de lectura y decisión editorial -->
+                        <section
+                            id="panel-detalle-revision"
+                            class="panel-evaluacion-revision"
+                            aria-labelledby="detalle-titulo"
+                            aria-live="polite"
+                        >
+                            <div class="cabecera-evaluacion-revision">
+                                <div class="evaluacion-etiquetas-top">
+                                    <span class="etiqueta-contexto-revision">En evaluación</span>
+                                    <span class="estado-badge estado-pendiente_revision">Pendiente de revisión</span>
+                                    <span id="detalle-categoria" class="chip-categoria-revision"></span>
+                                </div>
+                                <h2 id="detalle-titulo" class="titulo-evaluacion-revision">Selecciona una noticia pendiente</h2>
                                 <p id="detalle-meta" class="meta-lector-revision"></p>
+                                <div id="detalle-etiquetas" class="etiquetas-evaluacion-revision" hidden></div>
                             </div>
-                            <button type="button" id="cerrar-detalle" class="boton-secundario-admin boton-cerrar-panel">Cerrar</button>
-                        </div>
 
-                        <div class="cuerpo-lector-revision">
-                            <p id="detalle-resumen" class="resumen-revision"></p>
-                            <div id="detalle-imagen-contenedor" class="vista-previa-imagen imagen-lector-revision" hidden>
-                                <img id="detalle-imagen" src="" alt="Imagen de portada">
-                            </div>
-                            <div id="detalle-contenido" class="contenido-revision"></div>
-                        </div>
-                    </section>
+                            <div class="cuerpo-evaluacion-revision">
+                                <p id="detalle-resumen" class="resumen-revision" hidden></p>
 
-                    <!-- Formulario para solicitar cambios con observaciones obligatorias -->
-                    <section id="panel-solicitar-cambios" class="panel-cambios-revision" hidden aria-labelledby="titulo-solicitar-cambios">
-                        <div class="cabecera-cambios-revision">
-                            <div class="cabecera-cambios-texto">
-                                <span class="etiqueta-contexto-cambios">Decisión editorial</span>
-                                <h2 id="titulo-solicitar-cambios">Solicitar cambios</h2>
-                                <p id="cambios-noticia-titulo" class="noticia-objetivo-cambios"></p>
-                            </div>
-                            <button type="button" id="cancelar-cambios" class="boton-secundario-admin boton-cerrar-panel">Cancelar</button>
-                        </div>
+                                <div id="detalle-imagen-contenedor" class="vista-previa-imagen imagen-evaluacion-revision" hidden>
+                                    <img id="detalle-imagen" src="" alt="Imagen de portada de la noticia">
+                                </div>
 
-                        <form id="formulario-cambios" class="formulario-cambios cuerpo-cambios-revision" novalidate>
-                            <input type="hidden" id="cambios-noticia-id" value="0">
-                            <div class="campo-admin">
-                                <label for="campo-observaciones">Observaciones para el redactor (obligatorio)</label>
-                                <textarea
-                                    id="campo-observaciones"
-                                    rows="4"
-                                    placeholder="Escribe claramente qué debe corregir o ampliar el redactor..."
-                                    required
-                                ></textarea>
+                                <p id="detalle-estado-contenido" class="aviso-contenido-revision" hidden></p>
+
+                                <article id="detalle-contenido" class="contenido-revision contenido-evaluacion-lectura"></article>
+
+                                <section id="bloque-historial-revision" class="bloque-historial-revision" hidden aria-labelledby="titulo-historial-revision">
+                                    <h3 id="titulo-historial-revision" class="titulo-historial-revision">Observaciones editoriales previas</h3>
+                                    <ul id="lista-historial-revision" class="lista-historial-revision"></ul>
+                                </section>
                             </div>
-                            <div class="celda-acciones acciones-cambios-revision">
-                                <button type="submit" class="boton-aviso-admin boton-enviar-observaciones">Enviar observaciones</button>
-                            </div>
-                        </form>
-                    </section>
+
+                            <footer class="panel-decision-revision">
+                                <div class="barra-decision-revision">
+                                    <a
+                                        id="enlace-ver-noticia"
+                                        href="../noticia.html?id=0"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="enlace-accion enlace-ver boton-accion-revision"
+                                    >
+                                        Ver noticia
+                                    </a>
+
+                                    <div id="acciones-decision-revision" class="acciones-decision-revision">
+                                        <button
+                                            type="button"
+                                            id="btn-abrir-cambios"
+                                            class="enlace-accion enlace-cambios boton-accion-revision"
+                                            hidden
+                                        >
+                                            Solicitar cambios
+                                        </button>
+                                        <button
+                                            type="button"
+                                            id="btn-aprobar-noticia"
+                                            class="boton-primario-admin boton-aprobar-centro"
+                                            hidden
+                                        >
+                                            Aprobar y publicar
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <section id="panel-solicitar-cambios" class="panel-cambios-inline" hidden aria-labelledby="titulo-solicitar-cambios">
+                                    <div class="cabecera-cambios-inline">
+                                        <div>
+                                            <span class="etiqueta-contexto-cambios">Decisión editorial</span>
+                                            <h3 id="titulo-solicitar-cambios">Solicitar cambios al redactor</h3>
+                                            <p id="cambios-noticia-titulo" class="noticia-objetivo-cambios"></p>
+                                        </div>
+                                        <button type="button" id="cancelar-cambios" class="boton-secundario-admin boton-cerrar-panel">Cancelar</button>
+                                    </div>
+
+                                    <form id="formulario-cambios" class="formulario-cambios cuerpo-cambios-revision" novalidate>
+                                        <input type="hidden" id="cambios-noticia-id" value="0">
+                                        <div class="campo-admin">
+                                            <label for="campo-observaciones">Observaciones para el redactor (obligatorio)</label>
+                                            <textarea
+                                                id="campo-observaciones"
+                                                rows="4"
+                                                placeholder="Escribe claramente qué debe corregir o ampliar el redactor..."
+                                                required
+                                            ></textarea>
+                                        </div>
+                                        <div class="celda-acciones acciones-cambios-revision">
+                                            <button type="submit" id="btn-enviar-cambios" class="boton-aviso-admin boton-enviar-observaciones">Enviar observaciones</button>
+                                        </div>
+                                    </form>
+                                </section>
+                            </footer>
+                        </section>
+                    </div>
                 </div>
             </main>
         </div>
     </div>
 
-    <script src="../js/revision.js"></script>
+    <script src="../js/revision.js?v=20261119e"></script>
 </body>
 </html>

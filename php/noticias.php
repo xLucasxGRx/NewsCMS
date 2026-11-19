@@ -321,8 +321,13 @@ function responderDetalleNoticia(PDO $pdo): void
     ]);
 }
 
+function escaparLikeSql(string $texto): string
+{
+    return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $texto);
+}
+
 /**
- * Devuelve el listado administrativo de noticias según el rol del usuario.
+ * Devuelve el listado administrativo paginado y filtrado de noticias según permisos.
  */
 function responderListaAdmin(PDO $pdo): void
 {
@@ -348,46 +353,118 @@ function responderListaAdmin(PDO $pdo): void
         return;
     }
 
-    $busqueda = trim($_GET['q'] ?? '');
-    $estado = trim($_GET['estado'] ?? '');
+    $busqueda = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 200);
+    $autor = mb_substr(trim((string) ($_GET['autor'] ?? '')), 0, 120);
+    $estado = trim((string) ($_GET['estado'] ?? ''));
 
-    $sql = "SELECT n.id, n.titulo, n.estado, n.autor_id, n.es_destacada, n.es_ultima_hora,
-                   n.fecha_publicacion, n.fecha_creacion,
-                   c.nombre AS categoria, u.nombre AS autor,
-                   (SELECT r.observaciones
-                    FROM revisiones_editoriales r
-                    WHERE r.noticia_id = n.id
-                    ORDER BY r.fecha_creacion DESC, r.id DESC
-                    LIMIT 1) AS ultima_observacion
-            FROM noticias n
-            INNER JOIN categorias c ON c.id = n.categoria_id
-            INNER JOIN usuarios u ON u.id = n.autor_id
-            WHERE 1=1";
-
-    $parametros = [];
-
-    if ($puedeVerPropias && !$puedeVerAjenas) {
-        $sql .= ' AND n.autor_id = ?';
-        $parametros[] = $usuario['id'];
-    } elseif (!$puedeVerPropias && $puedeVerAjenas) {
-        $sql .= ' AND n.autor_id <> ?';
-        $parametros[] = $usuario['id'];
+    $estadosValidos = ['borrador', 'pendiente_revision', 'cambios_solicitados', 'publicada', 'archivada'];
+    if ($estado !== '' && !in_array($estado, $estadosValidos, true)) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'mensaje' => 'Estado de filtro no válido.']);
+        return;
     }
 
+    $pagina = max(1, (int) ($_GET['pagina'] ?? 1));
+    $porPaginaSolicitado = (int) ($_GET['por_pagina'] ?? 10);
+    $porPagina = max(1, min(50, $porPaginaSolicitado > 0 ? $porPaginaSolicitado : 10));
+
+    $alcanceCondicion = '1=1';
+    $alcanceParametros = [];
+    if ($puedeVerPropias && !$puedeVerAjenas) {
+        $alcanceCondicion = 'n.autor_id = ?';
+        $alcanceParametros[] = (int) $usuario['id'];
+    } elseif (!$puedeVerPropias && $puedeVerAjenas) {
+        $alcanceCondicion = 'n.autor_id <> ?';
+        $alcanceParametros[] = (int) $usuario['id'];
+    }
+
+    // Contadores globales reales según alcance de permisos (sin mezclar con filtros)
+    $contadores = [
+        'total'               => 0,
+        'publicada'           => 0,
+        'borrador'            => 0,
+        'pendiente_revision'  => 0,
+        'cambios_solicitados' => 0,
+        'archivada'           => 0,
+    ];
+    $stmtContadores = $pdo->prepare(
+        "SELECT n.estado, COUNT(*) AS cantidad
+         FROM noticias n
+         WHERE {$alcanceCondicion}
+         GROUP BY n.estado"
+    );
+    $stmtContadores->execute($alcanceParametros);
+    foreach ($stmtContadores->fetchAll() as $filaEstado) {
+        $claveEstado = (string) ($filaEstado['estado'] ?? '');
+        $cantidad = (int) ($filaEstado['cantidad'] ?? 0);
+        if (array_key_exists($claveEstado, $contadores)) {
+            $contadores[$claveEstado] = $cantidad;
+        }
+        $contadores['total'] += $cantidad;
+    }
+
+    // Condiciones combinadas: alcance primero + título + autor + estado
+    $condiciones = [$alcanceCondicion];
+    $parametros = $alcanceParametros;
+
     if ($busqueda !== '') {
-        $sql .= ' AND n.titulo LIKE ?';
-        $parametros[] = '%' . $busqueda . '%';
+        $condiciones[] = 'n.titulo LIKE ?';
+        $parametros[] = '%' . escaparLikeSql($busqueda) . '%';
+    }
+
+    if ($autor !== '') {
+        $condiciones[] = 'u.nombre LIKE ?';
+        $parametros[] = '%' . escaparLikeSql($autor) . '%';
     }
 
     if ($estado !== '') {
-        $sql .= ' AND n.estado = ?';
+        $condiciones[] = 'n.estado = ?';
         $parametros[] = $estado;
     }
 
-    $sql .= ' ORDER BY n.fecha_creacion DESC, n.id DESC';
+    $whereSql = implode(' AND ', $condiciones);
 
-    $consulta = $pdo->prepare($sql);
-    $consulta->execute($parametros);
+    $stmtTotal = $pdo->prepare(
+        "SELECT COUNT(*)
+         FROM noticias n
+         INNER JOIN usuarios u ON u.id = n.autor_id
+         WHERE {$whereSql}"
+    );
+    $stmtTotal->execute($parametros);
+    $totalFiltrado = (int) $stmtTotal->fetchColumn();
+
+    $totalPaginas = $totalFiltrado > 0 ? (int) ceil($totalFiltrado / $porPagina) : 0;
+    if ($totalPaginas > 0 && $pagina > $totalPaginas) {
+        $pagina = $totalPaginas;
+    } elseif ($totalFiltrado === 0) {
+        $pagina = 1;
+    }
+    $offset = ($pagina - 1) * $porPagina;
+
+    $sqlLista = "SELECT n.id, n.titulo, n.estado, n.autor_id, n.es_destacada, n.es_ultima_hora,
+                        n.fecha_publicacion, n.fecha_creacion,
+                        c.nombre AS categoria, u.nombre AS autor,
+                        (SELECT r.observaciones
+                         FROM revisiones_editoriales r
+                         WHERE r.noticia_id = n.id
+                         ORDER BY r.fecha_creacion DESC, r.id DESC
+                         LIMIT 1) AS ultima_observacion
+                 FROM noticias n
+                 INNER JOIN categorias c ON c.id = n.categoria_id
+                 INNER JOIN usuarios u ON u.id = n.autor_id
+                 WHERE {$whereSql}
+                 ORDER BY n.fecha_creacion DESC, n.id DESC
+                 LIMIT ? OFFSET ?";
+
+    $consulta = $pdo->prepare($sqlLista);
+    $indice = 1;
+    foreach ($parametros as $valor) {
+        $consulta->bindValue($indice, $valor);
+        $indice++;
+    }
+    $consulta->bindValue($indice, $porPagina, PDO::PARAM_INT);
+    $consulta->bindValue($indice + 1, $offset, PDO::PARAM_INT);
+    $consulta->execute();
     $filas = $consulta->fetchAll();
 
     $puedePublicar = tienePermiso('publicar_noticias');
@@ -398,8 +475,13 @@ function responderListaAdmin(PDO $pdo): void
     }
 
     echo json_encode([
-        'ok'       => true,
-        'noticias' => $filas,
+        'ok'            => true,
+        'noticias'      => $filas,
+        'total'         => $totalFiltrado,
+        'pagina'        => $pagina,
+        'por_pagina'    => $porPagina,
+        'total_paginas' => $totalPaginas,
+        'contadores'    => $contadores,
     ]);
 }
 
