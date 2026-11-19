@@ -1,0 +1,7 @@
+{
+  "identificador": "digital_magazine",
+  "nombre": "Digital Magazine — Revista Digital",
+  "descripcion": "Tema contemporáneo tipo revista digital con protagonismo visual de imágenes y tarjetas dinámicas.",
+  "version": "1.0.0",
+  "archivo_css": "tema.css"
+}

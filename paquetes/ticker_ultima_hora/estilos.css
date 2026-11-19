@@ -1,0 +1,73 @@
+.ticker-ultima-hora {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0.65rem 0;
+}
+
+.ticker-interior {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    overflow: hidden;
+}
+
+.ticker-etiqueta {
+    background-color: #b91c1c;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 0.22rem 0.6rem;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.ticker-pista {
+    overflow: hidden;
+    flex: 1;
+}
+
+.ticker-elementos {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.85rem;
+    white-space: nowrap;
+    animation: desplazamiento-ticker 22s linear infinite;
+}
+
+.ticker-elementos:hover {
+    animation-play-state: paused;
+}
+
+.ticker-enlace {
+    color: #162a45;
+    font-weight: 600;
+    font-size: 0.94rem;
+    text-decoration: none;
+}
+
+.ticker-enlace:hover {
+    text-decoration: underline;
+    color: #b91c1c;
+}
+
+.ticker-separador {
+    color: #94a3b8;
+}
+
+@keyframes desplazamiento-ticker {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-35%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ticker-elementos {
+        animation: none;
+        flex-wrap: wrap;
+        white-space: normal;
+    }
+}

@@ -1,0 +1,9 @@
+{
+  "identificador": "gestor_publicidad",
+  "nombre": "Gestor de Publicidad",
+  "descripcion": "Muestra hasta tres anuncios publicitarios habilitados en la portada de NewsCMS.",
+  "version": "1.0.0",
+  "zona": "portada_inferior",
+  "archivo_js": "principal.js",
+  "archivo_css": "estilos.css"
+}

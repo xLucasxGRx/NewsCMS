@@ -97,6 +97,7 @@ function responderListadoPublico(PDO $pdo): void
 {
     $busqueda = trim($_GET['q'] ?? '');
     $categoria = trim($_GET['categoria'] ?? '');
+    $etiqueta = trim($_GET['etiqueta'] ?? '');
 
     $sql = "SELECT n.id, n.titulo, n.resumen, n.imagen, n.es_destacada, n.es_ultima_hora,
                    n.fecha_publicacion, c.nombre AS categoria, c.identificador AS categoria_slug,
@@ -119,6 +120,16 @@ function responderListadoPublico(PDO $pdo): void
         $sql .= ' AND (c.identificador = ? OR c.nombre = ?)';
         $parametros[] = $categoria;
         $parametros[] = $categoria;
+    }
+
+    if ($etiqueta !== '') {
+        $sql .= ' AND EXISTS (
+            SELECT 1
+            FROM noticias_etiquetas ne
+            INNER JOIN etiquetas e ON e.id = ne.etiqueta_id
+            WHERE ne.noticia_id = n.id AND e.identificador = ?
+        )';
+        $parametros[] = $etiqueta;
     }
 
     $sql .= ' ORDER BY n.fecha_publicacion DESC, n.id DESC';

@@ -102,6 +102,14 @@ function renderizarModulos(modulosPermitidos) {
                 window.location.href = "revision.html";
                 return;
             }
+            if (modulo === "Complementos") {
+                window.location.href = "complementos.html";
+                return;
+            }
+            if (modulo === "Temas") {
+                window.location.href = "temas.html";
+                return;
+            }
             seleccionarModulo(modulo, boton);
         });
 

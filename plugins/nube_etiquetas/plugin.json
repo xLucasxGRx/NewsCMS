@@ -1,0 +1,9 @@
+{
+  "identificador": "nube_etiquetas",
+  "nombre": "Nube de Etiquetas",
+  "descripcion": "Muestra las etiquetas más usadas en noticias publicadas con tamaños proporcionales.",
+  "version": "1.0.0",
+  "zona": "portada_inferior",
+  "archivo_js": "principal.js",
+  "archivo_css": "estilos.css"
+}

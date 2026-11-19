@@ -1,0 +1,240 @@
+/* ==========================================================================
+   Tema: Tech Blog — Blog Tecnológico (Modo oscuro accesible)
+   Fondo grafito/azul marino, tipografía sans-serif moderna y acentos cian.
+   ========================================================================== */
+
+:root {
+    --color-fondo: #0b1120;
+    --color-superficie: #111827;
+    --color-texto: #e2e8f0;
+    --color-texto-suave: #94a3b8;
+    --color-primario: #38bdf8;
+    --color-primario-claro: #0284c7;
+    --color-acento: #06b6d4;
+    --color-borde: #1e293b;
+    --radio: 8px;
+}
+
+body {
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+}
+
+.logotipo,
+.titulo-seccion,
+.titulo-principal-noticia,
+.titulo-tarjeta-noticia,
+.item-ultima-noticia h3,
+.tarjeta-seccion h3,
+.titulo-detalle,
+.contenido-articulo h2,
+.contenido-articulo h3,
+.estado-vacio h2,
+.logotipo-pie {
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    letter-spacing: -0.02em;
+}
+
+.barra-superior {
+    background-color: #060a14;
+    color: #94a3b8;
+    border-bottom: 1px solid #1e293b;
+}
+
+.enlace-admin-previa {
+    color: #38bdf8;
+    border-bottom-color: rgba(56, 189, 248, 0.4);
+}
+
+.encabezado {
+    background-color: #0f172a;
+    border-bottom: 1px solid #1e293b;
+}
+
+.encabezado .enlace-admin-previa {
+    color: #38bdf8 !important;
+}
+
+.logotipo {
+    color: #f8fafc;
+}
+
+.logotipo span {
+    color: #06b6d4;
+}
+
+.lema {
+    color: #94a3b8;
+}
+
+.campo-busqueda {
+    background-color: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
+.campo-busqueda::placeholder {
+    color: #94a3b8;
+}
+
+.boton-buscar {
+    background-color: #0284c7;
+    border-color: #0284c7;
+    color: #ffffff;
+}
+
+.boton-login {
+    color: #38bdf8;
+    border-color: #38bdf8;
+}
+
+.boton-login:hover {
+    background-color: #0284c7;
+    border-color: #0284c7;
+    color: #ffffff;
+}
+
+.boton-menu {
+    border-color: #334155;
+}
+
+.linea-menu {
+    background-color: #38bdf8;
+}
+
+.navegacion {
+    background-color: #0b1120;
+    border-top: 1px solid #1e293b;
+    border-bottom: 2px solid #06b6d4;
+}
+
+.enlace-nav {
+    color: #cbd5e1;
+}
+
+.enlace-nav:hover {
+    background-color: #1e293b;
+    color: #38bdf8;
+}
+
+.enlace-nav.activo {
+    background-color: #0284c7;
+    color: #ffffff;
+}
+
+.franja-ultima-hora {
+    background-color: #111827;
+    border-bottom: 1px solid #1e293b;
+}
+
+.etiqueta-ultima-hora {
+    background-color: #0284c7;
+}
+
+.texto-ultima-hora {
+    color: #cbd5e1;
+}
+
+/* Tarjetas oscuras minimalistas */
+.cabecera-bloque {
+    border-bottom-color: #1e293b;
+}
+
+.etiqueta-bloque {
+    color: #06b6d4;
+}
+
+.titulo-seccion {
+    color: #f8fafc;
+}
+
+.tarjeta-noticia,
+.item-ultima-noticia,
+.tarjeta-seccion,
+.estado-vacio,
+.tarjeta-vacia,
+.articulo-detalle,
+.barra-filtros-archivo {
+    background-color: #111827;
+    border-color: #1e293b;
+    color: #e2e8f0;
+}
+
+.tarjeta-noticia:hover,
+.tarjeta-seccion:hover {
+    border-color: #06b6d4;
+}
+
+.tarjeta-seccion {
+    border-top: 3px solid #06b6d4;
+}
+
+.tarjeta-seccion h3,
+.titulo-principal-noticia a,
+.titulo-tarjeta-noticia a,
+.item-ultima-noticia a,
+.enlace-categoria-noticia,
+.enlace-ultima-hora {
+    color: #f8fafc;
+}
+
+.titulo-principal-noticia a:hover,
+.titulo-tarjeta-noticia a:hover,
+.item-ultima-noticia a:hover,
+.enlace-categoria-noticia:hover,
+.enlace-ultima-hora:hover {
+    color: #38bdf8;
+}
+
+.marcador-categoria {
+    background-color: #1e293b;
+    color: #38bdf8;
+}
+
+.marco-imagen-vacio {
+    background-color: #1e293b;
+    border-bottom-color: #334155;
+    color: #94a3b8;
+}
+
+.selector-categoria {
+    background-color: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
+.grupo-filtro-archivo label {
+    color: #e2e8f0;
+}
+
+/* Detalle oscuro de alta legibilidad */
+.titulo-detalle,
+.contenido-articulo h2,
+.contenido-articulo h3 {
+    color: #f8fafc;
+}
+
+.contenido-articulo a {
+    color: #38bdf8;
+}
+
+.resumen-detalle {
+    color: #cbd5e1;
+    border-left-color: #06b6d4;
+}
+
+.pie-pagina {
+    background-color: #060a14;
+    border-top: 1px solid #1e293b;
+}
+
+@media (max-width: 720px) {
+    .articulo-detalle {
+        padding: 1.25rem;
+    }
+
+    .titulo-detalle {
+        font-size: 1.65rem;
+    }
+}

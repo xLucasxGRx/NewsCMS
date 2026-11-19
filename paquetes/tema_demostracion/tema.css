@@ -1,0 +1,58 @@
+/* ==========================================================================
+   Tema de Demostración para NewsCMS
+   Modifica colores principales, cabecera, tarjetas, bordes, botones y espaciado
+   sin afectar el panel administrativo ni romper los complementos.
+   ========================================================================== */
+
+:root {
+    --color-fondo: #eef6f5;
+    --color-superficie: #ffffff;
+    --color-primario: #0f4c5c;
+    --color-primario-claro: #1b6b7f;
+    --color-acento: #e36414;
+    --color-borde: #cde0df;
+    --radio: 12px;
+}
+
+.barra-superior {
+    background-color: #09323d;
+}
+
+.encabezado {
+    border-bottom: 3px solid var(--color-acento);
+    box-shadow: 0 2px 10px rgba(15, 76, 92, 0.08);
+}
+
+.navegacion {
+    background-color: #e4f0ef;
+    border-bottom-color: var(--color-primario);
+}
+
+.tarjeta-noticia,
+.tarjeta-seccion,
+.item-ultima-noticia,
+.articulo-detalle {
+    border-color: var(--color-borde);
+    box-shadow: 0 4px 12px rgba(15, 76, 92, 0.06);
+}
+
+.tarjeta-seccion {
+    border-top-width: 4px;
+    border-top-color: var(--color-acento);
+}
+
+.boton-buscar,
+.enlace-nav.activo {
+    background-color: var(--color-acento);
+    border-color: var(--color-acento);
+}
+
+.boton-login {
+    border-width: 2px;
+    border-radius: 999px;
+}
+
+.pie-pagina {
+    background-color: #09323d;
+    border-top: 4px solid var(--color-acento);
+}

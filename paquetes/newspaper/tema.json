@@ -1,0 +1,7 @@
+{
+  "identificador": "newspaper",
+  "nombre": "Newspaper — Periódico",
+  "descripcion": "Diseño editorial clásico inspirado en un periódico tradicional en blanco, negro y tonos crema.",
+  "version": "1.0.0",
+  "archivo_css": "tema.css"
+}

@@ -937,3 +937,7 @@ a.boton-login {
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+.zona-complementos:empty {
+    display: none;
+}

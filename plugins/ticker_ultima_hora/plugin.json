@@ -1,0 +1,9 @@
+{
+  "identificador": "ticker_ultima_hora",
+  "nombre": "Ticker de Última Hora",
+  "descripcion": "Muestra un cintillo animado con las noticias publicadas marcadas como última hora.",
+  "version": "1.0.0",
+  "zona": "portada_superior",
+  "archivo_js": "principal.js",
+  "archivo_css": "estilos.css"
+}

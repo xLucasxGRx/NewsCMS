@@ -15,7 +15,12 @@ if (!$conexionActiva || !$pdo) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    listarCatalogos($pdo);
+    $modo = $_GET['modo'] ?? '';
+    if ($modo === 'nube_etiquetas') {
+        listarNubeEtiquetasPublica($pdo);
+    } else {
+        listarCatalogos($pdo);
+    }
     exit;
 }
 
@@ -52,6 +57,28 @@ function listarCatalogos(PDO $pdo): void
         'ok'         => true,
         'categorias' => $categorias,
         'etiquetas'  => $etiquetas,
+    ]);
+}
+
+/**
+ * Devuelve hasta 20 etiquetas usadas en noticias publicadas para la nube pública.
+ */
+function listarNubeEtiquetasPublica(PDO $pdo): void
+{
+    $etiquetas = $pdo->query(
+        "SELECT e.id, e.nombre, e.identificador, COUNT(n.id) AS total_publicadas
+         FROM etiquetas e
+         INNER JOIN noticias_etiquetas ne ON ne.etiqueta_id = e.id
+         INNER JOIN noticias n ON n.id = ne.noticia_id AND n.estado = 'publicada'
+         GROUP BY e.id
+         HAVING total_publicadas > 0
+         ORDER BY total_publicadas DESC, e.nombre ASC
+         LIMIT 20"
+    )->fetchAll();
+
+    echo json_encode([
+        'ok'        => true,
+        'etiquetas' => $etiquetas,
     ]);
 }
 

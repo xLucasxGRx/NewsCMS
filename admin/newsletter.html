@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter — NewsCMS</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+    <div id="contenedor-admin" class="contenedor-admin" hidden>
+        <aside id="barra-lateral" class="barra-lateral" aria-label="Módulos del panel administrativo">
+            <div class="marca-admin">
+                <a href="index.html" class="logo-admin">News<span>CMS</span></a>
+                <span id="rol-sidebar" class="rol-usuario"></span>
+            </div>
+
+            <nav class="menu-lateral">
+                <p class="grupo-menu">Módulos disponibles</p>
+                <ul id="lista-modulos" class="lista-modulos"></ul>
+            </nav>
+
+            <div class="pie-sidebar">
+                <a href="../index.html" class="enlace-volver">&larr; Volver al portal público</a>
+            </div>
+        </aside>
+
+        <div class="area-principal">
+            <header class="cabecera-admin">
+                <div class="cabecera-izquierda">
+                    <button
+                        type="button"
+                        id="boton-sidebar"
+                        class="boton-sidebar"
+                        aria-expanded="false"
+                        aria-controls="barra-lateral"
+                        aria-label="Mostrar u ocultar menú lateral"
+                    >
+                        &#9776;
+                    </button>
+                    <h1 class="titulo-modulo">Configuración: Newsletter</h1>
+                </div>
+
+                <div class="cabecera-derecha">
+                    <span id="nombre-usuario" class="perfil-previa"></span>
+                    <span id="rol-usuario" class="rol-usuario"></span>
+                    <button type="button" id="boton-salir" class="boton-salir">Cerrar sesión</button>
+                </div>
+            </header>
+
+            <main class="contenido-admin">
+                <div class="barra-herramientas">
+                    <a href="complementos.html" class="enlace-secundario">&larr; Volver a Complementos</a>
+                    <button type="button" id="btn-nuevo-boletin" class="boton-primario-admin">+ Nuevo boletín</button>
+                </div>
+
+                <div id="mensaje-newsletter" class="alerta-admin" role="status" hidden></div>
+
+                <!-- Estado del servicio de correo real -->
+                <div id="estado-correo-servidor" class="banner-vista-previa" role="note">
+                    Comprobando disponibilidad de envío de correo...
+                </div>
+
+                <!-- Resumen de suscriptores -->
+                <div class="rejilla-estadisticas">
+                    <article class="tarjeta-estadistica">
+                        <span class="etiqueta-estadistica">Total de suscriptores</span>
+                        <strong id="stat-total-suscriptores" class="valor-estadistica">0</strong>
+                    </article>
+
+                    <article class="tarjeta-estadistica">
+                        <span class="etiqueta-estadistica">Suscriptores activos</span>
+                        <strong id="stat-suscriptores-activos" class="valor-estadistica">0</strong>
+                    </article>
+                </div>
+
+                <!-- Formulario de boletín -->
+                <section id="panel-formulario-boletin" class="tarjeta-form" hidden aria-labelledby="titulo-form-boletin">
+                    <div class="cabecera-panel">
+                        <h2 id="titulo-form-boletin">Nuevo boletín</h2>
+                        <button type="button" id="btn-cancelar-boletin" class="boton-secundario-admin">Cancelar</button>
+                    </div>
+
+                    <form id="formulario-boletin" class="formulario-cambios" novalidate>
+                        <input type="hidden" id="boletin-id" value="0">
+
+                        <div class="campo-admin">
+                            <label for="boletin-asunto">Asunto</label>
+                            <input type="text" id="boletin-asunto" maxlength="180" required>
+                        </div>
+
+                        <div class="campo-admin">
+                            <label for="boletin-contenido">Contenido del boletín</label>
+                            <textarea id="boletin-contenido" rows="6" required placeholder="Redacta aquí las novedades para los suscriptores..."></textarea>
+                        </div>
+
+                        <div class="celda-acciones">
+                            <button type="submit" class="boton-primario-admin">Guardar borrador</button>
+                            <button type="button" id="btn-vista-previa-boletin" class="boton-secundario-admin">Vista previa</button>
+                            <button type="button" id="btn-enviar-boletin" class="boton-aviso-admin" disabled>Enviar boletín</button>
+                        </div>
+                    </form>
+
+                    <div id="vista-previa-boletin" class="tarjeta-form" hidden>
+                        <h3>Vista previa del boletín</h3>
+                        <p id="previa-asunto" class="titulo-vacio"></p>
+                        <div id="previa-cuerpo" class="contenido-revision"></div>
+                    </div>
+                </section>
+
+                <!-- Tabla de boletines -->
+                <section class="panel-tabla" aria-labelledby="titulo-tabla-boletines">
+                    <div class="cabecera-panel">
+                        <h2 id="titulo-tabla-boletines">Boletines registrados</h2>
+                        <span id="total-boletines" class="etiqueta-tabla">0 boletines</span>
+                    </div>
+                    <div class="contenedor-tabla">
+                        <table class="tabla-datos">
+                            <thead>
+                                <tr>
+                                    <th>Asunto</th>
+                                    <th>Estado</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpo-tabla-boletines">
+                                <tr>
+                                    <td colspan="4" class="fila-vacia">Cargando boletines...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Tabla de suscriptores -->
+                <section class="panel-tabla" aria-labelledby="titulo-tabla-suscriptores">
+                    <div class="cabecera-panel">
+                        <h2 id="titulo-tabla-suscriptores">Suscriptores registrados</h2>
+                    </div>
+                    <div class="contenedor-tabla">
+                        <table class="tabla-datos">
+                            <thead>
+                                <tr>
+                                    <th>Correo</th>
+                                    <th>Estado</th>
+                                    <th>Fecha de registro</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpo-tabla-suscriptores">
+                                <tr>
+                                    <td colspan="3" class="fila-vacia">Cargando suscriptores...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/newsletter_admin.js"></script>
+</body>
+</html>

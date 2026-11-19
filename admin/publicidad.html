@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Publicidad — NewsCMS</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+    <div id="contenedor-admin" class="contenedor-admin" hidden>
+        <aside id="barra-lateral" class="barra-lateral" aria-label="Módulos del panel administrativo">
+            <div class="marca-admin">
+                <a href="index.html" class="logo-admin">News<span>CMS</span></a>
+                <span id="rol-sidebar" class="rol-usuario"></span>
+            </div>
+
+            <nav class="menu-lateral">
+                <p class="grupo-menu">Módulos disponibles</p>
+                <ul id="lista-modulos" class="lista-modulos"></ul>
+            </nav>
+
+            <div class="pie-sidebar">
+                <a href="../index.html" class="enlace-volver">&larr; Volver al portal público</a>
+            </div>
+        </aside>
+
+        <div class="area-principal">
+            <header class="cabecera-admin">
+                <div class="cabecera-izquierda">
+                    <button
+                        type="button"
+                        id="boton-sidebar"
+                        class="boton-sidebar"
+                        aria-expanded="false"
+                        aria-controls="barra-lateral"
+                        aria-label="Mostrar u ocultar menú lateral"
+                    >
+                        &#9776;
+                    </button>
+                    <h1 class="titulo-modulo">Gestión de Publicidad</h1>
+                </div>
+
+                <div class="cabecera-derecha">
+                    <span id="nombre-usuario" class="perfil-previa"></span>
+                    <span id="rol-usuario" class="rol-usuario"></span>
+                    <button type="button" id="boton-salir" class="boton-salir">Cerrar sesión</button>
+                </div>
+            </header>
+
+            <main class="contenido-admin">
+                <div class="barra-herramientas">
+                    <a href="complementos.html" class="enlace-secundario">&larr; Volver a Complementos</a>
+                    <button type="button" id="btn-nuevo-anuncio" class="boton-primario-admin">+ Nuevo anuncio</button>
+                </div>
+
+                <div id="mensaje-publicidad" class="alerta-admin" role="status" hidden></div>
+
+                <!-- Formulario HTML para crear o editar anuncio -->
+                <section id="panel-formulario-publicidad" class="tarjeta-form" hidden aria-labelledby="titulo-form-publicidad">
+                    <div class="cabecera-panel">
+                        <h2 id="titulo-form-publicidad">Nuevo anuncio</h2>
+                        <button type="button" id="btn-cancelar-publicidad" class="boton-secundario-admin">Cancelar</button>
+                    </div>
+
+                    <form id="formulario-publicidad" class="formulario-cambios" enctype="multipart/form-data" novalidate>
+                        <input type="hidden" id="anuncio-id" name="id" value="0">
+
+                        <div class="campo-admin">
+                            <label for="anuncio-titulo">Título del anuncio</label>
+                            <input type="text" id="anuncio-titulo" name="titulo" maxlength="120" required>
+                        </div>
+
+                        <div class="campo-admin">
+                            <label for="anuncio-descripcion">Descripción breve (opcional)</label>
+                            <textarea id="anuncio-descripcion" name="descripcion" rows="2" maxlength="255"></textarea>
+                        </div>
+
+                        <div class="campo-admin">
+                            <label for="anuncio-imagen">Imagen publicitaria (JPG, PNG, WEBP máx. 2 MB)</label>
+                            <input type="file" id="anuncio-imagen" name="imagen" accept="image/jpeg,image/png,image/webp">
+                            <div id="contenedor-previa-anuncio" class="vista-previa-imagen" hidden>
+                                <img id="imagen-previa-anuncio" src="" alt="Vista previa del anuncio">
+                            </div>
+                        </div>
+
+                        <div class="campo-admin">
+                            <label for="anuncio-enlace">URL de destino (HTTPS)</label>
+                            <input type="url" id="anuncio-enlace" name="enlace" maxlength="500" placeholder="https://..." required>
+                        </div>
+
+                        <div class="campo-admin">
+                            <label for="anuncio-visible">Visibilidad en el portal</label>
+                            <select id="anuncio-visible" name="visible">
+                                <option value="1">Visible</option>
+                                <option value="0">Inactivo</option>
+                            </select>
+                        </div>
+
+                        <div class="celda-acciones">
+                            <button type="submit" class="boton-primario-admin">Guardar anuncio</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="panel-tabla" aria-labelledby="titulo-tabla-publicidad">
+                    <div class="cabecera-panel">
+                        <h2 id="titulo-tabla-publicidad">Anuncios registrados</h2>
+                        <span id="total-anuncios" class="etiqueta-tabla">0 anuncios</span>
+                    </div>
+
+                    <div class="contenedor-tabla">
+                        <table class="tabla-datos">
+                            <thead>
+                                <tr>
+                                    <th>Imagen</th>
+                                    <th>Título</th>
+                                    <th>Enlace</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpo-tabla-publicidad">
+                                <tr>
+                                    <td colspan="5" class="fila-vacia">Cargando anuncios...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/publicidad_admin.js"></script>
+</body>
+</html>

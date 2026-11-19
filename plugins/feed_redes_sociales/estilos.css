@@ -1,0 +1,102 @@
+.feed-social-bloque {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-top: 3px solid #162a45;
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-top: 1.25rem;
+}
+
+.feed-social-titulo {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.25rem;
+    color: #162a45;
+    margin-bottom: 1rem;
+}
+
+.feed-social-rejilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.feed-social-tarjeta {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.feed-social-cabecera {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.feed-social-icono {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: #162a45;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.feed-social-icono.icono-facebook {
+    background-color: #1877f2;
+}
+
+.feed-social-icono.icono-instagram {
+    background-color: #c13584;
+}
+
+.feed-social-icono.icono-tiktok {
+    background-color: #0f172a;
+}
+
+.feed-social-icono.icono-x {
+    background-color: #111827;
+}
+
+.feed-social-plataforma {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #475569;
+}
+
+.feed-social-nombre {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.02rem;
+    color: #1f2937;
+}
+
+.feed-social-desc {
+    font-size: 0.88rem;
+    color: #4b5563;
+    flex: 1;
+}
+
+.feed-social-enlace {
+    display: inline-block;
+    align-self: flex-start;
+    margin-top: 0.25rem;
+    padding: 0.4rem 0.8rem;
+    background-color: #162a45;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 0.84rem;
+    font-weight: 600;
+    border-radius: 4px;
+}
+
+.feed-social-enlace:hover {
+    background-color: #223f66;
+}

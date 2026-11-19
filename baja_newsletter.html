@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cancelar suscripción — NewsCMS</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body class="pagina-acceso">
+    <main class="contenedor-acceso">
+        <section class="tarjeta-acceso" aria-labelledby="titulo-baja">
+            <div class="cabecera-acceso">
+                <a href="index.html" class="logotipo">News<span>CMS</span></a>
+                <h1 id="titulo-baja">Cancelar suscripción al boletín</h1>
+                <p id="texto-confirmacion-baja">
+                    Confirma si deseas dejar de recibir los boletines informativos de NewsCMS.
+                </p>
+            </div>
+
+            <div id="alerta-baja" class="alerta-error" role="status" hidden></div>
+
+            <div id="acciones-baja" class="formulario-acceso">
+                <button type="button" id="btn-confirmar-baja" class="boton-ingresar">
+                    Confirmar cancelación
+                </button>
+            </div>
+
+            <div class="pie-acceso">
+                <a href="index.html">&larr; Volver al portal público</a>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/baja_newsletter.js"></script>
+</body>
+</html>

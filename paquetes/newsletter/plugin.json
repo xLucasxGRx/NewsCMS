@@ -1,0 +1,9 @@
+{
+  "identificador": "newsletter",
+  "nombre": "Newsletter",
+  "descripcion": "Permite suscribirse y recibir boletines de noticias.",
+  "version": "1.0.0",
+  "zona": "portada_inferior",
+  "archivo_js": "principal.js",
+  "archivo_css": "estilos.css"
+}

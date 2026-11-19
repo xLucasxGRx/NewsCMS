@@ -1,0 +1,7 @@
+{
+  "identificador": "sports_news",
+  "nombre": "Sports News — Noticias Deportivas",
+  "descripcion": "Tema enérgico para medios deportivos en rojo, negro y blanco con titulares contundentes.",
+  "version": "1.0.0",
+  "archivo_css": "tema.css"
+}

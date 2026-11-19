@@ -1,0 +1,7 @@
+{
+  "identificador": "tech_blog",
+  "nombre": "Tech Blog — Blog Tecnológico",
+  "descripcion": "Diseño oscuro minimalista en azul marino y grafito con acentos cian para portales tecnológicos.",
+  "version": "1.0.0",
+  "archivo_css": "tema.css"
+}

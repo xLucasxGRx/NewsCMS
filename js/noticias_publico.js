@@ -91,6 +91,7 @@ async function cargarListadoPublico() {
     const contenedor = document.getElementById("contenedor-listado-noticias");
     const q = (document.getElementById("campo-busqueda-listado")?.value || "").trim();
     const categoria = document.getElementById("filtro-categoria-publica")?.value || "";
+    const etiqueta = new URLSearchParams(window.location.search).get("etiqueta") || "";
 
     const params = new URLSearchParams({ modo: "listado" });
     if (q) {
@@ -98,6 +99,9 @@ async function cargarListadoPublico() {
     }
     if (categoria) {
         params.set("categoria", categoria);
+    }
+    if (etiqueta) {
+        params.set("etiqueta", etiqueta);
     }
 
     try {

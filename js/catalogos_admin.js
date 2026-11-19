@@ -75,6 +75,10 @@ function renderizarSidebarCatalogo(modulos) {
             enlace.href = "etiquetas.html";
         } else if (modulo === "Revisión editorial") {
             enlace.href = "revision.html";
+        } else if (modulo === "Complementos") {
+            enlace.href = "complementos.html";
+        } else if (modulo === "Temas") {
+            enlace.href = "temas.html";
         } else {
             enlace.href = `index.html?modulo=${encodeURIComponent(modulo)}`;
         }

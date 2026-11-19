@@ -1,0 +1,68 @@
+.publicidad-bloque {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 1.25rem;
+    margin-top: 1.25rem;
+}
+
+.publicidad-cabecera {
+    margin-bottom: 0.75rem;
+}
+
+.publicidad-etiqueta {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    background-color: #f1f5f9;
+    padding: 0.15rem 0.55rem;
+    border-radius: 4px;
+}
+
+.publicidad-rejilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.publicidad-tarjeta {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+    background-color: #f8fafc;
+}
+
+.publicidad-enlace {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.publicidad-imagen {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    display: block;
+}
+
+.publicidad-cuerpo {
+    padding: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.publicidad-titulo {
+    font-size: 0.96rem;
+    color: #162a45;
+}
+
+.publicidad-desc {
+    font-size: 0.84rem;
+    color: #4b5563;
+}

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Complementos — NewsCMS</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+    <div id="contenedor-admin" class="contenedor-admin" hidden>
+        <aside id="barra-lateral" class="barra-lateral" aria-label="Módulos del panel administrativo">
+            <div class="marca-admin">
+                <a href="index.html" class="logo-admin">News<span>CMS</span></a>
+                <span id="rol-sidebar" class="rol-usuario"></span>
+            </div>
+
+            <nav class="menu-lateral">
+                <p class="grupo-menu">Módulos disponibles</p>
+                <ul id="lista-modulos" class="lista-modulos"></ul>
+            </nav>
+
+            <div class="pie-sidebar">
+                <a href="../index.html" class="enlace-volver">&larr; Volver al portal público</a>
+            </div>
+        </aside>
+
+        <div class="area-principal">
+            <header class="cabecera-admin">
+                <div class="cabecera-izquierda">
+                    <button
+                        type="button"
+                        id="boton-sidebar"
+                        class="boton-sidebar"
+                        aria-expanded="false"
+                        aria-controls="barra-lateral"
+                        aria-label="Mostrar u ocultar menú lateral"
+                    >
+                        &#9776;
+                    </button>
+                    <h1 class="titulo-modulo">Gestión de Complementos</h1>
+                </div>
+
+                <div class="cabecera-derecha">
+                    <span id="nombre-usuario" class="perfil-previa"></span>
+                    <span id="rol-usuario" class="rol-usuario"></span>
+                    <button type="button" id="boton-salir" class="boton-salir">Cerrar sesión</button>
+                </div>
+            </header>
+
+            <main class="contenido-admin">
+                <div id="mensaje-complementos" class="alerta-admin" role="status" hidden></div>
+
+                <!-- Formulario de instalación de complemento ZIP -->
+                <section class="tarjeta-form" aria-labelledby="titulo-instalar-zip">
+                    <h2 id="titulo-instalar-zip">Instalar complemento desde archivo ZIP</h2>
+                    <form id="formulario-instalar-zip" class="formulario-zip" enctype="multipart/form-data" novalidate>
+                        <div class="campo-admin">
+                            <label for="archivo-zip">Seleccionar paquete ZIP (máximo 5 MB)</label>
+                            <input type="file" id="archivo-zip" name="archivo_zip" accept=".zip,application/zip" required>
+                        </div>
+                        <button type="submit" id="btn-instalar-zip" class="boton-primario-admin">Instalar complemento</button>
+                    </form>
+                </section>
+
+                <!-- Tabla de complementos instalados -->
+                <section class="panel-tabla" aria-labelledby="titulo-tabla-complementos">
+                    <div class="cabecera-panel">
+                        <h2 id="titulo-tabla-complementos">Complementos instalados</h2>
+                        <span id="total-complementos" class="etiqueta-tabla">0 instalados</span>
+                    </div>
+
+                    <div class="contenedor-tabla">
+                        <table class="tabla-datos">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Descripción</th>
+                                    <th>Versión</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpo-tabla-complementos">
+                                <tr>
+                                    <td colspan="5" class="fila-vacia">Cargando complementos...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/complementos_admin.js"></script>
+</body>
+</html>

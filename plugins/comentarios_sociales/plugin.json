@@ -1,0 +1,9 @@
+{
+  "identificador": "comentarios_sociales",
+  "nombre": "Comentarios con Inicio de Sesión Social",
+  "descripcion": "Permite comentar noticias mediante autenticación con Google.",
+  "version": "1.0.0",
+  "zona": "detalle_noticia",
+  "archivo_js": "principal.js",
+  "archivo_css": "estilos.css"
+}

@@ -113,3 +113,108 @@ INSERT IGNORE INTO categorias (nombre, identificador, descripcion) VALUES
 ('Deportes', 'deportes', 'Información sobre competencias, resultados y disciplinas deportivas.'),
 ('Economía', 'economia', 'Finanzas, mercados, emprendimiento y desarrollo económico.'),
 ('Entretenimiento', 'entretenimiento', 'Cultura, cine, música y espectáculos.');
+
+-- 7. Tabla de complementos (plugins) instalados en el sistema
+CREATE TABLE IF NOT EXISTS complementos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(120) NOT NULL,
+    identificador VARCHAR(80) NOT NULL,
+    descripcion VARCHAR(255) NULL,
+    version VARCHAR(30) NOT NULL,
+    zona VARCHAR(60) NOT NULL DEFAULT 'portada_inferior',
+    archivo_js VARCHAR(120) NOT NULL DEFAULT 'principal.js',
+    archivo_css VARCHAR(120) NULL,
+    activo TINYINT(1) NOT NULL DEFAULT 0,
+    fecha_instalacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_complementos_identificador (identificador)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 8. Tabla de enlaces para el complemento Feed de Redes Sociales
+CREATE TABLE IF NOT EXISTS enlaces_sociales (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    plataforma ENUM('Facebook', 'Instagram', 'TikTok', 'X') NOT NULL,
+    titulo VARCHAR(120) NOT NULL,
+    descripcion VARCHAR(255) NULL,
+    url VARCHAR(500) NOT NULL,
+    visible TINYINT(1) NOT NULL DEFAULT 1,
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_enlaces_visible (visible)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 9. Tabla de anuncios para el complemento Gestor de Publicidad
+CREATE TABLE IF NOT EXISTS anuncios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(120) NOT NULL,
+    descripcion VARCHAR(255) NULL,
+    imagen VARCHAR(255) NOT NULL,
+    enlace VARCHAR(500) NOT NULL,
+    visible TINYINT(1) NOT NULL DEFAULT 1,
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_anuncios_visible (visible)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 10. Tabla de suscriptores del complemento Newsletter
+CREATE TABLE IF NOT EXISTS suscriptores_newsletter (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    correo VARCHAR(150) NOT NULL,
+    estado ENUM('activo', 'inactivo') NOT NULL DEFAULT 'activo',
+    token_baja VARCHAR(64) NOT NULL,
+    fecha_registro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_baja DATETIME NULL,
+    UNIQUE KEY uk_newsletter_correo (correo),
+    UNIQUE KEY uk_newsletter_token (token_baja),
+    KEY idx_newsletter_estado (estado)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 11. Tabla de boletines del complemento Newsletter
+CREATE TABLE IF NOT EXISTS boletines_newsletter (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    asunto VARCHAR(180) NOT NULL,
+    contenido TEXT NOT NULL,
+    estado ENUM('borrador', 'enviado') NOT NULL DEFAULT 'borrador',
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_envio DATETIME NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 12. Tabla de visitantes autenticados mediante proveedor social (Google)
+CREATE TABLE IF NOT EXISTS usuarios_sociales (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    proveedor VARCHAR(30) NOT NULL DEFAULT 'google',
+    proveedor_id VARCHAR(120) NOT NULL,
+    nombre VARCHAR(120) NOT NULL,
+    correo VARCHAR(150) NULL,
+    fecha_registro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_social_proveedor_id (proveedor, proveedor_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 13. Tabla de comentarios de noticias
+CREATE TABLE IF NOT EXISTS comentarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    noticia_id INT NOT NULL,
+    usuario_social_id INT NOT NULL,
+    contenido TEXT NOT NULL,
+    estado ENUM('pendiente', 'aprobado', 'rechazado') NOT NULL DEFAULT 'pendiente',
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_revision DATETIME NULL,
+    KEY idx_comentarios_noticia_estado (noticia_id, estado),
+    KEY idx_comentarios_usuario (usuario_social_id),
+    CONSTRAINT fk_comentarios_noticia
+        FOREIGN KEY (noticia_id) REFERENCES noticias (id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_comentarios_usuario
+        FOREIGN KEY (usuario_social_id) REFERENCES usuarios_sociales (id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 14. Tabla de temas visuales instalados en el sistema
+CREATE TABLE IF NOT EXISTS temas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(120) NOT NULL,
+    identificador VARCHAR(80) NOT NULL,
+    descripcion VARCHAR(255) NULL,
+    version VARCHAR(30) NOT NULL,
+    archivo_css VARCHAR(120) NOT NULL DEFAULT 'tema.css',
+    activo TINYINT(1) NOT NULL DEFAULT 0,
+    fecha_instalacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_temas_identificador (identificador)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

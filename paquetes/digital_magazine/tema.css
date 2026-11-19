@@ -1,0 +1,199 @@
+/* ==========================================================================
+   Tema: Digital Magazine — Revista Digital
+   Diseño editorial cálido, fotografías protagonistas y jerarquía dinámica.
+   ========================================================================== */
+
+:root {
+    --color-fondo: #fbf8f4;
+    --color-superficie: #ffffff;
+    --color-texto: #231f20;
+    --color-texto-suave: #5c5356;
+    --color-primario: #4a1942;
+    --color-primario-claro: #6d2861;
+    --color-acento: #d1495b;
+    --color-borde: #eadfe4;
+    --radio: 14px;
+}
+
+body {
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+}
+
+.barra-superior {
+    background-color: #361030;
+}
+
+.encabezado {
+    border-bottom: none;
+    box-shadow: 0 6px 24px rgba(74, 25, 66, 0.08);
+}
+
+.logotipo {
+    font-family: Georgia, "Palatino Linotype", serif;
+    font-size: 2.2rem;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+}
+
+.logotipo span {
+    font-weight: 700;
+    color: var(--color-acento);
+}
+
+.navegacion {
+    background-color: #f7f1f5;
+    border-bottom: 2px solid var(--color-primario);
+}
+
+.enlace-nav {
+    border-radius: 999px;
+    padding: 0.42rem 1rem;
+}
+
+.enlace-nav.activo {
+    background-color: var(--color-acento);
+}
+
+.boton-login,
+.boton-buscar {
+    border-radius: 999px;
+}
+
+.boton-buscar {
+    background-color: var(--color-acento);
+    border-color: var(--color-acento);
+    margin-left: 0.35rem;
+}
+
+.campo-busqueda {
+    border-radius: 999px;
+    border-right: 1px solid #d1d5db;
+}
+
+/* Portada de revista con fotografía protagonista */
+.contenido-principal {
+    gap: 2.75rem;
+}
+
+.rejilla-portada {
+    grid-template-columns: 1.75fr 1fr;
+    gap: 2rem;
+}
+
+.tarjeta-noticia {
+    border-radius: var(--radio);
+    border: 1px solid var(--color-borde);
+    box-shadow: 0 10px 26px rgba(74, 25, 66, 0.07);
+    transition: transform 0.2s ease;
+}
+
+.tarjeta-noticia:hover {
+    transform: translateY(-2px);
+}
+
+.imagen-principal-noticia {
+    max-height: 410px;
+}
+
+.titulo-principal-noticia {
+    font-size: 1.85rem;
+    font-weight: 400;
+}
+
+.item-ultima-noticia {
+    background-color: #f8f2f6;
+    border-color: var(--color-borde);
+    border-radius: 12px;
+    padding: 1.05rem 1.15rem;
+}
+
+/* Destacadas con distinto tamaño y bloque de acento */
+.rejilla-destacadas {
+    grid-template-columns: 1.35fr 1fr 1fr;
+    gap: 1.4rem;
+}
+
+.rejilla-destacadas > .tarjeta-noticia:first-child {
+    background-color: #f8eef4;
+    border-color: #dec3d2;
+}
+
+.rejilla-destacadas > .tarjeta-noticia:first-child .imagen-tarjeta-noticia {
+    height: 230px;
+}
+
+.marcador-categoria {
+    background-color: #fce7ea;
+    color: #9f1239;
+    border-radius: 999px;
+    padding: 0.2rem 0.7rem;
+}
+
+.tarjeta-seccion {
+    border-top: none;
+    border-left: 4px solid var(--color-acento);
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(74, 25, 66, 0.05);
+}
+
+/* Detalle tipo artículo de revista */
+.articulo-detalle {
+    max-width: 880px;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(74, 25, 66, 0.07);
+}
+
+.titulo-detalle {
+    font-size: 2.25rem;
+    font-weight: 400;
+}
+
+.imagen-detalle img {
+    max-height: 470px;
+    border-radius: 12px;
+}
+
+.resumen-detalle {
+    background-color: #f8f2f6;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+}
+
+.pie-pagina {
+    background-color: #361030;
+}
+
+@media (max-width: 960px) {
+    .rejilla-portada,
+    .rejilla-destacadas {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .rejilla-portada {
+        grid-template-columns: 1fr;
+    }
+
+    .rejilla-destacadas > .tarjeta-noticia:first-child {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 720px) {
+    .rejilla-destacadas {
+        grid-template-columns: 1fr;
+    }
+
+    .rejilla-destacadas > .tarjeta-noticia:first-child {
+        grid-column: auto;
+    }
+
+    .articulo-detalle {
+        padding: 1.4rem;
+    }
+
+    .titulo-detalle {
+        font-size: 1.75rem;
+    }
+}

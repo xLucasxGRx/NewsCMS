@@ -1,0 +1,9 @@
+{
+  "identificador": "feed_redes_sociales",
+  "nombre": "Feed de Redes Sociales",
+  "descripcion": "Muestra en la portada una sección con enlaces oficiales a redes sociales configurados desde el panel.",
+  "version": "1.0.0",
+  "zona": "portada_inferior",
+  "archivo_js": "principal.js",
+  "archivo_css": "estilos.css"
+}

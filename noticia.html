@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Noticia — NewsCMS</title>
     <link rel="stylesheet" href="css/estilos.css">
+    <script src="js/cargador_temas.js"></script>
 </head>
 <body>
     <div class="barra-superior">
@@ -34,6 +35,8 @@
         <article id="articulo-detalle" class="articulo-detalle">
             <p class="texto-vacio">Cargando noticia...</p>
         </article>
+
+        <div id="zona-detalle-noticia" data-zona="detalle_noticia" class="zona-complementos"></div>
     </main>
 
     <footer class="pie-pagina">
@@ -60,5 +63,6 @@
     </footer>
 
     <script src="js/noticia_detalle.js"></script>
+    <script type="module" src="js/cargador_complementos.js"></script>
 </body>
 </html>

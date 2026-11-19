@@ -1,0 +1,64 @@
+.nube-etiquetas-bloque {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-top: 3px solid #162a45;
+    border-radius: 6px;
+    padding: 1.5rem;
+}
+
+.nube-etiquetas-titulo {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.25rem;
+    color: #162a45;
+    margin-bottom: 1rem;
+}
+
+.nube-etiquetas-lista {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.nube-etiqueta {
+    display: inline-block;
+    text-decoration: none;
+    color: #162a45;
+    background-color: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    padding: 0.3rem 0.8rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.nube-etiqueta:hover {
+    background-color: #162a45;
+    color: #ffffff;
+}
+
+.nube-etiqueta.nivel-1 {
+    font-size: 0.84rem;
+}
+
+.nube-etiqueta.nivel-2 {
+    font-size: 0.96rem;
+}
+
+.nube-etiqueta.nivel-3 {
+    font-size: 1.1rem;
+    background-color: #e0e7ff;
+    border-color: #c7d2fe;
+}
+
+.nube-etiqueta.nivel-4 {
+    font-size: 1.25rem;
+    background-color: #fee2e2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.nube-etiqueta.nivel-4:hover {
+    background-color: #b91c1c;
+    color: #ffffff;
+}

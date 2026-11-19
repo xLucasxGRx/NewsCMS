@@ -1,0 +1,281 @@
+/* ==========================================================================
+   Tema: Newspaper — Periódico Tradicional
+   Paleta sobria, tipografía serif editorial, filetes finos y columnas clásicas.
+   ========================================================================== */
+
+:root {
+    --color-fondo: #faf8f4;
+    --color-superficie: #ffffff;
+    --color-texto: #141414;
+    --color-texto-suave: #4a4a4a;
+    --color-primario: #111111;
+    --color-primario-claro: #333333;
+    --color-acento: #6b1d1d;
+    --color-borde: #cfcac0;
+    --radio: 0px;
+}
+
+body {
+    font-family: Georgia, "Times New Roman", Times, serif;
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+}
+
+.barra-superior {
+    background-color: #f2efe9;
+    color: #2b2b2b;
+    border-bottom: 1px solid #cfcac0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.enlace-admin-previa {
+    color: #111111;
+    border-bottom-color: #888888;
+}
+
+.enlace-admin-previa:hover {
+    color: #000000;
+}
+
+/* Cabecera clásica de periódico */
+.encabezado {
+    background-color: #ffffff;
+    border-bottom: none;
+    position: static;
+}
+
+.encabezado-superior {
+    padding-top: 1.4rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid #111111;
+}
+
+.marca {
+    text-align: left;
+}
+
+.logotipo {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 2.6rem;
+    letter-spacing: -0.8px;
+    color: #111111;
+}
+
+.logotipo span {
+    color: #4a4a4a;
+    font-style: italic;
+}
+
+.lema {
+    font-family: "Segoe UI", Arial, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    margin-top: 0.15rem;
+}
+
+.campo-busqueda,
+.boton-buscar,
+.boton-login,
+.selector-categoria {
+    border-radius: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.boton-buscar {
+    background-color: #111111;
+    border-color: #111111;
+}
+
+.boton-login {
+    border-color: #111111;
+    color: #111111;
+}
+
+.boton-login:hover {
+    background-color: #111111;
+    color: #ffffff;
+}
+
+.navegacion {
+    background-color: #ffffff;
+    border-top: none;
+    border-bottom: 4px double #111111;
+}
+
+.lista-navegacion {
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.enlace-nav {
+    font-family: "Segoe UI", Arial, sans-serif;
+    text-transform: uppercase;
+    font-size: 0.82rem;
+    letter-spacing: 0.05em;
+    border-radius: 0;
+}
+
+.enlace-nav.activo {
+    background-color: #111111;
+    color: #ffffff;
+}
+
+.franja-ultima-hora {
+    background-color: #f4f1ea;
+    border-bottom: 1px solid #cfcac0;
+}
+
+.etiqueta-ultima-hora {
+    background-color: #111111;
+    border-radius: 0;
+}
+
+/* Portada periodística en columnas */
+.rejilla-portada {
+    grid-template-columns: 2.25fr 1fr;
+    gap: 2rem;
+}
+
+.bloque-noticia-principal {
+    border-right: 1px solid var(--color-borde);
+    padding-right: 2rem;
+}
+
+.cabecera-bloque {
+    border-bottom: 2px solid #111111;
+    margin-bottom: 1.15rem;
+}
+
+.titulo-seccion {
+    font-size: 1.55rem;
+    color: #111111;
+}
+
+.tarjeta-noticia,
+.tarjeta-seccion,
+.item-ultima-noticia,
+.articulo-detalle,
+.barra-filtros-archivo {
+    border-radius: 0;
+    border-color: var(--color-borde);
+    box-shadow: none;
+}
+
+.tarjeta-principal .titulo-principal-noticia {
+    font-size: 2rem;
+    line-height: 1.15;
+}
+
+.item-ultima-noticia {
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid var(--color-borde);
+    padding: 0.75rem 0;
+}
+
+.lista-ultimas-publicas {
+    gap: 0.25rem;
+}
+
+/* Jerarquía diferenciada en noticias destacadas */
+.rejilla-destacadas {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.rejilla-destacadas > .tarjeta-noticia:first-child {
+    grid-column: span 2;
+    flex-direction: row;
+}
+
+.rejilla-destacadas > .tarjeta-noticia:first-child .imagen-tarjeta-noticia {
+    width: 45%;
+    height: auto;
+    min-height: 220px;
+}
+
+.marcador-categoria {
+    border-radius: 0;
+    background-color: #eae6dc;
+    color: #111111;
+}
+
+.tarjeta-seccion {
+    border-top: 2px solid #111111;
+}
+
+/* Detalle orientado a lectura clásica */
+.articulo-detalle {
+    max-width: 740px;
+    padding: 2.5rem 2.25rem;
+    border-top: 3px double #111111;
+    border-bottom: 3px double #111111;
+}
+
+.titulo-detalle {
+    font-size: 2.3rem;
+    color: #111111;
+}
+
+.resumen-detalle {
+    font-style: italic;
+    border-left: 2px solid #111111;
+}
+
+.pie-pagina {
+    background-color: #1a1a1a;
+    border-top: 4px double #cfcac0;
+}
+
+@media (max-width: 960px) {
+    .bloque-noticia-principal {
+        border-right: none;
+        padding-right: 0;
+        border-bottom: 1px solid var(--color-borde);
+        padding-bottom: 1.5rem;
+    }
+
+    .rejilla-destacadas {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .rejilla-destacadas > .tarjeta-noticia:first-child {
+        grid-column: span 2;
+        flex-direction: column;
+    }
+
+    .rejilla-destacadas > .tarjeta-noticia:first-child .imagen-tarjeta-noticia {
+        width: 100%;
+        height: 200px;
+    }
+}
+
+@media (max-width: 720px) {
+    .logotipo {
+        font-size: 2rem;
+    }
+
+    .lista-navegacion {
+        justify-content: flex-start;
+    }
+
+    .rejilla-destacadas {
+        grid-template-columns: 1fr;
+    }
+
+    .rejilla-destacadas > .tarjeta-noticia:first-child {
+        grid-column: auto;
+    }
+
+    .articulo-detalle {
+        padding: 1.5rem 1.15rem;
+    }
+
+    .titulo-detalle {
+        font-size: 1.75rem;
+    }
+}

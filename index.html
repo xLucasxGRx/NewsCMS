@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NewsCMS — Portal de Noticias</title>
     <link rel="stylesheet" href="css/estilos.css">
+    <script src="js/cargador_temas.js"></script>
 </head>
 <body>
     <!-- Barra superior: fecha actual -->
@@ -77,6 +78,8 @@
             <button type="button" id="cerrar-aviso" class="cerrar-aviso" aria-label="Cerrar aviso">&times;</button>
         </div>
     </div>
+
+    <div id="zona-portada-superior" data-zona="portada_superior" class="zona-complementos"></div>
 
     <!-- Espacio para noticias de última hora -->
     <section class="franja-ultima-hora" aria-label="Noticias de última hora">
@@ -189,6 +192,8 @@
                 </article>
             </div>
         </section>
+
+        <div id="zona-portada-inferior" data-zona="portada_inferior" class="zona-complementos"></div>
     </main>
 
     <!-- Pie de página profesional -->
@@ -218,5 +223,6 @@
     </footer>
 
     <script src="js/app.js"></script>
+    <script type="module" src="js/cargador_complementos.js"></script>
 </body>
 </html>

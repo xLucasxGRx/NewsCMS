@@ -748,3 +748,19 @@ a.boton-modulo {
     color: #991b1b;
     border-color: #fecaca;
 }
+
+.formulario-zip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.miniatura-publicidad {
+    width: 72px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--admin-borde);
+    display: block;
+}
