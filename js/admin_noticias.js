@@ -25,14 +25,36 @@ async function iniciarListadoNoticias() {
         }
 
         csrfTokenNoticias = datos.csrf_token || "";
+        const permisos = datos.permisos || {};
         mostrarDatosCabecera(datos.usuario);
         renderizarSidebarNoticias(datos.modulos_permitidos || ["Dashboard"]);
         inicializarSidebarMovilNoticias();
         inicializarSalirNoticias();
 
+        if (datos.permisos && !permisos.crear_noticias) {
+            document.querySelectorAll('a[href="editar_noticia.html"]').forEach((enlace) => {
+                enlace.hidden = true;
+            });
+        }
+
         const contenedor = document.getElementById("contenedor-admin");
         if (contenedor) {
             contenedor.hidden = false;
+        }
+
+        if (datos.permisos && !permisos.consultar_noticias_propias && !permisos.consultar_noticias_ajenas) {
+            const cuerpo = document.getElementById("cuerpo-tabla-noticias");
+            if (cuerpo) {
+                cuerpo.textContent = "";
+                const tr = document.createElement("tr");
+                const td = document.createElement("td");
+                td.colSpan = 6;
+                td.className = "fila-vacia";
+                td.textContent = "Tu rol actual no tiene permiso para consultar noticias registradas.";
+                tr.appendChild(td);
+                cuerpo.appendChild(tr);
+            }
+            return;
         }
 
         const filtroBusqueda = document.getElementById("filtro-busqueda");
@@ -77,10 +99,14 @@ function renderizarSidebarNoticias(modulos) {
             enlace.href = "etiquetas.html";
         } else if (modulo === "Revisión editorial") {
             enlace.href = "revision.html";
+        } else if (modulo === "Usuarios") {
+            enlace.href = "usuarios.html";
         } else if (modulo === "Complementos") {
             enlace.href = "complementos.html";
         } else if (modulo === "Temas") {
             enlace.href = "temas.html";
+        } else if (modulo === "Configuración") {
+            enlace.href = "configuracion.html";
         } else {
             enlace.href = `index.html?modulo=${encodeURIComponent(modulo)}`;
         }

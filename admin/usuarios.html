@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración de Usuarios — NewsCMS</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+    <div id="contenedor-admin" class="contenedor-admin" hidden>
+        <aside id="barra-lateral" class="barra-lateral" aria-label="Módulos del panel administrativo">
+            <div class="marca-admin">
+                <a href="index.html" class="logo-admin">News<span>CMS</span></a>
+                <span id="rol-sidebar" class="rol-usuario"></span>
+            </div>
+
+            <nav class="menu-lateral">
+                <p class="grupo-menu">Módulos disponibles</p>
+                <ul id="lista-modulos" class="lista-modulos"></ul>
+            </nav>
+
+            <div class="pie-sidebar">
+                <a href="../index.html" class="enlace-volver">&larr; Volver al portal público</a>
+            </div>
+        </aside>
+
+        <div class="area-principal">
+            <header class="cabecera-admin">
+                <div class="cabecera-izquierda">
+                    <button
+                        type="button"
+                        id="boton-sidebar"
+                        class="boton-sidebar"
+                        aria-expanded="false"
+                        aria-controls="barra-lateral"
+                        aria-label="Mostrar u ocultar menú lateral"
+                    >
+                        &#9776;
+                    </button>
+                    <h1 class="titulo-modulo">Administración de Usuarios</h1>
+                </div>
+
+                <div class="cabecera-derecha">
+                    <span id="nombre-usuario" class="perfil-previa"></span>
+                    <span id="rol-usuario" class="rol-usuario"></span>
+                    <button type="button" id="boton-salir" class="boton-salir">Cerrar sesión</button>
+                </div>
+            </header>
+
+            <main class="contenido-admin">
+                <div class="barra-herramientas">
+                    <div class="filtros-noticias">
+                        <input
+                            type="search"
+                            id="filtro-busqueda-usuario"
+                            class="entrada-filtro"
+                            placeholder="Buscar por nombre, usuario o correo..."
+                            aria-label="Buscar usuarios"
+                        >
+                        <select id="filtro-rol-usuario" class="entrada-filtro" aria-label="Filtrar por rol">
+                            <option value="">Todos los roles</option>
+                            <option value="administrador">Administrador</option>
+                            <option value="editor">Editor</option>
+                            <option value="redactor">Redactor</option>
+                        </select>
+                        <select id="filtro-estado-usuario" class="entrada-filtro" aria-label="Filtrar por estado">
+                            <option value="">Todos los estados</option>
+                            <option value="activo">Activo</option>
+                            <option value="inactivo">Inactivo</option>
+                        </select>
+                    </div>
+
+                    <button type="button" id="btn-nuevo-usuario" class="boton-primario-admin">+ Nuevo usuario</button>
+                </div>
+
+                <div id="mensaje-usuarios" class="alerta-admin" role="status" hidden></div>
+
+                <!-- Formulario HTML para crear o editar cuenta -->
+                <section id="panel-formulario-usuario" class="tarjeta-form" hidden aria-labelledby="titulo-form-usuario">
+                    <div class="cabecera-panel">
+                        <h2 id="titulo-form-usuario">Nuevo usuario</h2>
+                        <button type="button" id="btn-cancelar-usuario" class="boton-secundario-admin">Cancelar</button>
+                    </div>
+
+                    <form id="formulario-usuario" class="formulario-cambios" novalidate>
+                        <input type="hidden" id="usuario-id" value="0">
+
+                        <div class="campo-admin">
+                            <label for="usuario-nombre">Nombre completo</label>
+                            <input type="text" id="usuario-nombre" maxlength="120" required>
+                        </div>
+
+                        <div class="campo-admin">
+                            <label for="usuario-login">Nombre de usuario</label>
+                            <input type="text" id="usuario-login" maxlength="60" required>
+                        </div>
+
+                        <div class="campo-admin">
+                            <label for="usuario-correo">Correo electrónico</label>
+                            <input type="email" id="usuario-correo" maxlength="150" required>
+                        </div>
+
+                        <div id="bloque-contrasena-crear" class="formulario-cambios">
+                            <div class="campo-admin">
+                                <label for="usuario-contrasena">Contraseña inicial (mínimo 10 caracteres)</label>
+                                <input type="password" id="usuario-contrasena" minlength="10" autocomplete="new-password">
+                            </div>
+
+                            <div class="campo-admin">
+                                <label for="usuario-confirmar">Confirmar contraseña</label>
+                                <input type="password" id="usuario-confirmar" minlength="10" autocomplete="new-password">
+                            </div>
+                        </div>
+
+                        <div class="campo-admin">
+                            <label for="usuario-rol">Rol</label>
+                            <select id="usuario-rol" required>
+                                <option value="redactor">Redactor</option>
+                                <option value="editor">Editor</option>
+                                <option value="administrador">Administrador</option>
+                            </select>
+                        </div>
+
+                        <div class="campo-admin">
+                            <label for="usuario-estado">Estado</label>
+                            <select id="usuario-estado" required>
+                                <option value="activo">Activo</option>
+                                <option value="inactivo">Inactivo</option>
+                            </select>
+                        </div>
+
+                        <div class="celda-acciones">
+                            <button type="submit" class="boton-primario-admin">Guardar usuario</button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Formulario HTML para restablecer contraseña -->
+                <section id="panel-reset-contrasena" class="tarjeta-form" hidden aria-labelledby="titulo-form-reset">
+                    <div class="cabecera-panel">
+                        <h2 id="titulo-form-reset">Restablecer contraseña</h2>
+                        <button type="button" id="btn-cancelar-reset" class="boton-secundario-admin">Cancelar</button>
+                    </div>
+
+                    <p id="reset-usuario-destino" class="texto-suave-form"></p>
+
+                    <form id="formulario-reset-contrasena" class="formulario-cambios" novalidate>
+                        <input type="hidden" id="reset-usuario-id" value="0">
+
+                        <div class="campo-admin">
+                            <label for="reset-nueva">Nueva contraseña (mínimo 10 caracteres)</label>
+                            <input type="password" id="reset-nueva" minlength="10" autocomplete="new-password" required>
+                        </div>
+
+                        <div class="campo-admin">
+                            <label for="reset-confirmar">Confirmar contraseña</label>
+                            <input type="password" id="reset-confirmar" minlength="10" autocomplete="new-password" required>
+                        </div>
+
+                        <div class="celda-acciones">
+                            <button type="submit" class="boton-aviso-admin">Actualizar contraseña</button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Tabla de usuarios internos -->
+                <section class="panel-tabla" aria-labelledby="titulo-tabla-usuarios">
+                    <div class="cabecera-panel">
+                        <h2 id="titulo-tabla-usuarios">Cuentas registradas</h2>
+                        <span id="total-usuarios" class="etiqueta-tabla">0 usuarios</span>
+                    </div>
+
+                    <div class="contenedor-tabla">
+                        <table class="tabla-datos">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Usuario</th>
+                                    <th>Correo electrónico</th>
+                                    <th>Rol</th>
+                                    <th>Estado</th>
+                                    <th>Fecha de registro</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpo-tabla-usuarios">
+                                <tr>
+                                    <td colspan="7" class="fila-vacia">Cargando usuarios...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/usuarios_admin.js"></script>
+</body>
+</html>

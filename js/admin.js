@@ -30,18 +30,48 @@ async function iniciarPanel() {
         }
 
         csrfTokenActual = datos.csrf_token || "";
+        const permisos = datos.permisos || {};
 
         mostrarDatosUsuario(datos.usuario);
         renderizarModulos(datos.modulos_permitidos || ["Dashboard"]);
         inicializarSidebarMovil();
         inicializarCierreSesion();
 
+        if (datos.permisos && !permisos.crear_noticias) {
+            document.querySelectorAll('a[href="editar_noticia.html"]').forEach((enlace) => {
+                enlace.hidden = true;
+            });
+        }
+
+        const moduloUrl = new URLSearchParams(window.location.search).get("modulo");
+        if (moduloUrl === "Configuración") {
+            window.location.href = "configuracion.html";
+            return;
+        }
+        if (moduloUrl && moduloUrl !== "Dashboard") {
+            const botonDestino = document.querySelector(`.boton-modulo[data-modulo="${CSS.escape(moduloUrl)}"]`);
+            if (botonDestino) {
+                seleccionarModulo(moduloUrl, botonDestino);
+            }
+        }
+
         const contenedor = document.getElementById("contenedor-admin");
         if (contenedor) {
             contenedor.hidden = false;
         }
 
-        await cargarEstadisticas();
+        if (!datos.permisos || permisos.ver_dashboard) {
+            await cargarEstadisticas();
+        } else {
+            const tarjetas = document.querySelector(".cuadricula-tarjetas");
+            if (tarjetas) {
+                tarjetas.hidden = true;
+            }
+        }
+
+        if (!datos.permisos || permisos.consultar_noticias_propias || permisos.consultar_noticias_ajenas) {
+            await cargarTablaDashboard();
+        }
     } catch {
         window.location.href = "../acceso.html";
     }
@@ -102,12 +132,20 @@ function renderizarModulos(modulosPermitidos) {
                 window.location.href = "revision.html";
                 return;
             }
+            if (modulo === "Usuarios") {
+                window.location.href = "usuarios.html";
+                return;
+            }
             if (modulo === "Complementos") {
                 window.location.href = "complementos.html";
                 return;
             }
             if (modulo === "Temas") {
                 window.location.href = "temas.html";
+                return;
+            }
+            if (modulo === "Configuración") {
+                window.location.href = "configuracion.html";
                 return;
             }
             seleccionarModulo(modulo, boton);
@@ -211,6 +249,88 @@ async function cargarEstadisticas() {
         }
     } catch {
         // Mantener valores en 0 si no se pudo consultar el servidor
+    }
+}
+
+/**
+ * Carga las noticias recientes en la tabla del Dashboard desde MySQL.
+ */
+async function cargarTablaDashboard() {
+    const cuerpo = document.getElementById("cuerpo-tabla-dashboard");
+    if (!cuerpo) {
+        return;
+    }
+
+    try {
+        const respuesta = await fetch("../php/noticias.php?modo=admin_lista", {
+            credentials: "same-origin"
+        });
+        if (!respuesta.ok) {
+            return;
+        }
+
+        const datos = await respuesta.json();
+        const noticias = (datos.noticias || []).slice(0, 5);
+        if (noticias.length === 0) {
+            return;
+        }
+
+        const etiquetasEstado = {
+            borrador: "Borrador",
+            pendiente_revision: "Pendiente de revisión",
+            cambios_solicitados: "Cambios solicitados",
+            publicada: "Publicada",
+            archivada: "Archivada"
+        };
+
+        cuerpo.textContent = "";
+        noticias.forEach((n) => {
+            const tr = document.createElement("tr");
+
+            const tdTitulo = document.createElement("td");
+            tdTitulo.textContent = n.titulo;
+
+            const tdCategoria = document.createElement("td");
+            tdCategoria.textContent = n.categoria;
+
+            const tdAutor = document.createElement("td");
+            tdAutor.textContent = n.autor;
+
+            const tdEstado = document.createElement("td");
+            const badge = document.createElement("span");
+            badge.className = `estado-badge estado-${n.estado}`;
+            badge.textContent = etiquetasEstado[n.estado] || n.estado;
+            tdEstado.appendChild(badge);
+
+            const tdFecha = document.createElement("td");
+            const fechaBase = n.fecha_publicacion || n.fecha_creacion || "";
+            tdFecha.textContent = fechaBase ? fechaBase.slice(0, 10) : "-";
+
+            const tdAcciones = document.createElement("td");
+            tdAcciones.className = "celda-acciones";
+            if (n.puede_editar) {
+                const aEdit = document.createElement("a");
+                aEdit.href = `editar_noticia.html?id=${encodeURIComponent(n.id)}`;
+                aEdit.className = "enlace-accion";
+                aEdit.textContent = "Editar";
+                tdAcciones.appendChild(aEdit);
+            }
+            const aVer = document.createElement("a");
+            aVer.href = `../noticia.html?id=${encodeURIComponent(n.id)}`;
+            aVer.className = "enlace-accion enlace-ver";
+            aVer.textContent = "Ver";
+            tdAcciones.appendChild(aVer);
+
+            tr.appendChild(tdTitulo);
+            tr.appendChild(tdCategoria);
+            tr.appendChild(tdAutor);
+            tr.appendChild(tdEstado);
+            tr.appendChild(tdFecha);
+            tr.appendChild(tdAcciones);
+            cuerpo.appendChild(tr);
+        });
+    } catch {
+        // Mantener mensaje por defecto si falla la consulta
     }
 }
 

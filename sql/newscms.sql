@@ -218,3 +218,69 @@ CREATE TABLE IF NOT EXISTS temas (
     fecha_instalacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uk_temas_identificador (identificador)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 15. Tabla de configuración general del portal
+CREATE TABLE IF NOT EXISTS configuracion (
+    clave VARCHAR(80) PRIMARY KEY,
+    valor TEXT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO configuracion (clave, valor) VALUES
+('nombre_portal', 'NewsCMS'),
+('subtitulo_portal', 'Portal informativo universitario'),
+('descripcion_portal', 'Sistema de gestión de contenidos de noticias desarrollado con HTML5, CSS3, JavaScript, PHP nativo y MySQL.'),
+('texto_pie_pagina', 'Sistema de gestión de contenidos de noticias desarrollado sin frameworks con HTML5, CSS3, JavaScript, PHP y MySQL.'),
+('correo_contacto', '');
+
+-- 16. Tabla de permisos editoriales por rol
+CREATE TABLE IF NOT EXISTS permisos_roles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    rol ENUM('administrador', 'editor', 'redactor') NOT NULL,
+    permiso VARCHAR(60) NOT NULL,
+    permitido TINYINT(1) NOT NULL DEFAULT 0,
+    UNIQUE KEY uk_rol_permiso (rol, permiso)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO permisos_roles (rol, permiso, permitido) VALUES
+-- Administrador (todos activos)
+('administrador', 'ver_dashboard', 1),
+('administrador', 'crear_noticias', 1),
+('administrador', 'consultar_noticias_propias', 1),
+('administrador', 'consultar_noticias_ajenas', 1),
+('administrador', 'editar_noticias_propias', 1),
+('administrador', 'editar_noticias_ajenas', 1),
+('administrador', 'enviar_revision', 1),
+('administrador', 'publicar_noticias', 1),
+('administrador', 'consultar_revision', 1),
+('administrador', 'aprobar_noticias', 1),
+('administrador', 'solicitar_correcciones', 1),
+('administrador', 'gestionar_categorias', 1),
+('administrador', 'gestionar_etiquetas', 1),
+-- Editor (todos los permisos editoriales iniciales activos)
+('editor', 'ver_dashboard', 1),
+('editor', 'crear_noticias', 1),
+('editor', 'consultar_noticias_propias', 1),
+('editor', 'consultar_noticias_ajenas', 1),
+('editor', 'editar_noticias_propias', 1),
+('editor', 'editar_noticias_ajenas', 1),
+('editor', 'enviar_revision', 1),
+('editor', 'publicar_noticias', 1),
+('editor', 'consultar_revision', 1),
+('editor', 'aprobar_noticias', 1),
+('editor', 'solicitar_correcciones', 1),
+('editor', 'gestionar_categorias', 1),
+('editor', 'gestionar_etiquetas', 1),
+-- Redactor (permisos iniciales de redacción propia)
+('redactor', 'ver_dashboard', 1),
+('redactor', 'crear_noticias', 1),
+('redactor', 'consultar_noticias_propias', 1),
+('redactor', 'consultar_noticias_ajenas', 0),
+('redactor', 'editar_noticias_propias', 1),
+('redactor', 'editar_noticias_ajenas', 0),
+('redactor', 'enviar_revision', 1),
+('redactor', 'publicar_noticias', 0),
+('redactor', 'consultar_revision', 0),
+('redactor', 'aprobar_noticias', 0),
+('redactor', 'solicitar_correcciones', 0),
+('redactor', 'gestionar_categorias', 0),
+('redactor', 'gestionar_etiquetas', 0);

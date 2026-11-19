@@ -42,6 +42,9 @@ async function comprobarSesionArchivo() {
         if (d.autenticado) {
             enlace.textContent = "Ir al panel";
             enlace.href = "admin/index.html";
+            enlace.hidden = false;
+        } else {
+            enlace.hidden = true;
         }
     } catch {
         // Mantener enlace por defecto

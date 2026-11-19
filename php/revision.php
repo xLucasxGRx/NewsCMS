@@ -51,9 +51,9 @@ echo json_encode(['exito' => false, 'mensaje' => 'Método no permitido.']);
  */
 function listarNoticiasPendientes(PDO $pdo, array $usuario): void
 {
-    if (!in_array($usuario['rol'], ['administrador', 'editor'], true)) {
+    if (!tienePermiso('consultar_revision')) {
         http_response_code(403);
-        echo json_encode(['exito' => false, 'mensaje' => 'No autorizado para revisar noticias.']);
+        echo json_encode(['exito' => false, 'mensaje' => 'No autorizado para consultar la revisión editorial.']);
         return;
     }
 
@@ -97,8 +97,8 @@ function consultarHistorialRevisiones(PDO $pdo, array $usuario): void
         return;
     }
 
-    $autorizado = in_array($usuario['rol'], ['administrador', 'editor'], true)
-        || (int) $noticia['autor_id'] === (int) $usuario['id'];
+    $autorizado = tienePermiso('consultar_revision')
+        || ((int) $noticia['autor_id'] === (int) $usuario['id'] && tienePermiso('consultar_noticias_propias'));
 
     if (!$autorizado) {
         http_response_code(403);
@@ -126,9 +126,9 @@ function consultarHistorialRevisiones(PDO $pdo, array $usuario): void
  */
 function procesarDecisionEditorial(PDO $pdo, array $usuario): void
 {
-    if (!in_array($usuario['rol'], ['administrador', 'editor'], true)) {
+    if (!tienePermiso('consultar_revision')) {
         http_response_code(403);
-        echo json_encode(['exito' => false, 'mensaje' => 'No tienes permisos para aprobar o revisar noticias.']);
+        echo json_encode(['exito' => false, 'mensaje' => 'No tienes permisos para acceder a la revisión editorial.']);
         return;
     }
 
@@ -145,6 +145,18 @@ function procesarDecisionEditorial(PDO $pdo, array $usuario): void
     if ($noticiaId <= 0 || !in_array($accion, ['aprobar', 'solicitar_cambios'], true)) {
         http_response_code(400);
         echo json_encode(['exito' => false, 'mensaje' => 'Datos de revisión no válidos.']);
+        return;
+    }
+
+    if ($accion === 'aprobar' && !tienePermiso('aprobar_noticias')) {
+        http_response_code(403);
+        echo json_encode(['exito' => false, 'mensaje' => 'Tu rol no tiene permiso para aprobar noticias.']);
+        return;
+    }
+
+    if ($accion === 'solicitar_cambios' && !tienePermiso('solicitar_correcciones')) {
+        http_response_code(403);
+        echo json_encode(['exito' => false, 'mensaje' => 'Tu rol no tiene permiso para solicitar correcciones.']);
         return;
     }
 

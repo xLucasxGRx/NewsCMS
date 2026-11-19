@@ -28,11 +28,19 @@ async function iniciarEditorNoticia() {
 
         csrfTokenEditor = datos.csrf_token || "";
         rolUsuarioEditor = datos.usuario.rol || "";
+        const permisos = datos.permisos || {};
         document.getElementById("csrf-token").value = csrfTokenEditor;
+
+        const params = new URLSearchParams(window.location.search);
+        const idNoticia = Number(params.get("id") || 0);
+        if (idNoticia <= 0 && datos.permisos && !permisos.crear_noticias) {
+            window.location.href = "noticias.html";
+            return;
+        }
 
         mostrarUsuarioEditor(datos.usuario);
         renderizarSidebarEditor(datos.modulos_permitidos || ["Dashboard"]);
-        configurarPermisosVisuales(rolUsuarioEditor);
+        configurarPermisosVisuales(permisos);
         inicializarSidebarMovilEditor();
         inicializarSalirEditor();
         inicializarEditorEnriquecido();
@@ -41,8 +49,6 @@ async function iniciarEditorNoticia() {
 
         await cargarCatalogos();
 
-        const params = new URLSearchParams(window.location.search);
-        const idNoticia = Number(params.get("id") || 0);
         if (idNoticia > 0) {
             await cargarNoticiaExistente(idNoticia);
         }
@@ -79,10 +85,14 @@ function renderizarSidebarEditor(modulos) {
             enlace.href = "etiquetas.html";
         } else if (modulo === "Revisión editorial") {
             enlace.href = "revision.html";
+        } else if (modulo === "Usuarios") {
+            enlace.href = "usuarios.html";
         } else if (modulo === "Complementos") {
             enlace.href = "complementos.html";
         } else if (modulo === "Temas") {
             enlace.href = "temas.html";
+        } else if (modulo === "Configuración") {
+            enlace.href = "configuracion.html";
         } else {
             enlace.href = `index.html?modulo=${encodeURIComponent(modulo)}`;
         }

@@ -287,9 +287,10 @@ function responderDetalleNoticia(PDO $pdo): void
 
     if ($noticia['estado'] !== 'publicada') {
         $usuario = obtenerUsuarioActual();
+        $esAutor = $usuario !== null && (int) $noticia['autor_id'] === (int) $usuario['id'];
         $puedeVerBorrador = $usuario !== null && (
-            in_array($usuario['rol'], ['administrador', 'editor'], true) ||
-            (int) $noticia['autor_id'] === (int) $usuario['id']
+            ($esAutor && tienePermiso('consultar_noticias_propias')) ||
+            (!$esAutor && tienePermiso('consultar_noticias_ajenas'))
         );
 
         if (!$puedeVerBorrador) {
@@ -333,6 +334,15 @@ function responderListaAdmin(PDO $pdo): void
     }
 
     $usuario = obtenerUsuarioActual();
+    $puedeVerPropias = tienePermiso('consultar_noticias_propias');
+    $puedeVerAjenas = tienePermiso('consultar_noticias_ajenas');
+
+    if (!$puedeVerPropias && !$puedeVerAjenas) {
+        http_response_code(403);
+        echo json_encode(['ok' => false, 'mensaje' => 'No tienes permiso para consultar noticias.']);
+        return;
+    }
+
     $busqueda = trim($_GET['q'] ?? '');
     $estado = trim($_GET['estado'] ?? '');
 
@@ -351,8 +361,11 @@ function responderListaAdmin(PDO $pdo): void
 
     $parametros = [];
 
-    if ($usuario['rol'] === 'redactor') {
+    if ($puedeVerPropias && !$puedeVerAjenas) {
         $sql .= ' AND n.autor_id = ?';
+        $parametros[] = $usuario['id'];
+    } elseif (!$puedeVerPropias && $puedeVerAjenas) {
+        $sql .= ' AND n.autor_id <> ?';
         $parametros[] = $usuario['id'];
     }
 
@@ -466,6 +479,12 @@ function guardarNoticia(PDO $pdo): void
     $rol = $usuario['rol'];
 
     $id = (int) ($_POST['id'] ?? 0);
+    if ($id <= 0 && !tienePermiso('crear_noticias')) {
+        http_response_code(403);
+        echo json_encode(['ok' => false, 'mensaje' => 'Tu rol no tiene permiso para crear noticias.']);
+        return;
+    }
+
     $titulo = trim($_POST['titulo'] ?? '');
     $resumen = trim($_POST['resumen'] ?? '');
     $contenidoBruto = $_POST['contenido'] ?? '';
@@ -497,19 +516,23 @@ function guardarNoticia(PDO $pdo): void
         return;
     }
 
-    // Validar estado permitido según rol
-    $estadosPermitidos = $rol === 'redactor'
-        ? ['borrador', 'pendiente_revision']
-        : ['borrador', 'pendiente_revision', 'publicada'];
+    // Validar estado permitido según permisos efectivos del rol
+    $estadosPermitidos = ['borrador'];
+    if (tienePermiso('enviar_revision')) {
+        $estadosPermitidos[] = 'pendiente_revision';
+    }
+    if (tienePermiso('publicar_noticias')) {
+        $estadosPermitidos[] = 'publicada';
+    }
 
     if (!in_array($accion, $estadosPermitidos, true)) {
         http_response_code(403);
-        echo json_encode(['ok' => false, 'mensaje' => 'Tu rol no tiene autorización para esta acción.']);
+        echo json_encode(['ok' => false, 'mensaje' => 'Tu rol no tiene autorización para guardar la noticia en ese estado.']);
         return;
     }
 
-    // El redactor no puede marcar noticias como destacadas ni de última hora
-    if ($rol === 'redactor') {
+    // Solo los roles autorizados a publicar pueden destacar o marcar última hora
+    if (!tienePermiso('publicar_noticias')) {
         $esDestacada = 0;
         $esUltimaHora = 0;
     }
@@ -620,17 +643,22 @@ function guardarNoticia(PDO $pdo): void
  */
 function puedeEditarNoticia(array $usuario, array $noticia): bool
 {
-    if (in_array($usuario['rol'], ['administrador', 'editor'], true)) {
+    $esAutor = (int) $noticia['autor_id'] === (int) $usuario['id'];
+
+    if ($esAutor) {
+        if (!tienePermiso('editar_noticias_propias')) {
+            return false;
+        }
+
+        // Si el usuario es redactor sin permiso de publicación directa, solo edita borradores o con correcciones.
+        if ($usuario['rol'] === 'redactor' && !tienePermiso('publicar_noticias')) {
+            return in_array($noticia['estado'], ['borrador', 'cambios_solicitados'], true);
+        }
+
         return true;
     }
 
-    if ($usuario['rol'] === 'redactor') {
-        $esAutor = (int) $noticia['autor_id'] === (int) $usuario['id'];
-        $estadoEditable = in_array($noticia['estado'], ['borrador', 'cambios_solicitados'], true);
-        return $esAutor && $estadoEditable;
-    }
-
-    return false;
+    return tienePermiso('editar_noticias_ajenas');
 }
 
 /**

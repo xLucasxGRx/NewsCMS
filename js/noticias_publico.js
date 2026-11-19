@@ -2,12 +2,12 @@
  * NewsCMS - Script del listado público de noticias (noticias.html)
  */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     mostrarFechaListado();
     comprobarSesionListado();
-    cargarCategoriasFiltro();
+    await cargarCategoriasFiltro();
     inicializarFiltrosListado();
-    cargarListadoPublico();
+    await cargarListadoPublico();
 });
 
 function mostrarFechaListado() {
@@ -35,6 +35,9 @@ async function comprobarSesionListado() {
         if (d.autenticado) {
             enlace.textContent = "Ir al panel";
             enlace.href = "admin/index.html";
+            enlace.hidden = false;
+        } else {
+            enlace.hidden = true;
         }
     } catch {
         // Mantener enlace por defecto

@@ -16,9 +16,9 @@ if (!estaAutenticado()) {
     exit;
 }
 
-if (!tieneRol(['administrador', 'editor', 'redactor'])) {
+if (!tieneRol(['administrador', 'editor', 'redactor']) || !tienePermiso('ver_dashboard')) {
     http_response_code(403);
-    echo json_encode(['ok' => false, 'mensaje' => 'No autorizado.']);
+    echo json_encode(['ok' => false, 'mensaje' => 'No autorizado para ver el dashboard.']);
     exit;
 }
 

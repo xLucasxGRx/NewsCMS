@@ -55,9 +55,9 @@ async function comprobarEstadoSesion() {
         if (datos.autenticado) {
             enlaceAcceso.textContent = "Ir al panel";
             enlaceAcceso.setAttribute("href", "admin/index.html");
+            enlaceAcceso.hidden = false;
         } else {
-            enlaceAcceso.textContent = "Iniciar sesión";
-            enlaceAcceso.setAttribute("href", "acceso.html");
+            enlaceAcceso.hidden = true;
         }
     } catch {
         // Mantener enlace predeterminado

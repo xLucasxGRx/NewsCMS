@@ -4,6 +4,7 @@
  * También entrega el token CSRF para formularios HTML.
  */
 
+require_once __DIR__ . '/../config/conexion.php';
 require_once __DIR__ . '/../config/seguridad.php';
 
 header('Content-Type: application/json; charset=utf-8');
@@ -21,39 +22,50 @@ if (!estaAutenticado()) {
 
 $usuario = obtenerUsuarioActual();
 $rol = $usuario['rol'];
+$permisos = obtenerPermisosPorRol($rol);
 
-$modulosPorRol = [
-    'administrador' => [
-        'Dashboard',
-        'Noticias',
-        'Categorías',
-        'Etiquetas',
-        'Revisión editorial',
-        'Usuarios',
-        'Complementos',
-        'Temas',
-        'Configuración',
-    ],
-    'editor' => [
-        'Dashboard',
-        'Noticias',
-        'Categorías',
-        'Etiquetas',
-        'Revisión editorial',
-    ],
-    'redactor' => [
-        'Dashboard',
-        'Noticias',
-    ],
-];
+$modulosPermitidos = [];
+if (!empty($permisos['ver_dashboard'])) {
+    $modulosPermitidos[] = 'Dashboard';
+}
+if (
+    !empty($permisos['crear_noticias']) ||
+    !empty($permisos['consultar_noticias_propias']) ||
+    !empty($permisos['consultar_noticias_ajenas'])
+) {
+    $modulosPermitidos[] = 'Noticias';
+}
+if (!empty($permisos['gestionar_categorias'])) {
+    $modulosPermitidos[] = 'Categorías';
+}
+if (!empty($permisos['gestionar_etiquetas'])) {
+    $modulosPermitidos[] = 'Etiquetas';
+}
+if (!empty($permisos['consultar_revision'])) {
+    $modulosPermitidos[] = 'Revisión editorial';
+}
+if (!empty($permisos['administrar_usuarios'])) {
+    $modulosPermitidos[] = 'Usuarios';
+}
+if (!empty($permisos['gestionar_complementos'])) {
+    $modulosPermitidos[] = 'Complementos';
+}
+if (!empty($permisos['gestionar_temas'])) {
+    $modulosPermitidos[] = 'Temas';
+}
+if (!empty($permisos['configurar_sistema'])) {
+    $modulosPermitidos[] = 'Configuración';
+}
 
 echo json_encode([
     'autenticado'        => true,
     'usuario'            => [
+        'id'      => $usuario['id'],
         'nombre'  => $usuario['nombre'],
         'usuario' => $usuario['usuario'],
         'rol'     => $rol,
     ],
-    'modulos_permitidos' => $modulosPorRol[$rol] ?? ['Dashboard'],
+    'modulos_permitidos' => $modulosPermitidos,
+    'permisos'           => $permisos,
     'csrf_token'         => $tokenCsrf,
 ]);

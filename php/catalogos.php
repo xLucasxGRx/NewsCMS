@@ -95,7 +95,7 @@ function procesarOperacionCatalogo(PDO $pdo): void
         return;
     }
 
-    if (!tieneRol(['administrador', 'editor'])) {
+    if (!tieneRol(['administrador', 'editor', 'redactor'])) {
         http_response_code(403);
         echo json_encode(['ok' => false, 'mensaje' => 'No tienes permisos para administrar categorías o etiquetas.']);
         return;
@@ -108,6 +108,21 @@ function procesarOperacionCatalogo(PDO $pdo): void
     }
 
     $accion = trim($_POST['accion'] ?? '');
+
+    $accionesCategoria = ['crear_categoria', 'editar_categoria', 'eliminar_categoria'];
+    $accionesEtiqueta = ['crear_etiqueta', 'editar_etiqueta', 'eliminar_etiqueta'];
+
+    if (in_array($accion, $accionesCategoria, true) && !tienePermiso('gestionar_categorias')) {
+        http_response_code(403);
+        echo json_encode(['ok' => false, 'mensaje' => 'Tu rol no tiene permiso para administrar categorías.']);
+        return;
+    }
+
+    if (in_array($accion, $accionesEtiqueta, true) && !tienePermiso('gestionar_etiquetas')) {
+        http_response_code(403);
+        echo json_encode(['ok' => false, 'mensaje' => 'Tu rol no tiene permiso para administrar etiquetas.']);
+        return;
+    }
 
     if ($accion === 'crear_categoria') {
         crearCategoria($pdo);
