@@ -35,7 +35,9 @@ async function comprobarSesionDetalle() {
             enlace.href = "admin/index.html";
             enlace.hidden = false;
         } else {
-            enlace.hidden = true;
+            enlace.textContent = "Acceso editorial";
+            enlace.href = "acceso.html";
+            enlace.hidden = false;
         }
     } catch {
         // Mantener enlace por defecto
@@ -114,10 +116,15 @@ async function cargarDetalleNoticia() {
         if (Array.isArray(n.etiquetas) && n.etiquetas.length > 0) {
             const pieEtiquetas = document.createElement("div");
             pieEtiquetas.className = "etiquetas-detalle";
+            const tituloEtiq = document.createElement("span");
+            tituloEtiq.className = "etiquetas-detalle-label";
+            tituloEtiq.textContent = "Etiquetas:";
+            pieEtiquetas.appendChild(tituloEtiq);
             n.etiquetas.forEach((etiq) => {
-                const badge = document.createElement("span");
-                badge.className = "marcador-categoria";
-                badge.textContent = etiq.nombre;
+                const badge = document.createElement("a");
+                badge.href = `noticias.html?etiqueta=${encodeURIComponent(etiq.identificador)}`;
+                badge.className = "marcador-categoria etiqueta-enlace-detalle";
+                badge.textContent = `#${etiq.nombre}`;
                 pieEtiquetas.appendChild(badge);
             });
             contenedor.appendChild(pieEtiquetas);

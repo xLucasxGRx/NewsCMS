@@ -57,7 +57,9 @@ async function comprobarEstadoSesion() {
             enlaceAcceso.setAttribute("href", "admin/index.html");
             enlaceAcceso.hidden = false;
         } else {
-            enlaceAcceso.hidden = true;
+            enlaceAcceso.textContent = "Acceso editorial";
+            enlaceAcceso.setAttribute("href", "acceso.html");
+            enlaceAcceso.hidden = false;
         }
     } catch {
         // Mantener enlace predeterminado
@@ -248,20 +250,57 @@ function renderizarPorCategoria(noticias) {
     const tarjetas = document.querySelectorAll(".tarjeta-seccion");
     tarjetas.forEach((tarjeta) => {
         const catNombre = tarjeta.getAttribute("data-categoria");
-        const coincidencia = noticias.find((n) => n.categoria === catNombre);
-        if (!coincidencia) {
+        const coincidencias = noticias.filter((n) => n.categoria === catNombre).slice(0, 2);
+        if (coincidencias.length === 0) {
             return;
         }
 
-        const estado = tarjeta.querySelector(".estado-tarjeta");
-        if (estado) {
-            estado.textContent = "";
-            const enlace = document.createElement("a");
-            enlace.href = `noticia.html?id=${encodeURIComponent(coincidencia.id)}`;
-            enlace.className = "enlace-categoria-noticia";
-            enlace.textContent = coincidencia.titulo;
-            estado.appendChild(enlace);
+        const principalCat = coincidencias[0];
+        tarjeta.textContent = "";
+
+        if (principalCat.imagen) {
+            const enlaceImg = document.createElement("a");
+            enlaceImg.href = `noticia.html?id=${encodeURIComponent(principalCat.id)}`;
+            enlaceImg.className = "miniatura-seccion-enlace";
+            const img = document.createElement("img");
+            img.src = principalCat.imagen;
+            img.alt = principalCat.titulo;
+            img.className = "miniatura-seccion-img";
+            enlaceImg.appendChild(img);
+            tarjeta.appendChild(enlaceImg);
         }
+
+        const cuerpo = document.createElement("div");
+        cuerpo.className = "cuerpo-tarjeta-seccion";
+
+        const cabeceraCat = document.createElement("div");
+        cabeceraCat.className = "cabecera-tarjeta-seccion";
+
+        const h3 = document.createElement("h3");
+        h3.textContent = catNombre;
+        cabeceraCat.appendChild(h3);
+
+        const verMas = document.createElement("a");
+        verMas.href = `noticias.html?categoria=${encodeURIComponent(principalCat.categoria_slug || catNombre)}`;
+        verMas.className = "enlace-ver-categoria";
+        verMas.textContent = "Ver sección →";
+        cabeceraCat.appendChild(verMas);
+
+        cuerpo.appendChild(cabeceraCat);
+
+        const listaTitulares = document.createElement("div");
+        listaTitulares.className = "estado-tarjeta lista-titulares-seccion";
+
+        coincidencias.forEach((item, idx) => {
+            const enlace = document.createElement("a");
+            enlace.href = `noticia.html?id=${encodeURIComponent(item.id)}`;
+            enlace.className = idx === 0 ? "enlace-categoria-noticia titular-primario-seccion" : "enlace-categoria-noticia titular-secundario-seccion";
+            enlace.textContent = item.titulo;
+            listaTitulares.appendChild(enlace);
+        });
+
+        cuerpo.appendChild(listaTitulares);
+        tarjeta.appendChild(cuerpo);
     });
 }
 

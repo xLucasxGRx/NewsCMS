@@ -44,7 +44,9 @@ async function comprobarSesionArchivo() {
             enlace.href = "admin/index.html";
             enlace.hidden = false;
         } else {
-            enlace.hidden = true;
+            enlace.textContent = "Acceso editorial";
+            enlace.href = "acceso.html";
+            enlace.hidden = false;
         }
     } catch {
         // Mantener enlace por defecto

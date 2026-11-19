@@ -1116,18 +1116,112 @@ a.boton-login {
 
 /* Secciones por categorías compactas */
 .portada-editorial .rejilla-secciones {
-    grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
-    gap: 0.85rem;
+    grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
+    gap: 1rem;
 }
 
 .portada-editorial .tarjeta-seccion {
-    padding: 0.88rem 1rem;
-    border-top-width: 2px;
+    padding: 0;
+    border-top-width: 3px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.portada-editorial .tarjeta-seccion:hover {
+    border-color: var(--color-primario);
+    box-shadow: 0 5px 14px rgba(15, 23, 42, 0.08);
+}
+
+.miniatura-seccion-enlace {
+    display: block;
+    overflow: hidden;
+}
+
+.miniatura-seccion-img {
+    width: 100%;
+    height: 128px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.25s ease;
+}
+
+.portada-editorial .tarjeta-seccion:hover .miniatura-seccion-img {
+    transform: scale(1.03);
+}
+
+.cuerpo-tarjeta-seccion {
+    padding: 0.9rem 1.05rem 1.05rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    flex: 1;
+}
+
+.cabecera-tarjeta-seccion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--color-borde);
+    padding-bottom: 0.38rem;
 }
 
 .portada-editorial .tarjeta-seccion h3 {
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
+    font-size: 0.98rem;
+    margin-bottom: 0;
+}
+
+.enlace-ver-categoria {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--color-acento);
+    text-decoration: none;
+}
+
+.enlace-ver-categoria:hover {
+    text-decoration: underline;
+}
+
+.lista-titulares-seccion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.48rem;
+}
+
+.titular-primario-seccion {
+    font-weight: 700;
+    font-size: 0.9rem;
+    line-height: 1.38;
+    color: var(--color-primario);
+}
+
+.titular-secundario-seccion {
+    font-size: 0.83rem;
+    line-height: 1.35;
+    color: var(--color-texto-suave);
+    padding-top: 0.42rem;
+    border-top: 1px dashed var(--color-borde);
+}
+
+.etiquetas-detalle-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-texto-suave);
+    align-self: center;
+    margin-right: 0.25rem;
+}
+
+.etiqueta-enlace-detalle {
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    margin-bottom: 0;
+}
+
+.etiqueta-enlace-detalle:hover {
+    background-color: var(--color-primario);
+    color: #ffffff;
 }
 
 .portada-editorial .estado-tarjeta {
