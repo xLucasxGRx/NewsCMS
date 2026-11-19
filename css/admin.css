@@ -388,3 +388,39 @@ body {
         padding: 1rem;
     }
 }
+
+/* Ajustes para enlaces de módulos y botón de cierre de sesión en admin/index.php */
+a.boton-modulo {
+    display: block;
+    text-decoration: none;
+}
+
+.formulario-salir {
+    display: inline-block;
+}
+
+.boton-salir {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.boton-salir:hover {
+    background-color: #fecaca;
+}
+
+.rol-usuario {
+    background-color: #e0e7ff;
+    color: #1e40af;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    text-transform: capitalize;
+}

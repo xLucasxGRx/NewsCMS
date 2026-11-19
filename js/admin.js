@@ -1,12 +1,192 @@
 /**
- * NewsCMS - Script de la vista previa del panel administrativo
- * Controla el menú lateral responsive y el cambio visual entre módulos.
+ * NewsCMS - Script del panel administrativo
+ * Verifica la sesión en el servidor, carga estadísticas reales y gestiona la navegación.
  */
 
+let csrfTokenActual = "";
+
 document.addEventListener("DOMContentLoaded", () => {
-    inicializarSidebarMovil();
-    inicializarModulos();
+    iniciarPanel();
 });
+
+/**
+ * Comprueba la sesión en php/comprobar_sesion.php antes de mostrar el panel.
+ */
+async function iniciarPanel() {
+    try {
+        const respuesta = await fetch("../php/comprobar_sesion.php", {
+            credentials: "same-origin"
+        });
+
+        if (!respuesta.ok) {
+            window.location.href = "../acceso.html";
+            return;
+        }
+
+        const datos = await respuesta.json();
+        if (!datos.autenticado || !datos.usuario) {
+            window.location.href = "../acceso.html";
+            return;
+        }
+
+        csrfTokenActual = datos.csrf_token || "";
+
+        mostrarDatosUsuario(datos.usuario);
+        renderizarModulos(datos.modulos_permitidos || ["Dashboard"]);
+        inicializarSidebarMovil();
+        inicializarCierreSesion();
+
+        const contenedor = document.getElementById("contenedor-admin");
+        if (contenedor) {
+            contenedor.hidden = false;
+        }
+
+        await cargarEstadisticas();
+    } catch {
+        window.location.href = "../acceso.html";
+    }
+}
+
+/**
+ * Muestra el nombre y rol del usuario autenticado usando textContent.
+ */
+function mostrarDatosUsuario(usuario) {
+    const elNombre = document.getElementById("nombre-usuario");
+    const elRol = document.getElementById("rol-usuario");
+    const elRolSidebar = document.getElementById("rol-sidebar");
+
+    if (elNombre) {
+        elNombre.textContent = usuario.nombre || "";
+    }
+    if (elRol) {
+        elRol.textContent = usuario.rol || "";
+    }
+    if (elRolSidebar) {
+        elRolSidebar.textContent = usuario.rol || "";
+    }
+}
+
+/**
+ * Construye los botones de módulos autorizados en la barra lateral.
+ */
+function renderizarModulos(modulosPermitidos) {
+    const lista = document.getElementById("lista-modulos");
+    if (!lista) {
+        return;
+    }
+
+    lista.textContent = "";
+
+    modulosPermitidos.forEach((modulo, indice) => {
+        const li = document.createElement("li");
+        const boton = document.createElement("button");
+        boton.type = "button";
+        boton.className = indice === 0 ? "boton-modulo activo" : "boton-modulo";
+        boton.setAttribute("data-modulo", modulo);
+        boton.textContent = modulo;
+
+        boton.addEventListener("click", () => seleccionarModulo(modulo, boton));
+
+        li.appendChild(boton);
+        lista.appendChild(li);
+    });
+}
+
+/**
+ * Cambia entre el Dashboard y los módulos pendientes autorizados.
+ */
+function seleccionarModulo(modulo, botonActivo) {
+    const botones = document.querySelectorAll(".boton-modulo");
+    const tituloModulo = document.getElementById("titulo-modulo");
+    const vistaDashboard = document.getElementById("vista-dashboard");
+    const vistaModuloVacio = document.getElementById("vista-modulo-vacio");
+    const nombreModuloDetalle = document.getElementById("nombre-modulo-detalle");
+    const descripcionModuloDetalle = document.getElementById("descripcion-modulo-detalle");
+    const barraLateral = document.getElementById("barra-lateral");
+    const botonSidebar = document.getElementById("boton-sidebar");
+
+    const descripciones = {
+        "Noticias": "Este módulo permitirá redactar, editar y administrar las noticias del portal.",
+        "Categorías": "Este módulo permitirá gestionar las secciones temáticas del sitio.",
+        "Etiquetas": "Este módulo permitirá organizar etiquetas para clasificar artículos.",
+        "Revisión editorial": "Este módulo permitirá revisar y aprobar borradores antes de publicarlos.",
+        "Usuarios": "Este módulo permitirá administrar cuentas y roles del sistema.",
+        "Complementos": "Este módulo permitirá activar o desactivar extensiones de NewsCMS.",
+        "Temas": "Este módulo permitirá configurar la apariencia visual del portal.",
+        "Configuración": "Este módulo permitirá ajustar los parámetros generales del CMS."
+    };
+
+    botones.forEach((item) => item.classList.remove("activo"));
+    botonActivo.classList.add("activo");
+
+    if (tituloModulo) {
+        tituloModulo.textContent = modulo;
+    }
+
+    if (modulo === "Dashboard") {
+        vistaDashboard.classList.remove("oculto");
+        vistaModuloVacio.classList.add("oculto");
+    } else {
+        vistaDashboard.classList.add("oculto");
+        vistaModuloVacio.classList.remove("oculto");
+        if (nombreModuloDetalle) {
+            nombreModuloDetalle.textContent = modulo;
+        }
+        if (descripcionModuloDetalle) {
+            descripcionModuloDetalle.textContent =
+                descripciones[modulo] || "Módulo pendiente de desarrollo en próximas fases.";
+        }
+    }
+
+    if (barraLateral && barraLateral.classList.contains("abierta")) {
+        barraLateral.classList.remove("abierta");
+        if (botonSidebar) {
+            botonSidebar.setAttribute("aria-expanded", "false");
+        }
+    }
+}
+
+/**
+ * Obtiene las estadísticas reales desde php/estadisticas.php mediante fetch().
+ */
+async function cargarEstadisticas() {
+    try {
+        const respuesta = await fetch("../php/estadisticas.php", {
+            credentials: "same-origin"
+        });
+
+        if (respuesta.status === 401) {
+            window.location.href = "../acceso.html";
+            return;
+        }
+
+        if (!respuesta.ok) {
+            return;
+        }
+
+        const datos = await respuesta.json();
+        if (!datos.ok) {
+            return;
+        }
+
+        const total = Number(datos.total_noticias ?? 0);
+        const publicadas = Number(datos.noticias_publicadas ?? 0);
+        const pendientes = Number(datos.noticias_pendientes ?? 0);
+        const usuarios = Number(datos.total_usuarios ?? 0);
+
+        document.getElementById("stat-total-noticias").textContent = String(total);
+        document.getElementById("stat-noticias-publicadas").textContent = String(publicadas);
+        document.getElementById("stat-noticias-pendientes").textContent = String(pendientes);
+        document.getElementById("stat-total-usuarios").textContent = String(usuarios);
+
+        const etiquetaTabla = document.getElementById("etiqueta-tabla");
+        if (etiquetaTabla) {
+            etiquetaTabla.textContent = total === 0 ? "Estado: vacía" : `Estado: ${total} registros`;
+        }
+    } catch {
+        // Mantener valores en 0 si no se pudo consultar el servidor
+    }
+}
 
 /**
  * Muestra u oculta la barra lateral en pantallas pequeñas.
@@ -26,65 +206,34 @@ function inicializarSidebarMovil() {
 }
 
 /**
- * Cambia la vista entre el Dashboard y los módulos preparados en vista previa.
+ * Envía la solicitud POST protegida por CSRF para cerrar sesión.
  */
-function inicializarModulos() {
-    const botones = document.querySelectorAll(".boton-modulo");
-    const tituloModulo = document.getElementById("titulo-modulo");
-    const vistaDashboard = document.getElementById("vista-dashboard");
-    const vistaModuloVacio = document.getElementById("vista-modulo-vacio");
-    const nombreModuloDetalle = document.getElementById("nombre-modulo-detalle");
-    const descripcionModuloDetalle = document.getElementById("descripcion-modulo-detalle");
-    const barraLateral = document.getElementById("barra-lateral");
-    const botonSidebar = document.getElementById("boton-sidebar");
-
-    const descripciones = {
-        "Noticias": "Módulo visual para crear, editar, programar y publicar noticias del portal.",
-        "Categorías": "Módulo visual para organizar las secciones principales del periódico digital.",
-        "Etiquetas": "Módulo visual para clasificar artículos mediante palabras clave.",
-        "Revisión editorial": "Módulo visual para aprobar o devolver borradores antes de su publicación.",
-        "Usuarios": "Módulo visual para administrar cuentas, editores y permisos de acceso.",
-        "Complementos": "Módulo visual para activar o desactivar extensiones del sistema.",
-        "Temas": "Módulo visual para seleccionar la apariencia gráfica del portal público.",
-        "Configuración": "Módulo visual para ajustar el nombre del sitio, idioma y parámetros generales."
-    };
-
-    if (!botones.length) {
+function inicializarCierreSesion() {
+    const botonSalir = document.getElementById("boton-salir");
+    if (!botonSalir) {
         return;
     }
 
-    botones.forEach((boton) => {
-        boton.addEventListener("click", () => {
-            const modulo = boton.getAttribute("data-modulo") || "Dashboard";
+    botonSalir.addEventListener("click", async () => {
+        const datosFormulario = new FormData();
+        datosFormulario.append("csrf_token", csrfTokenActual);
 
-            botones.forEach((item) => item.classList.remove("activo"));
-            boton.classList.add("activo");
+        try {
+            const respuesta = await fetch("../php/cerrar_sesion.php", {
+                method: "POST",
+                body: datosFormulario,
+                credentials: "same-origin"
+            });
 
-            if (tituloModulo) {
-                tituloModulo.textContent = modulo;
+            if (respuesta.ok) {
+                const datos = await respuesta.json();
+                window.location.href = datos.redirigir || "../acceso.html";
+                return;
             }
+        } catch {
+            // Redirigir a acceso.html en caso de fallo de red
+        }
 
-            if (modulo === "Dashboard") {
-                vistaDashboard.classList.remove("oculto");
-                vistaModuloVacio.classList.add("oculto");
-            } else {
-                vistaDashboard.classList.add("oculto");
-                vistaModuloVacio.classList.remove("oculto");
-                if (nombreModuloDetalle) {
-                    nombreModuloDetalle.textContent = modulo;
-                }
-                if (descripcionModuloDetalle) {
-                    descripcionModuloDetalle.textContent =
-                        descripciones[modulo] || "Módulo en preparación para próximas fases.";
-                }
-            }
-
-            if (barraLateral && barraLateral.classList.contains("abierta")) {
-                barraLateral.classList.remove("abierta");
-                if (botonSidebar) {
-                    botonSidebar.setAttribute("aria-expanded", "false");
-                }
-            }
-        });
+        window.location.href = "../acceso.html";
     });
 }

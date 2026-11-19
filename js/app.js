@@ -1,14 +1,15 @@
 /**
  * NewsCMS - Script principal del portal público
- * Gestiona fecha actual, menú móvil, categorías y avisos visuales.
+ * Gestiona fecha actual, estado de sesión, menú móvil, categorías y buscador.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
     mostrarFechaActual();
+    actualizarAnioPie();
+    comprobarEstadoSesion();
     inicializarMenuMovil();
     inicializarNavegacionSecciones();
     inicializarBuscador();
-    inicializarBotonLogin();
     inicializarCierreAviso();
 });
 
@@ -31,6 +32,46 @@ function mostrarFechaActual() {
 
     const texto = formato.format(hoy);
     elementoFecha.textContent = texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+/**
+ * Actualiza el año en el pie de página.
+ */
+function actualizarAnioPie() {
+    const elementoAnio = document.getElementById("anio-actual");
+    if (elementoAnio) {
+        elementoAnio.textContent = String(new Date().getFullYear());
+    }
+}
+
+/**
+ * Consulta si existe una sesión activa para ajustar el botón de acceso.
+ */
+async function comprobarEstadoSesion() {
+    const enlaceAcceso = document.getElementById("enlace-acceso");
+    if (!enlaceAcceso) {
+        return;
+    }
+
+    try {
+        const respuesta = await fetch("php/comprobar_sesion.php", {
+            credentials: "same-origin"
+        });
+        if (!respuesta.ok) {
+            return;
+        }
+
+        const datos = await respuesta.json();
+        if (datos.autenticado) {
+            enlaceAcceso.textContent = "Ir al panel";
+            enlaceAcceso.setAttribute("href", "admin/index.html");
+        } else {
+            enlaceAcceso.textContent = "Iniciar sesión";
+            enlaceAcceso.setAttribute("href", "acceso.html");
+        }
+    } catch {
+        // Si falla la comprobación, se mantiene el enlace predeterminado a acceso.html
+    }
 }
 
 /**
@@ -111,20 +152,6 @@ function inicializarBuscador() {
         }
 
         mostrarAviso(`Búsqueda visual para "${consulta}": aún no hay noticias registradas en el sistema.`);
-    });
-}
-
-/**
- * Muestra un aviso informativo al pulsar el botón de inicio de sesión.
- */
-function inicializarBotonLogin() {
-    const botonLogin = document.getElementById("boton-login");
-    if (!botonLogin) {
-        return;
-    }
-
-    botonLogin.addEventListener("click", () => {
-        mostrarAviso("El inicio de sesión se habilitará en una fase posterior. Puedes revisar el diseño en Panel Admin (Vista previa).");
     });
 }
 

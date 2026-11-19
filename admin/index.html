@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrativo — NewsCMS</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+    <div id="contenedor-admin" class="contenedor-admin" hidden>
+        <!-- Barra lateral de módulos autorizados según rol -->
+        <aside id="barra-lateral" class="barra-lateral" aria-label="Módulos del panel administrativo">
+            <div class="marca-admin">
+                <a href="index.html" class="logo-admin">News<span>CMS</span></a>
+                <span id="rol-sidebar" class="rol-usuario"></span>
+            </div>
+
+            <nav class="menu-lateral">
+                <p class="grupo-menu">Módulos disponibles</p>
+                <ul id="lista-modulos" class="lista-modulos"></ul>
+            </nav>
+
+            <div class="pie-sidebar">
+                <a href="../index.html" class="enlace-volver">&larr; Volver al portal público</a>
+            </div>
+        </aside>
+
+        <!-- Área principal del panel -->
+        <div class="area-principal">
+            <header class="cabecera-admin">
+                <div class="cabecera-izquierda">
+                    <button
+                        type="button"
+                        id="boton-sidebar"
+                        class="boton-sidebar"
+                        aria-expanded="false"
+                        aria-controls="barra-lateral"
+                        aria-label="Mostrar u ocultar menú lateral"
+                    >
+                        &#9776;
+                    </button>
+                    <h1 id="titulo-modulo" class="titulo-modulo">Dashboard</h1>
+                </div>
+
+                <div class="cabecera-derecha">
+                    <span id="nombre-usuario" class="perfil-previa"></span>
+                    <span id="rol-usuario" class="rol-usuario"></span>
+                    <button type="button" id="boton-salir" class="boton-salir">Cerrar sesión</button>
+                </div>
+            </header>
+
+            <main class="contenido-admin">
+                <!-- Vista del Dashboard -->
+                <section id="vista-dashboard" class="vista-modulo">
+                    <div class="rejilla-estadisticas" aria-label="Estadísticas desde MySQL">
+                        <article class="tarjeta-estadistica">
+                            <span class="etiqueta-estadistica">Total de noticias</span>
+                            <strong id="stat-total-noticias" class="valor-estadistica">0</strong>
+                            <span class="nota-estadistica">Consultado en MySQL</span>
+                        </article>
+
+                        <article class="tarjeta-estadistica">
+                            <span class="etiqueta-estadistica">Noticias publicadas</span>
+                            <strong id="stat-noticias-publicadas" class="valor-estadistica">0</strong>
+                            <span class="nota-estadistica">Consultado en MySQL</span>
+                        </article>
+
+                        <article class="tarjeta-estadistica">
+                            <span class="etiqueta-estadistica">Pendientes de revisión</span>
+                            <strong id="stat-noticias-pendientes" class="valor-estadistica">0</strong>
+                            <span class="nota-estadistica">Consultado en MySQL</span>
+                        </article>
+
+                        <article class="tarjeta-estadistica">
+                            <span class="etiqueta-estadistica">Total de usuarios</span>
+                            <strong id="stat-total-usuarios" class="valor-estadistica">0</strong>
+                            <span class="nota-estadistica">Consultado en MySQL</span>
+                        </article>
+                    </div>
+
+                    <!-- Tabla de noticias -->
+                    <section class="panel-tabla" aria-labelledby="titulo-tabla-noticias">
+                        <div class="cabecera-panel">
+                            <h2 id="titulo-tabla-noticias">Tabla de Noticias</h2>
+                            <span id="etiqueta-tabla" class="etiqueta-tabla">Estado: vacía</span>
+                        </div>
+
+                        <div class="contenedor-tabla">
+                            <table class="tabla-datos">
+                                <thead>
+                                    <tr>
+                                        <th>Título</th>
+                                        <th>Categoría</th>
+                                        <th>Autor</th>
+                                        <th>Estado</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="6" class="fila-vacia">
+                                            Aún no existen noticias registradas en el sistema.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </section>
+
+                <!-- Vista para módulos pendientes de desarrollo -->
+                <section id="vista-modulo-vacio" class="vista-modulo oculto" aria-live="polite">
+                    <div class="tarjeta-modulo-vacio">
+                        <span class="etiqueta-previa">Módulo pendiente</span>
+                        <h2 id="nombre-modulo-detalle">Módulo</h2>
+                        <p id="descripcion-modulo-detalle">
+                            Este módulo forma parte del panel de NewsCMS y se implementará en las
+                            próximas fases del proyecto.
+                        </p>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/admin.js"></script>
+</body>
+</html>

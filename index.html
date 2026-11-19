@@ -1,6 +1,3 @@
-<?php
-require_once __DIR__ . '/config/conexion.php';
-?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -10,15 +7,12 @@ require_once __DIR__ . '/config/conexion.php';
     <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
-    <!-- Barra superior: fecha actual y acceso rápido -->
+    <!-- Barra superior: fecha actual -->
     <div class="barra-superior">
         <div class="contenedor barra-superior-contenido">
             <span id="fecha-actual" class="fecha-actual">Cargando fecha...</span>
             <div class="barra-acciones">
-                <a href="admin/vista_previa.html" class="enlace-admin-previa">Panel Admin (Vista previa)</a>
-                <span class="estado-sistema <?php echo $conexionActiva ? 'estado-activo' : 'estado-inactivo'; ?>">
-                    <?php echo $conexionActiva ? 'BD conectada' : 'BD sin conexión'; ?>
-                </span>
+                <a href="admin/index.html" class="enlace-admin-previa">Panel Administrativo</a>
             </div>
         </div>
     </div>
@@ -27,7 +21,7 @@ require_once __DIR__ . '/config/conexion.php';
     <header class="encabezado">
         <div class="contenedor encabezado-superior">
             <div class="marca">
-                <a href="index.php" class="logotipo">News<span>CMS</span></a>
+                <a href="index.html" class="logotipo">News<span>CMS</span></a>
                 <p class="lema">Portal informativo universitario</p>
             </div>
 
@@ -43,9 +37,7 @@ require_once __DIR__ . '/config/conexion.php';
             </form>
 
             <div class="acciones-usuario">
-                <button type="button" id="boton-login" class="boton-login">
-                    Iniciar sesión
-                </button>
+                <a href="acceso.html" id="enlace-acceso" class="boton-login">Iniciar sesión</a>
                 <button
                     type="button"
                     id="boton-menu"
@@ -76,7 +68,7 @@ require_once __DIR__ . '/config/conexion.php';
         </nav>
     </header>
 
-    <!-- Aviso discreto para interacciones visuales (búsqueda / inicio de sesión) -->
+    <!-- Aviso discreto para interacciones visuales -->
     <div id="aviso-portal" class="aviso-portal oculto" role="status" aria-live="polite">
         <div class="contenedor aviso-contenido">
             <p id="texto-aviso"></p>
@@ -96,7 +88,6 @@ require_once __DIR__ . '/config/conexion.php';
 
     <!-- Contenido principal del portal -->
     <main id="inicio" class="contenedor contenido-principal">
-        <!-- Rejilla superior: Noticia principal + Últimas noticias -->
         <div class="rejilla-portada">
             <!-- Sección de noticia principal -->
             <section class="bloque-noticia-principal" aria-labelledby="titulo-principal">
@@ -209,13 +200,13 @@ require_once __DIR__ . '/config/conexion.php';
                 <ul>
                     <li><a href="#inicio">Portada</a></li>
                     <li><a href="#secciones">Categorías</a></li>
-                    <li><a href="admin/vista_previa.html">Vista previa del panel</a></li>
+                    <li><a href="admin/index.html">Panel administrativo</a></li>
                 </ul>
             </div>
 
             <div class="pie-meta">
                 <h4>Proyecto Académico</h4>
-                <p>&copy; <?php echo date('Y'); ?> NewsCMS. Todos los derechos reservados.</p>
+                <p>&copy; <span id="anio-actual">2026</span> NewsCMS. Todos los derechos reservados.</p>
             </div>
         </div>
     </footer>

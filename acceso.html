@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión — NewsCMS</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body class="pagina-acceso">
+    <main class="contenedor-acceso">
+        <section class="tarjeta-acceso" aria-labelledby="titulo-acceso">
+            <div class="cabecera-acceso">
+                <a href="index.html" class="logotipo">News<span>CMS</span></a>
+                <h1 id="titulo-acceso">Acceso al Panel Administrativo</h1>
+                <p>Ingresa tus credenciales para continuar.</p>
+            </div>
+
+            <div id="alerta-acceso" class="alerta-error" role="alert" hidden></div>
+
+            <form id="formulario-acceso" class="formulario-acceso" novalidate>
+                <input type="hidden" id="csrf-token" name="csrf_token" value="">
+
+                <div class="campo-formulario">
+                    <label for="identificador">Usuario o correo electrónico</label>
+                    <input
+                        type="text"
+                        id="identificador"
+                        name="identificador"
+                        autocomplete="username"
+                        required
+                    >
+                </div>
+
+                <div class="campo-formulario">
+                    <label for="contrasena">Contraseña</label>
+                    <input
+                        type="password"
+                        id="contrasena"
+                        name="contrasena"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+
+                <button type="submit" id="boton-ingresar" class="boton-ingresar">Ingresar</button>
+            </form>
+
+            <div class="pie-acceso">
+                <a href="index.html">&larr; Volver al portal público</a>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/acceso.js"></script>
+</body>
+</html>
