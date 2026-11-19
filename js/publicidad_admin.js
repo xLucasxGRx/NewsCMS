@@ -88,112 +88,310 @@ function renderizarSidebarPublicidad(modulos) {
     });
 }
 
+async function peticionGetPublicidad(modo) {
+    const opciones = { credentials: "same-origin" };
+    try {
+        return await fetch(`../php/publicidad.php?modo=${encodeURIComponent(modo)}`, opciones);
+    } catch {
+        // Respaldo si el navegador o una extension bloquea /php/publicidad.php
+        return await fetch(`../php/complementos.php?canal=patrocinios&modo=${encodeURIComponent(modo)}`, opciones);
+    }
+}
+
+async function enviarOperacionPublicidad(formData) {
+    const opciones = {
+        method: "POST",
+        body: formData,
+        credentials: "same-origin"
+    };
+    try {
+        return await fetch("../php/publicidad.php", opciones);
+    } catch {
+        // Respaldo si el navegador o una extension bloquea /php/publicidad.php
+        formData.set("canal", "patrocinios");
+        return await fetch("../php/complementos.php?canal=patrocinios", opciones);
+    }
+}
+
+function esUrlHttpValida(valor) {
+    try {
+        const parsed = new URL(valor);
+        return (parsed.protocol === "http:" || parsed.protocol === "https:") && parsed.hostname !== "";
+    } catch {
+        return false;
+    }
+}
+
+function mostrarEstadoCargandoPublicidad(contenedor) {
+    if (!contenedor) {
+        return;
+    }
+    contenedor.textContent = "";
+    const p = document.createElement("p");
+    p.className = "cargando-publicidad";
+    p.textContent = "Cargando anuncios...";
+    contenedor.appendChild(p);
+}
+
+function mostrarEstadoErrorPublicidad(contenedor, totalEl, activosEl, detalle) {
+    if (totalEl) {
+        totalEl.textContent = "—";
+    }
+    if (activosEl) {
+        activosEl.textContent = "—";
+    }
+    if (contenedor) {
+        contenedor.textContent = "";
+        const caja = document.createElement("div");
+        caja.className = "estado-error-publicidad";
+
+        const titulo = document.createElement("h3");
+        titulo.className = "titulo-error-publicidad";
+        titulo.textContent = "No se pudieron cargar los anuncios";
+
+        const texto = document.createElement("p");
+        texto.className = "texto-error-publicidad";
+        texto.textContent = detalle;
+
+        const btnReintentar = document.createElement("button");
+        btnReintentar.type = "button";
+        btnReintentar.className = "boton-secundario-admin";
+        btnReintentar.textContent = "Reintentar";
+        btnReintentar.addEventListener("click", cargarAnuncios);
+
+        caja.appendChild(titulo);
+        caja.appendChild(texto);
+        caja.appendChild(btnReintentar);
+        contenedor.appendChild(caja);
+    }
+    mostrarMensajePublicidad(detalle, true);
+}
+
 async function cargarAnuncios() {
-    const cuerpo = document.getElementById("cuerpo-tabla-publicidad");
+    const contenedor = document.getElementById("cuerpo-tabla-publicidad");
     const totalEl = document.getElementById("total-anuncios");
+    const activosEl = document.getElementById("contador-activos-publicidad");
+
+    mostrarEstadoCargandoPublicidad(contenedor);
 
     try {
-        const respuesta = await fetch("../php/publicidad.php?modo=admin_lista", {
-            credentials: "same-origin"
-        });
-        if (!respuesta.ok) {
+        const respuesta = await peticionGetPublicidad("admin_lista");
+        let datos = null;
+        try {
+            datos = await respuesta.json();
+        } catch {
+            datos = null;
+        }
+
+        if (!respuesta.ok || !datos || datos.ok !== true || !Array.isArray(datos.anuncios)) {
+            const detalle = (datos && datos.mensaje)
+                ? datos.mensaje
+                : `No se pudieron cargar los anuncios (HTTP ${respuesta.status}).`;
+            mostrarEstadoErrorPublicidad(contenedor, totalEl, activosEl, detalle);
             return;
         }
 
-        const datos = await respuesta.json();
-        const anuncios = datos.anuncios || [];
+        const anuncios = datos.anuncios;
+        const activos = anuncios.filter((item) => Number(item.visible) === 1).length;
 
-        if (totalEl) {
-            totalEl.textContent = `${anuncios.length} anuncios`;
+        const alerta = document.getElementById("mensaje-publicidad");
+        if (alerta && alerta.classList.contains("alerta-admin-error")) {
+            alerta.textContent = "";
+            alerta.hidden = true;
         }
 
-        cuerpo.textContent = "";
+        if (totalEl) {
+            totalEl.textContent = `${anuncios.length} ${anuncios.length === 1 ? "anuncio" : "anuncios"}`;
+        }
+        if (activosEl) {
+            activosEl.textContent = `${activos} ${activos === 1 ? "activo" : "activos"}`;
+        }
+
+        contenedor.textContent = "";
         if (anuncios.length === 0) {
-            const tr = document.createElement("tr");
-            const td = document.createElement("td");
-            td.colSpan = 5;
-            td.className = "fila-vacia";
-            td.textContent = "Aún no hay anuncios registrados.";
-            tr.appendChild(td);
-            cuerpo.appendChild(tr);
+            contenedor.appendChild(construirEstadoVacioPublicidad());
             return;
         }
 
         anuncios.forEach((item) => {
-            const tr = document.createElement("tr");
-
-            const tdImg = document.createElement("td");
-            const img = document.createElement("img");
-            img.src = `../${item.imagen}`;
-            img.alt = item.titulo;
-            img.className = "miniatura-publicidad";
-            tdImg.appendChild(img);
-
-            const tdTitulo = document.createElement("td");
-            tdTitulo.textContent = item.titulo;
-
-            const tdEnlace = document.createElement("td");
-            const a = document.createElement("a");
-            a.href = item.enlace;
-            a.target = "_blank";
-            a.rel = "noopener noreferrer";
-            a.className = "enlace-secundario";
-            a.textContent = item.enlace;
-            tdEnlace.appendChild(a);
-
-            const esVisible = Number(item.visible) === 1;
-            const tdEstado = document.createElement("td");
-            const badge = document.createElement("span");
-            badge.className = esVisible ? "estado-badge estado-publicada" : "estado-badge estado-borrador";
-            badge.textContent = esVisible ? "Visible" : "Inactivo";
-            tdEstado.appendChild(badge);
-
-            const tdAcciones = document.createElement("td");
-            tdAcciones.className = "celda-acciones";
-
-            const btnEditar = document.createElement("button");
-            btnEditar.type = "button";
-            btnEditar.className = "enlace-accion";
-            btnEditar.textContent = "Editar";
-            btnEditar.addEventListener("click", () => abrirEdicionAnuncio(item));
-
-            const btnVis = document.createElement("button");
-            btnVis.type = "button";
-            btnVis.className = "enlace-accion enlace-ver";
-            btnVis.textContent = esVisible ? "Desactivar" : "Activar";
-            btnVis.addEventListener("click", () => cambiarVisibilidadAnuncio(item.id, esVisible ? 0 : 1));
-
-            const btnElim = document.createElement("button");
-            btnElim.type = "button";
-            btnElim.className = "enlace-accion enlace-eliminar";
-            btnElim.textContent = "Eliminar";
-            btnElim.addEventListener("click", () => eliminarAnuncioItem(item));
-
-            tdAcciones.appendChild(btnEditar);
-            tdAcciones.appendChild(btnVis);
-            tdAcciones.appendChild(btnElim);
-
-            tr.appendChild(tdImg);
-            tr.appendChild(tdTitulo);
-            tr.appendChild(tdEnlace);
-            tr.appendChild(tdEstado);
-            tr.appendChild(tdAcciones);
-            cuerpo.appendChild(tr);
+            contenedor.appendChild(construirFilaAnuncio(item));
         });
     } catch {
-        mostrarMensajePublicidad("No se pudieron cargar los anuncios.", true);
+        mostrarEstadoErrorPublicidad(
+            contenedor,
+            totalEl,
+            activosEl,
+            "No se pudieron cargar los anuncios. Verifica la conexión con el servidor."
+        );
     }
+}
+
+function construirEstadoVacioPublicidad() {
+    const caja = document.createElement("div");
+    caja.className = "estado-vacio-publicidad";
+
+    const etiqueta = document.createElement("span");
+    etiqueta.className = "etiqueta-vacio-publicidad";
+    etiqueta.textContent = "Sin campañas registradas";
+
+    const titulo = document.createElement("h3");
+    titulo.className = "titulo-vacio-publicidad";
+    titulo.textContent = "Todavía no hay anuncios registrados.";
+
+    const texto = document.createElement("p");
+    texto.className = "texto-vacio-publicidad";
+    texto.textContent = "Crea anuncios de texto o con banner (JPG, PNG o WEBP) para mostrarlos en el bloque inferior de la portada pública (máximo 3 visibles).";
+
+    const boton = document.createElement("button");
+    boton.type = "button";
+    boton.className = "boton-primario-admin";
+    boton.textContent = "+ Nuevo anuncio";
+    boton.addEventListener("click", abrirNuevoAnuncio);
+
+    caja.appendChild(etiqueta);
+    caja.appendChild(titulo);
+    caja.appendChild(texto);
+    caja.appendChild(boton);
+    return caja;
+}
+
+function construirMarcadorSoloTextoAdmin(marco) {
+    marco.textContent = "";
+    marco.classList.add("marco-solo-texto");
+    const chip = document.createElement("span");
+    chip.className = "badge-solo-texto-admin";
+    chip.textContent = "Solo texto";
+    marco.appendChild(chip);
+}
+
+function construirFilaAnuncio(item) {
+    const esVisible = Number(item.visible) === 1;
+    const rutaImagen = typeof item.imagen === "string" ? item.imagen.trim() : "";
+
+    const fila = document.createElement("article");
+    fila.className = esVisible ? "item-anuncio-admin" : "item-anuncio-admin item-inactivo";
+    if (!rutaImagen) {
+        fila.classList.add("item-solo-texto");
+    }
+
+    const marco = document.createElement("div");
+    marco.className = "marco-miniatura-publicidad";
+
+    if (rutaImagen !== "") {
+        const img = document.createElement("img");
+        img.src = `../${rutaImagen}`;
+        img.alt = item.titulo || "Banner publicitario";
+        img.className = "miniatura-publicidad";
+        img.loading = "lazy";
+        img.addEventListener("error", () => construirMarcadorSoloTextoAdmin(marco), { once: true });
+        marco.appendChild(img);
+    } else {
+        construirMarcadorSoloTextoAdmin(marco);
+    }
+
+    const cuerpo = document.createElement("div");
+    cuerpo.className = "cuerpo-item-publicidad";
+
+    const cabecera = document.createElement("div");
+    cabecera.className = "cabecera-item-publicidad";
+
+    const titulo = document.createElement("h3");
+    titulo.className = "titulo-item-publicidad";
+    titulo.textContent = item.titulo || "";
+
+    const badge = document.createElement("span");
+    badge.className = esVisible
+        ? "badge-estado-publicidad estado-visible"
+        : "badge-estado-publicidad estado-inactivo";
+    badge.textContent = esVisible ? "Visible" : "Inactivo";
+
+    cabecera.appendChild(titulo);
+    cabecera.appendChild(badge);
+    cuerpo.appendChild(cabecera);
+
+    if (item.descripcion) {
+        const desc = document.createElement("p");
+        desc.className = "descripcion-item-publicidad";
+        desc.textContent = item.descripcion;
+        cuerpo.appendChild(desc);
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "metadatos-item-publicidad";
+
+    const ubicacion = document.createElement("span");
+    ubicacion.className = "meta-ubicacion-publicidad";
+    ubicacion.textContent = "Portada inferior · Máx. 3 activos";
+
+    const enlace = document.createElement("a");
+    enlace.href = item.enlace;
+    enlace.target = "_blank";
+    enlace.rel = "noopener noreferrer";
+    enlace.className = "enlace-destino-publicidad";
+    enlace.textContent = item.enlace;
+
+    meta.appendChild(ubicacion);
+    meta.appendChild(enlace);
+    cuerpo.appendChild(meta);
+
+    const acciones = document.createElement("div");
+    acciones.className = "acciones-item-publicidad";
+
+    const btnEditar = document.createElement("button");
+    btnEditar.type = "button";
+    btnEditar.className = "btn-accion-publicidad btn-editar-publicidad";
+    btnEditar.textContent = "Editar";
+    btnEditar.addEventListener("click", () => abrirEdicionAnuncio(item));
+
+    const btnVis = document.createElement("button");
+    btnVis.type = "button";
+    btnVis.className = esVisible
+        ? "btn-accion-publicidad btn-desactivar-publicidad"
+        : "btn-accion-publicidad btn-activar-publicidad";
+    btnVis.textContent = esVisible ? "Desactivar" : "Activar";
+    btnVis.addEventListener("click", () => cambiarVisibilidadAnuncio(item.id, esVisible ? 0 : 1, fila));
+
+    const btnElim = document.createElement("button");
+    btnElim.type = "button";
+    btnElim.className = "btn-accion-publicidad btn-eliminar-publicidad";
+    btnElim.textContent = "Eliminar";
+    btnElim.addEventListener("click", () => eliminarAnuncioItem(item, fila));
+
+    acciones.appendChild(btnEditar);
+    acciones.appendChild(btnVis);
+    acciones.appendChild(btnElim);
+
+    fila.appendChild(marco);
+    fila.appendChild(cuerpo);
+    fila.appendChild(acciones);
+    return fila;
+}
+
+function establecerEstadoBotonesFila(fila, deshabilitado) {
+    if (!fila) {
+        return;
+    }
+    fila.querySelectorAll("button").forEach((btn) => {
+        btn.disabled = deshabilitado;
+    });
 }
 
 function inicializarVistaPreviaAnuncio() {
     const input = document.getElementById("anuncio-imagen");
     const cont = document.getElementById("contenedor-previa-anuncio");
     const img = document.getElementById("imagen-previa-anuncio");
+    const nombreArchivo = document.getElementById("nombre-archivo-anuncio");
 
     input?.addEventListener("change", () => {
         const archivo = input.files && input.files[0];
         if (!archivo) {
+            if (nombreArchivo) {
+                nombreArchivo.textContent = "Ningún archivo seleccionado";
+            }
             return;
+        }
+        if (nombreArchivo) {
+            nombreArchivo.textContent = archivo.name;
         }
         const lector = new FileReader();
         lector.onload = (e) => {
@@ -204,21 +402,59 @@ function inicializarVistaPreviaAnuncio() {
     });
 }
 
+function abrirModalPublicidad() {
+    const modal = document.getElementById("panel-formulario-publicidad");
+    ocultarMensajeModalPublicidad();
+    if (modal) {
+        modal.hidden = false;
+    }
+    document.getElementById("anuncio-titulo")?.focus();
+}
+
+function cerrarModalPublicidad() {
+    const modal = document.getElementById("panel-formulario-publicidad");
+    ocultarMensajeModalPublicidad();
+    if (modal) {
+        modal.hidden = true;
+    }
+}
+
+function abrirNuevoAnuncio() {
+    const formulario = document.getElementById("formulario-publicidad");
+    formulario?.reset();
+    document.getElementById("anuncio-id").value = "0";
+    document.getElementById("contenedor-previa-anuncio").hidden = true;
+    document.getElementById("imagen-previa-anuncio").src = "";
+    const nombreArchivo = document.getElementById("nombre-archivo-anuncio");
+    if (nombreArchivo) {
+        nombreArchivo.textContent = "Ningún archivo seleccionado";
+    }
+    document.getElementById("titulo-form-publicidad").textContent = "Nuevo anuncio";
+    abrirModalPublicidad();
+}
+
 function inicializarFormularioPublicidad() {
     const btnNuevo = document.getElementById("btn-nuevo-anuncio");
     const btnCancelar = document.getElementById("btn-cancelar-publicidad");
+    const btnCerrar = document.getElementById("btn-cerrar-modal-publicidad");
+    const modal = document.getElementById("panel-formulario-publicidad");
     const formulario = document.getElementById("formulario-publicidad");
+    const btnGuardar = document.getElementById("btn-guardar-publicidad");
 
-    btnNuevo?.addEventListener("click", () => {
-        formulario.reset();
-        document.getElementById("anuncio-id").value = "0";
-        document.getElementById("contenedor-previa-anuncio").hidden = true;
-        document.getElementById("titulo-form-publicidad").textContent = "Nuevo anuncio";
-        document.getElementById("panel-formulario-publicidad").hidden = false;
+    btnNuevo?.addEventListener("click", abrirNuevoAnuncio);
+    btnCancelar?.addEventListener("click", cerrarModalPublicidad);
+    btnCerrar?.addEventListener("click", cerrarModalPublicidad);
+
+    modal?.addEventListener("click", (e) => {
+        if (e.target === modal) {
+            cerrarModalPublicidad();
+        }
     });
 
-    btnCancelar?.addEventListener("click", () => {
-        document.getElementById("panel-formulario-publicidad").hidden = true;
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal && !modal.hidden) {
+            cerrarModalPublicidad();
+        }
     });
 
     formulario?.addEventListener("submit", async (e) => {
@@ -226,15 +462,14 @@ function inicializarFormularioPublicidad() {
         const id = Number(document.getElementById("anuncio-id").value || 0);
         const titulo = document.getElementById("anuncio-titulo").value.trim();
         const enlace = document.getElementById("anuncio-enlace").value.trim();
-        const inputImg = document.getElementById("anuncio-imagen");
 
         if (!titulo || !enlace) {
-            mostrarMensajePublicidad("El título y la URL de destino son obligatorios.", true);
+            mostrarMensajeModalPublicidad("El título y la URL de destino son obligatorios.");
             return;
         }
 
-        if (id === 0 && (!inputImg.files || inputImg.files.length === 0)) {
-            mostrarMensajePublicidad("Selecciona una imagen publicitaria.", true);
+        if (!esUrlHttpValida(enlace)) {
+            mostrarMensajeModalPublicidad("Ingresa una URL de destino válida (HTTP o HTTPS).");
             return;
         }
 
@@ -242,24 +477,30 @@ function inicializarFormularioPublicidad() {
         form.append("csrf_token", csrfTokenPublicidad);
         form.append("accion", id > 0 ? "editar" : "crear");
 
+        if (btnGuardar) {
+            btnGuardar.disabled = true;
+            btnGuardar.textContent = "Guardando...";
+        }
+
         try {
-            const respuesta = await fetch("../php/publicidad.php", {
-                method: "POST",
-                body: form,
-                credentials: "same-origin"
-            });
+            const respuesta = await enviarOperacionPublicidad(form);
             const resultado = await respuesta.json();
 
             if (respuesta.ok && resultado.ok) {
                 mostrarMensajePublicidad(resultado.mensaje || "Anuncio guardado.", false);
-                document.getElementById("panel-formulario-publicidad").hidden = true;
+                cerrarModalPublicidad();
                 await cargarAnuncios();
                 return;
             }
 
-            mostrarMensajePublicidad(resultado.mensaje || "No se pudo guardar el anuncio.", true);
+            mostrarMensajeModalPublicidad(resultado.mensaje || "No se pudo guardar el anuncio.");
         } catch {
-            mostrarMensajePublicidad("Error de comunicación con el servidor.", true);
+            mostrarMensajeModalPublicidad("Error de comunicación con el servidor.");
+        } finally {
+            if (btnGuardar) {
+                btnGuardar.disabled = false;
+                btnGuardar.textContent = "Guardar anuncio";
+            }
         }
     });
 }
@@ -272,39 +513,54 @@ function abrirEdicionAnuncio(item) {
     document.getElementById("anuncio-visible").value = String(Number(item.visible) === 1 ? 1 : 0);
     document.getElementById("anuncio-imagen").value = "";
 
-    if (item.imagen) {
-        document.getElementById("imagen-previa-anuncio").src = `../${item.imagen}`;
-        document.getElementById("contenedor-previa-anuncio").hidden = false;
+    const nombreArchivo = document.getElementById("nombre-archivo-anuncio");
+    const contPrevia = document.getElementById("contenedor-previa-anuncio");
+    const imgPrevia = document.getElementById("imagen-previa-anuncio");
+    const rutaImagen = typeof item.imagen === "string" ? item.imagen.trim() : "";
+
+    if (rutaImagen !== "") {
+        imgPrevia.src = `../${rutaImagen}`;
+        contPrevia.hidden = false;
+        if (nombreArchivo) {
+            nombreArchivo.textContent = "Imagen actual conservada (opcional reemplazar)";
+        }
+    } else {
+        imgPrevia.src = "";
+        contPrevia.hidden = true;
+        if (nombreArchivo) {
+            nombreArchivo.textContent = "Sin imagen (anuncio textual). Opcional subir una.";
+        }
     }
 
     document.getElementById("titulo-form-publicidad").textContent = "Editar anuncio";
-    document.getElementById("panel-formulario-publicidad").hidden = false;
+    abrirModalPublicidad();
 }
 
-async function cambiarVisibilidadAnuncio(id, visible) {
+async function cambiarVisibilidadAnuncio(id, visible, fila) {
     const form = new FormData();
     form.append("csrf_token", csrfTokenPublicidad);
     form.append("accion", "cambiar_visibilidad");
     form.append("id", String(id));
     form.append("visible", String(visible));
 
+    establecerEstadoBotonesFila(fila, true);
     try {
-        const respuesta = await fetch("../php/publicidad.php", {
-            method: "POST",
-            body: form,
-            credentials: "same-origin"
-        });
+        const respuesta = await enviarOperacionPublicidad(form);
         const resultado = await respuesta.json();
         if (respuesta.ok && resultado.ok) {
             mostrarMensajePublicidad(resultado.mensaje || "Visibilidad actualizada.", false);
             await cargarAnuncios();
+        } else {
+            mostrarMensajePublicidad(resultado.mensaje || "No se pudo actualizar el estado.", true);
         }
     } catch {
         mostrarMensajePublicidad("Error al actualizar el estado.", true);
+    } finally {
+        establecerEstadoBotonesFila(fila, false);
     }
 }
 
-async function eliminarAnuncioItem(item) {
+async function eliminarAnuncioItem(item, fila) {
     if (!window.confirm(`¿Deseas eliminar el anuncio "${item.titulo}"?`)) {
         return;
     }
@@ -314,19 +570,20 @@ async function eliminarAnuncioItem(item) {
     form.append("accion", "eliminar");
     form.append("id", String(item.id));
 
+    establecerEstadoBotonesFila(fila, true);
     try {
-        const respuesta = await fetch("../php/publicidad.php", {
-            method: "POST",
-            body: form,
-            credentials: "same-origin"
-        });
+        const respuesta = await enviarOperacionPublicidad(form);
         const resultado = await respuesta.json();
         if (respuesta.ok && resultado.ok) {
             mostrarMensajePublicidad(resultado.mensaje || "Anuncio eliminado.", false);
             await cargarAnuncios();
+        } else {
+            mostrarMensajePublicidad(resultado.mensaje || "No se pudo eliminar el anuncio.", true);
         }
     } catch {
         mostrarMensajePublicidad("Error al eliminar el anuncio.", true);
+    } finally {
+        establecerEstadoBotonesFila(fila, false);
     }
 }
 
@@ -338,6 +595,25 @@ function mostrarMensajePublicidad(texto, esError) {
     alerta.textContent = texto;
     alerta.className = esError ? "alerta-admin alerta-admin-error" : "alerta-admin alerta-admin-exito";
     alerta.hidden = false;
+}
+
+function mostrarMensajeModalPublicidad(texto) {
+    const alerta = document.getElementById("mensaje-modal-publicidad");
+    if (!alerta) {
+        mostrarMensajePublicidad(texto, true);
+        return;
+    }
+    alerta.textContent = texto;
+    alerta.className = "alerta-admin alerta-admin-error alerta-modal-publicidad";
+    alerta.hidden = false;
+}
+
+function ocultarMensajeModalPublicidad() {
+    const alerta = document.getElementById("mensaje-modal-publicidad");
+    if (alerta) {
+        alerta.textContent = "";
+        alerta.hidden = true;
+    }
 }
 
 function inicializarSidebarMovilPublicidad() {

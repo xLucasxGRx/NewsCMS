@@ -14,6 +14,11 @@ if (!$conexionActiva || !$pdo) {
     exit;
 }
 
+if (($_GET['canal'] ?? '') === 'patrocinios' || ($_POST['canal'] ?? '') === 'patrocinios') {
+    require __DIR__ . '/publicidad.php';
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $modo = $_GET['modo'] ?? 'activos';
 

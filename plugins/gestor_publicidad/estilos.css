@@ -1,38 +1,59 @@
 .publicidad-bloque {
-    background-color: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    padding: 1.25rem;
-    margin-top: 1.25rem;
+    background-color: var(--color-superficie, #ffffff);
+    border: 1px solid var(--color-borde, #e2e8f0);
+    border-radius: var(--radio, 8px);
+    padding: 0.95rem 1.05rem;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
 }
 
 .publicidad-cabecera {
-    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    padding-bottom: 0.6rem;
+    margin-bottom: 0.8rem;
+    border-bottom: 1px solid var(--color-borde, #e2e8f0);
 }
 
 .publicidad-etiqueta {
-    display: inline-block;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #64748b;
-    background-color: #f1f5f9;
-    padding: 0.15rem 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.18rem 0.55rem;
     border-radius: 4px;
+    background-color: var(--color-fondo, #f8fafc);
+    border: 1px solid var(--color-borde, #e2e8f0);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-texto-suave, #64748b);
+}
+
+.publicidad-nota-editorial {
+    font-size: 0.72rem;
+    color: var(--color-texto-suave, #64748b);
 }
 
 .publicidad-rejilla {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 0.85rem;
 }
 
 .publicidad-tarjeta {
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
+    border: 1px solid var(--color-borde, #e2e8f0);
+    border-radius: calc(var(--radio, 8px) - 1px);
     overflow: hidden;
-    background-color: #f8fafc;
+    background-color: var(--color-fondo, #f8fafc);
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.publicidad-tarjeta:hover {
+    border-color: var(--color-acento, #2563eb);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    transform: translateY(-1px);
 }
 
 .publicidad-enlace {
@@ -43,26 +64,101 @@
     height: 100%;
 }
 
+.publicidad-marco-imagen {
+    background-color: var(--color-superficie, #ffffff);
+    border-bottom: 1px solid var(--color-borde, #e2e8f0);
+    padding: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 112px;
+    max-height: 185px;
+    overflow: hidden;
+}
+
 .publicidad-imagen {
-    width: 100%;
-    height: 150px;
-    object-fit: cover;
+    max-width: 100%;
+    max-height: 165px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
     display: block;
 }
 
 .publicidad-cuerpo {
-    padding: 0.85rem;
+    padding: 0.75rem 0.9rem;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    justify-content: space-between;
+    gap: 0.45rem;
+    flex: 1;
 }
 
 .publicidad-titulo {
-    font-size: 0.96rem;
-    color: #162a45;
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.32;
+    color: var(--color-primario, #162a45);
+    margin: 0;
 }
 
 .publicidad-desc {
-    font-size: 0.84rem;
-    color: #4b5563;
+    font-size: 0.81rem;
+    color: var(--color-texto-suave, #64748b);
+    margin: 0.28rem 0 0;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.publicidad-cta {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--color-acento, #2563eb);
+    letter-spacing: 0.01em;
+}
+
+.publicidad-tarjeta:hover .publicidad-cta {
+    text-decoration: underline;
+}
+
+.publicidad-tarjeta--textual {
+    border-left: 3px solid var(--color-acento, #2563eb);
+    background-color: var(--color-superficie, #ffffff);
+}
+
+.publicidad-tarjeta--textual .publicidad-cuerpo {
+    padding: 0.9rem 1rem;
+    gap: 0.55rem;
+}
+
+.publicidad-tarjeta--textual .publicidad-titulo {
+    font-size: 0.96rem;
+    line-height: 1.35;
+}
+
+.publicidad-tarjeta--textual .publicidad-desc {
+    -webkit-line-clamp: 4;
+    margin-top: 0.35rem;
+}
+
+@media (max-width: 640px) {
+    .publicidad-bloque {
+        padding: 0.85rem;
+    }
+
+    .publicidad-rejilla {
+        grid-template-columns: 1fr;
+    }
+
+    .publicidad-marco-imagen {
+        min-height: 96px;
+        max-height: 160px;
+    }
+
+    .publicidad-imagen {
+        max-height: 142px;
+    }
 }

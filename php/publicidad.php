@@ -152,17 +152,15 @@ function crearAnuncio(PDO $pdo): void
         return;
     }
 
-    if (!isset($_FILES['imagen']) || $_FILES['imagen']['error'] === UPLOAD_ERR_NO_FILE) {
-        http_response_code(400);
-        echo json_encode(['ok' => false, 'mensaje' => 'La imagen publicitaria es obligatoria.']);
-        return;
-    }
-
-    $resultadoImagen = procesarImagenPublicidad($_FILES['imagen']);
-    if (!$resultadoImagen['ok']) {
-        http_response_code(400);
-        echo json_encode(['ok' => false, 'mensaje' => $resultadoImagen['mensaje']]);
-        return;
+    $rutaImagen = null;
+    if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] !== UPLOAD_ERR_NO_FILE) {
+        $resultadoImagen = procesarImagenPublicidad($_FILES['imagen']);
+        if (!$resultadoImagen['ok']) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'mensaje' => $resultadoImagen['mensaje']]);
+            return;
+        }
+        $rutaImagen = $resultadoImagen['ruta'];
     }
 
     $d = $validacion['datos'];
@@ -170,7 +168,7 @@ function crearAnuncio(PDO $pdo): void
         'INSERT INTO anuncios (titulo, descripcion, imagen, enlace, visible)
          VALUES (?, ?, ?, ?, ?)'
     );
-    $stmt->execute([$d['titulo'], $d['descripcion'], $resultadoImagen['ruta'], $d['enlace'], $d['visible']]);
+    $stmt->execute([$d['titulo'], $d['descripcion'], $rutaImagen, $d['enlace'], $d['visible']]);
 
     echo json_encode([
         'ok'      => true,
@@ -284,7 +282,7 @@ function validarDatosAnuncio(): array
     }
 
     if ($enlace === '' || mb_strlen($enlace) > 500 || !validarEnlaceHttps($enlace)) {
-        return ['ok' => false, 'mensaje' => 'Ingresa una URL de destino HTTPS válida.'];
+        return ['ok' => false, 'mensaje' => 'Ingresa una URL de destino HTTP o HTTPS válida.'];
     }
 
     return [
@@ -312,7 +310,7 @@ function validarEnlaceHttps(string $url): bool
     $esquema = strtolower($partes['scheme'] ?? '');
     $host = trim((string) ($partes['host'] ?? ''));
 
-    return $esquema === 'https' && $host !== '';
+    return ($esquema === 'https' || $esquema === 'http') && $host !== '';
 }
 
 function procesarImagenPublicidad(array $archivo): array
