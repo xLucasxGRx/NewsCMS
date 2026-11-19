@@ -104,16 +104,25 @@ async function cargarDatosNewsletter() {
         correoDisponibleServidor = Boolean(datos.correo_disponible);
         const bannerCorreo = document.getElementById("estado-correo-servidor");
         const btnEnviar = document.getElementById("btn-enviar-boletin");
+        const btnPrueba = document.getElementById("btn-enviar-prueba");
+        const infoCorreo = datos.estado_correo || {};
 
         if (correoDisponibleServidor) {
-            bannerCorreo.textContent = "Servicio de correo disponible para envío de boletines.";
+            const remitenteTxt = infoCorreo.remitente ? ` (${infoCorreo.remitente})` : "";
+            bannerCorreo.textContent = `Envío SMTP disponible vía Gmail${remitenteTxt}.`;
             if (btnEnviar) {
                 btnEnviar.disabled = false;
             }
+            if (btnPrueba) {
+                btnPrueba.disabled = false;
+            }
         } else {
-            bannerCorreo.textContent = "Envío de boletines: No disponible: falta configurar un servicio de correo.";
+            bannerCorreo.textContent = infoCorreo.mensaje || "Envío de boletines: No disponible: falta configurar Gmail SMTP.";
             if (btnEnviar) {
                 btnEnviar.disabled = true;
+            }
+            if (btnPrueba) {
+                btnPrueba.disabled = true;
             }
         }
 
@@ -220,6 +229,7 @@ function inicializarFormularioBoletin() {
     const btnCancelar = document.getElementById("btn-cancelar-boletin");
     const btnPrevia = document.getElementById("btn-vista-previa-boletin");
     const btnEnviar = document.getElementById("btn-enviar-boletin");
+    const btnPrueba = document.getElementById("btn-enviar-prueba");
     const formulario = document.getElementById("formulario-boletin");
 
     btnNuevo?.addEventListener("click", () => {
@@ -296,6 +306,54 @@ function inicializarFormularioBoletin() {
         }
     });
 
+    btnPrueba?.addEventListener("click", async () => {
+        if (!correoDisponibleServidor) {
+            mostrarMensajeNewsletter("No disponible: falta configurar Gmail SMTP en el servidor.", true);
+            return;
+        }
+
+        const correoInput = document.getElementById("correo-prueba-newsletter");
+        const correoPrueba = correoInput ? correoInput.value.trim() : "";
+        const asunto = document.getElementById("boletin-asunto").value.trim();
+        const contenido = document.getElementById("boletin-contenido").value.trim();
+
+        if (!correoPrueba) {
+            mostrarMensajeNewsletter("Ingresa una dirección de correo para enviar la prueba.", true);
+            correoInput?.focus();
+            return;
+        }
+
+        if (!asunto || !contenido) {
+            mostrarMensajeNewsletter("El asunto y el contenido son obligatorios para enviar la prueba.", true);
+            return;
+        }
+
+        const form = new FormData();
+        form.append("csrf_token", csrfTokenNewsletter);
+        form.append("accion", "enviar_prueba");
+        form.append("correo_prueba", correoPrueba);
+        form.append("asunto", asunto);
+        form.append("contenido", contenido);
+
+        btnPrueba.disabled = true;
+        btnPrueba.textContent = "Enviando prueba...";
+
+        try {
+            const respuesta = await fetch("../php/newsletter.php", {
+                method: "POST",
+                body: form,
+                credentials: "same-origin"
+            });
+            const resultado = await respuesta.json();
+            mostrarMensajeNewsletter(resultado.mensaje || "Prueba procesada.", !respuesta.ok || !resultado.ok);
+        } catch {
+            mostrarMensajeNewsletter("Error de comunicación con el servidor al enviar la prueba.", true);
+        } finally {
+            btnPrueba.disabled = !correoDisponibleServidor;
+            btnPrueba.textContent = "Enviar correo de prueba";
+        }
+    });
+
     btnEnviar?.addEventListener("click", async () => {
         if (!correoDisponibleServidor) {
             mostrarMensajeNewsletter("No disponible: falta configurar un servicio de correo.", true);
@@ -308,10 +366,20 @@ function inicializarFormularioBoletin() {
             return;
         }
 
+        const confirmado = window.confirm(
+            "¿Enviar este boletín de forma individual a los suscriptores activos? Esta acción marcará el boletín como enviado."
+        );
+        if (!confirmado) {
+            return;
+        }
+
         const form = new FormData();
         form.append("csrf_token", csrfTokenNewsletter);
         form.append("accion", "enviar_boletin");
         form.append("id", String(id));
+
+        btnEnviar.disabled = true;
+        btnEnviar.textContent = "Enviando boletín...";
 
         try {
             const respuesta = await fetch("../php/newsletter.php", {
@@ -322,8 +390,14 @@ function inicializarFormularioBoletin() {
             const resultado = await respuesta.json();
             mostrarMensajeNewsletter(resultado.mensaje || "Operación completada.", !respuesta.ok || !resultado.ok);
             await cargarDatosNewsletter();
+            if (respuesta.ok && resultado.ok) {
+                document.getElementById("panel-formulario-boletin").hidden = true;
+            }
         } catch {
             mostrarMensajeNewsletter("Error de comunicación con el servidor.", true);
+        } finally {
+            btnEnviar.disabled = !correoDisponibleServidor;
+            btnEnviar.textContent = "Enviar boletín";
         }
     });
 }

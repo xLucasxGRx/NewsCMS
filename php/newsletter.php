@@ -5,6 +5,7 @@
 
 require_once __DIR__ . '/../config/conexion.php';
 require_once __DIR__ . '/../config/seguridad.php';
+require_once __DIR__ . '/servicio_correo.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -37,6 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         cancelarSuscripcion($pdo);
     } elseif ($accion === 'guardar_boletin') {
         guardarBoletin($pdo);
+    } elseif ($accion === 'enviar_prueba') {
+        enviarBoletinPrueba();
     } elseif ($accion === 'enviar_boletin') {
         enviarBoletin($pdo);
     } else {
@@ -204,13 +207,20 @@ function responderDatosAdmin(PDO $pdo): void
          ORDER BY fecha_creacion DESC, id DESC'
     )->fetchAll();
 
+    $estadoCorreo = cargarConfiguracionSmtp();
+
     echo json_encode([
         'ok'                   => true,
         'total_suscriptores'   => $totalSuscriptores,
         'suscriptores_activos' => $suscriptoresActivos,
         'suscriptores'         => $suscriptores,
         'boletines'            => $boletines,
-        'correo_disponible'    => verificarServicioCorreoDisponible(),
+        'correo_disponible'    => $estadoCorreo['disponible'],
+        'estado_correo'        => [
+            'codigo'    => $estadoCorreo['codigo'],
+            'mensaje'   => $estadoCorreo['mensaje'],
+            'remitente' => $estadoCorreo['remitente_visible'],
+        ],
     ]);
 }
 
@@ -268,17 +278,80 @@ function guardarBoletin(PDO $pdo): void
     ]);
 }
 
+function enviarBoletinPrueba(): void
+{
+    if (!verificarAdminYCsrf()) {
+        return;
+    }
+
+    $ahora = time();
+    $ultimo = (int) ($_SESSION['newsletter_prueba_ultimo'] ?? 0);
+    if (($ahora - $ultimo) < 5) {
+        http_response_code(429);
+        echo json_encode(['ok' => false, 'estado' => 'limite_frecuencia', 'mensaje' => 'Espera unos segundos antes de enviar otra prueba.']);
+        return;
+    }
+
+    $historial = $_SESSION['newsletter_prueba_historial'] ?? [];
+    $ventanaInicio = $ahora - 600;
+    $historial = array_values(array_filter(is_array($historial) ? $historial : [], static function ($ts) use ($ventanaInicio) {
+        return (int) $ts >= $ventanaInicio;
+    }));
+    if (count($historial) >= 5) {
+        http_response_code(429);
+        echo json_encode(['ok' => false, 'estado' => 'limite_frecuencia', 'mensaje' => 'Se alcanzó el límite temporal de correos de prueba (máximo 5 cada 10 minutos).']);
+        return;
+    }
+
+    $correoPrueba = strtolower(trim($_POST['correo_prueba'] ?? ''));
+    $asunto = trim($_POST['asunto'] ?? '');
+    $contenido = trim($_POST['contenido'] ?? '');
+
+    if ($correoPrueba === '' || mb_strlen($correoPrueba) > 150 || !filter_var($correoPrueba, FILTER_VALIDATE_EMAIL)) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'estado' => 'destinatario_invalido', 'mensaje' => 'Ingresa una dirección de correo válida para enviar la prueba.']);
+        return;
+    }
+
+    if ($asunto === '' || mb_strlen($asunto) > 180) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'estado' => 'datos_invalidos', 'mensaje' => 'El asunto es obligatorio (máximo 180 caracteres).']);
+        return;
+    }
+
+    if ($contenido === '') {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'estado' => 'datos_invalidos', 'mensaje' => 'El contenido del boletín es obligatorio para la prueba.']);
+        return;
+    }
+
+    $_SESSION['newsletter_prueba_ultimo'] = $ahora;
+    $historial[] = $ahora;
+    $_SESSION['newsletter_prueba_historial'] = $historial;
+
+    $resultado = enviarCorreoPruebaSmtp($correoPrueba, $asunto, $contenido);
+
+    http_response_code($resultado['http']);
+    echo json_encode([
+        'ok'      => $resultado['ok'],
+        'estado'  => $resultado['estado'],
+        'mensaje' => $resultado['mensaje'],
+    ]);
+}
+
 function enviarBoletin(PDO $pdo): void
 {
     if (!verificarAdminYCsrf()) {
         return;
     }
 
-    if (!verificarServicioCorreoDisponible()) {
+    $estadoCorreo = cargarConfiguracionSmtp();
+    if (!$estadoCorreo['disponible']) {
         http_response_code(503);
         echo json_encode([
             'ok'      => false,
-            'mensaje' => 'No disponible: falta configurar un servicio de correo.',
+            'estado'  => $estadoCorreo['codigo'],
+            'mensaje' => $estadoCorreo['mensaje'],
         ]);
         return;
     }
@@ -286,7 +359,7 @@ function enviarBoletin(PDO $pdo): void
     $id = (int) ($_POST['id'] ?? 0);
     if ($id <= 0) {
         http_response_code(400);
-        echo json_encode(['ok' => false, 'mensaje' => 'Boletín no válido.']);
+        echo json_encode(['ok' => false, 'estado' => 'datos_invalidos', 'mensaje' => 'Boletín no válido.']);
         return;
     }
 
@@ -296,43 +369,48 @@ function enviarBoletin(PDO $pdo): void
 
     if (!$boletin || $boletin['estado'] !== 'borrador') {
         http_response_code(409);
-        echo json_encode(['ok' => false, 'mensaje' => 'El boletín no existe o ya fue procesado.']);
+        echo json_encode(['ok' => false, 'estado' => 'estado_invalido', 'mensaje' => 'El boletín no existe o ya fue enviado.']);
         return;
     }
 
-    $suscriptores = $pdo->query(
-        "SELECT correo, token_baja FROM suscriptores_newsletter WHERE estado = 'activo' LIMIT 50"
-    )->fetchAll();
+    $totalActivos = (int) $pdo->query("SELECT COUNT(*) FROM suscriptores_newsletter WHERE estado = 'activo'")->fetchColumn();
+    $stmtSubs = $pdo->prepare(
+        "SELECT correo, token_baja
+         FROM suscriptores_newsletter
+         WHERE estado = 'activo'
+         ORDER BY id ASC
+         LIMIT ?"
+    );
+    $stmtSubs->bindValue(1, NEWSCMS_MAX_ENVIOS_BOLETIN, PDO::PARAM_INT);
+    $stmtSubs->execute();
+    $suscriptores = $stmtSubs->fetchAll();
 
     if (empty($suscriptores)) {
         http_response_code(400);
-        echo json_encode(['ok' => false, 'mensaje' => 'No hay suscriptores activos para enviar el boletín.']);
+        echo json_encode(['ok' => false, 'estado' => 'sin_destinatarios', 'mensaje' => 'No hay suscriptores activos para enviar el boletín.']);
         return;
     }
 
-    $remitente = ini_get('sendmail_from');
-    $asuntoSeguro = str_replace(["\r", "\n"], '', $boletin['asunto']);
-    $cabeceras = "From: {$remitente}\r\nContent-Type: text/plain; charset=UTF-8\r\n";
-    $enviados = 0;
+    $resultado = enviarBoletinSuscriptoresSmtp($boletin, $suscriptores);
 
-    foreach ($suscriptores as $s) {
-        $enlaceBaja = 'http://localhost:8081/NewsCMS/baja_newsletter.html?token=' . urlencode($s['token_baja']);
-        $cuerpo = $boletin['contenido'] . "\n\n---\nPara cancelar tu suscripción visita: " . $enlaceBaja;
-        if (@mail($s['correo'], $asuntoSeguro, $cuerpo, $cabeceras)) {
-            $enviados++;
-        }
-    }
-
-    if ($enviados > 0) {
-        $upd = $pdo->prepare("UPDATE boletines_newsletter SET estado = 'enviado', fecha_envio = NOW() WHERE id = ?");
+    if (!empty($resultado['marcar_enviado'])) {
+        $upd = $pdo->prepare("UPDATE boletines_newsletter SET estado = 'enviado', fecha_envio = NOW() WHERE id = ? AND estado = 'borrador'");
         $upd->execute([$id]);
     }
 
+    $mensaje = $resultado['mensaje'];
+    if ($resultado['ok'] && $totalActivos > NEWSCMS_MAX_ENVIOS_BOLETIN) {
+        $mensaje .= ' Nota: la ejecución está limitada a ' . NEWSCMS_MAX_ENVIOS_BOLETIN . ' destinatarios por lote (total activos: ' . $totalActivos . ').';
+    }
+
+    http_response_code($resultado['http']);
     echo json_encode([
-        'ok'      => $enviados > 0,
-        'mensaje' => $enviados > 0
-            ? "Boletín procesado para {$enviados} suscriptores activos."
-            : 'No se pudo entregar ningún correo desde el servidor local.',
+        'ok'        => $resultado['ok'],
+        'estado'    => $resultado['estado'],
+        'enviados'  => $resultado['enviados'],
+        'fallidos'  => $resultado['fallidos'],
+        'parcial'   => $resultado['parcial'],
+        'mensaje'   => $mensaje,
     ]);
 }
 
@@ -362,32 +440,10 @@ function verificarAdminYCsrf(): bool
 }
 
 /**
- * Comprueba de forma real si PHP dispone de un servicio de correo operativo.
+ * Comprueba si PHPMailer y la configuración privada SMTP de Gmail están listas.
  */
 function verificarServicioCorreoDisponible(): bool
 {
-    if (!function_exists('mail')) {
-        return false;
-    }
-
-    $sendmailPath = trim((string) ini_get('sendmail_path'));
-    if ($sendmailPath !== '') {
-        return true;
-    }
-
-    $remitente = trim((string) ini_get('sendmail_from'));
-    $smtpHost = trim((string) ini_get('SMTP'));
-    $smtpPort = (int) ini_get('smtp_port');
-
-    if ($remitente === '' || $smtpHost === '' || $smtpPort <= 0) {
-        return false;
-    }
-
-    $conexion = @fsockopen($smtpHost, $smtpPort, $errno, $errstr, 1);
-    if ($conexion) {
-        fclose($conexion);
-        return true;
-    }
-
-    return false;
+    $estado = cargarConfiguracionSmtp();
+    return (bool) ($estado['disponible'] ?? false);
 }

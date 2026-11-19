@@ -25,7 +25,7 @@
         </aside>
 
         <div class="area-principal">
-            <header class="cabecera-admin">
+            <header class="cabecera-admin cabecera-dashboard">
                 <div class="cabecera-izquierda">
                     <button
                         type="button"
@@ -37,98 +37,118 @@
                     >
                         &#9776;
                     </button>
-                    <h1 class="titulo-modulo">Configuración: Feed de Redes Sociales</h1>
+                    <div class="titulo-cabecera-bloque">
+                        <h1 class="titulo-modulo">Configuración: Feed de Redes Sociales</h1>
+                        <p class="subtitulo-modulo">Enlaces oficiales visibles en el bloque social del portal público</p>
+                    </div>
                 </div>
 
-                <div class="cabecera-derecha">
-                    <span id="nombre-usuario" class="perfil-previa"></span>
-                    <span id="rol-usuario" class="rol-usuario"></span>
+                <div class="cabecera-derecha cabecera-usuario-dashboard">
+                    <div class="ficha-usuario-cabecera">
+                        <span id="nombre-usuario" class="perfil-previa"></span>
+                        <span id="rol-usuario" class="rol-usuario"></span>
+                    </div>
                     <button type="button" id="boton-salir" class="boton-salir">Cerrar sesión</button>
                 </div>
             </header>
 
-            <main class="contenido-admin">
-                <div class="barra-herramientas">
-                    <a href="complementos.html" class="enlace-secundario">&larr; Volver a Complementos</a>
-                    <button type="button" id="btn-nuevo-enlace" class="boton-primario-admin">+ Agregar enlace</button>
+            <main class="contenido-admin contenido-dashboard">
+                <div class="modulo-redes-admin">
+                    <div class="barra-superior-redes">
+                        <a href="complementos.html" class="enlace-secundario enlace-volver-redes">&larr; Volver a Complementos</a>
+                        <button type="button" id="btn-nuevo-enlace" class="boton-primario-admin">+ Agregar enlace</button>
+                    </div>
+
+                    <div id="mensaje-social" class="alerta-admin" role="status" hidden></div>
+
+                    <section class="panel-redes-tarjetas" aria-labelledby="titulo-tabla-social">
+                        <div class="cabecera-panel-redes">
+                            <div>
+                                <h2 id="titulo-tabla-social">Enlaces registrados</h2>
+                                <p class="subtitulo-form-redes">Solo los enlaces marcados como visibles aparecen en la portada cuando el complemento está activo.</p>
+                            </div>
+                            <span id="total-social" class="etiqueta-tabla">0 enlaces</span>
+                        </div>
+
+                        <div id="cuerpo-tabla-social" class="rejilla-tarjetas-social" aria-live="polite">
+                            <p class="fila-vacia estado-cargando-social">Cargando enlaces...</p>
+                        </div>
+                    </section>
+
+                    <!-- Modal simple para crear o editar enlace social -->
+                    <div
+                        id="panel-formulario-social"
+                        class="modal-social-admin"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="titulo-form-social"
+                        hidden
+                    >
+                        <div class="modal-social-backdrop" data-cerrar-modal="1"></div>
+                        <section class="modal-social-caja">
+                            <div class="cabecera-panel cabecera-modal-social">
+                                <div>
+                                    <h2 id="titulo-form-social">Agregar enlace social</h2>
+                                    <p class="subtitulo-form-redes">Configura enlaces oficiales HTTPS de Facebook, Instagram, TikTok o X.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    id="btn-cerrar-modal-social"
+                                    class="boton-cerrar-modal"
+                                    aria-label="Cerrar formulario"
+                                >
+                                    &times;
+                                </button>
+                            </div>
+
+                            <div id="mensaje-modal-social" class="alerta-admin alerta-modal-social" role="alert" hidden></div>
+
+                            <form id="formulario-social" class="formulario-cambios formulario-redes-admin" novalidate>
+                                <input type="hidden" id="social-id" value="0">
+
+                                <div class="rejilla-campos-redes">
+                                    <div class="campo-admin">
+                                        <label for="social-plataforma">Plataforma</label>
+                                        <select id="social-plataforma" required>
+                                            <option value="Facebook">Facebook</option>
+                                            <option value="Instagram">Instagram</option>
+                                            <option value="TikTok">TikTok</option>
+                                            <option value="X">X</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="campo-admin">
+                                        <label for="social-visible">Visible en el portal</label>
+                                        <select id="social-visible">
+                                            <option value="1">Sí</option>
+                                            <option value="0">No</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="campo-admin campo-redes-completo">
+                                        <label for="social-titulo">Título o nombre</label>
+                                        <input type="text" id="social-titulo" maxlength="120" required placeholder="Ej. NewsCMS en Facebook">
+                                    </div>
+
+                                    <div class="campo-admin campo-redes-completo">
+                                        <label for="social-url">URL de publicación o perfil (HTTPS)</label>
+                                        <input type="url" id="social-url" maxlength="500" placeholder="https://www.facebook.com/..." required>
+                                    </div>
+
+                                    <div class="campo-admin campo-redes-completo">
+                                        <label for="social-descripcion">Descripción breve</label>
+                                        <textarea id="social-descripcion" rows="2" maxlength="255" placeholder="Descripción breve de la publicación o perfil..."></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="celda-acciones barra-acciones-redes">
+                                    <button type="button" id="btn-cancelar-social" class="boton-secundario-admin">Cancelar</button>
+                                    <button type="submit" class="boton-primario-admin">Guardar</button>
+                                </div>
+                            </form>
+                        </section>
+                    </div>
                 </div>
-
-                <div id="mensaje-social" class="alerta-admin" role="status" hidden></div>
-
-                <!-- Formulario HTML para crear o editar enlace social -->
-                <section id="panel-formulario-social" class="tarjeta-form" hidden aria-labelledby="titulo-form-social">
-                    <div class="cabecera-panel">
-                        <h2 id="titulo-form-social">Agregar enlace social</h2>
-                        <button type="button" id="btn-cancelar-social" class="boton-secundario-admin">Cancelar</button>
-                    </div>
-
-                    <form id="formulario-social" class="formulario-cambios" novalidate>
-                        <input type="hidden" id="social-id" value="0">
-
-                        <div class="campo-admin">
-                            <label for="social-plataforma">Plataforma</label>
-                            <select id="social-plataforma" required>
-                                <option value="Facebook">Facebook</option>
-                                <option value="Instagram">Instagram</option>
-                                <option value="TikTok">TikTok</option>
-                                <option value="X">X</option>
-                            </select>
-                        </div>
-
-                        <div class="campo-admin">
-                            <label for="social-titulo">Título o nombre</label>
-                            <input type="text" id="social-titulo" maxlength="120" required>
-                        </div>
-
-                        <div class="campo-admin">
-                            <label for="social-descripcion">Descripción breve</label>
-                            <textarea id="social-descripcion" rows="2" maxlength="255" placeholder="Descripción breve de la publicación o perfil..."></textarea>
-                        </div>
-
-                        <div class="campo-admin">
-                            <label for="social-url">URL de publicación o perfil (HTTPS)</label>
-                            <input type="url" id="social-url" maxlength="500" placeholder="https://www.facebook.com/..." required>
-                        </div>
-
-                        <div class="campo-admin">
-                            <label for="social-visible">Visible en el portal</label>
-                            <select id="social-visible">
-                                <option value="1">Sí</option>
-                                <option value="0">No</option>
-                            </select>
-                        </div>
-
-                        <div class="celda-acciones">
-                            <button type="submit" class="boton-primario-admin">Guardar</button>
-                        </div>
-                    </form>
-                </section>
-
-                <section class="panel-tabla" aria-labelledby="titulo-tabla-social">
-                    <div class="cabecera-panel">
-                        <h2 id="titulo-tabla-social">Enlaces registrados</h2>
-                        <span id="total-social" class="etiqueta-tabla">0 enlaces</span>
-                    </div>
-
-                    <div class="contenedor-tabla">
-                        <table class="tabla-datos">
-                            <thead>
-                                <tr>
-                                    <th>Plataforma</th>
-                                    <th>Título</th>
-                                    <th>URL</th>
-                                    <th>Visible</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="cuerpo-tabla-social">
-                                <tr>
-                                    <td colspan="5" class="fila-vacia">Cargando enlaces...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
             </main>
         </div>
     </div>

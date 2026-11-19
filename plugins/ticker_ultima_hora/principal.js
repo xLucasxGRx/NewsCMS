@@ -30,6 +30,9 @@ export async function iniciar(contenedor) {
         const interior = document.createElement("div");
         interior.className = "contenedor ticker-interior";
 
+        const marco = document.createElement("div");
+        marco.className = "ticker-cintillo";
+
         const etiqueta = document.createElement("span");
         etiqueta.className = "ticker-etiqueta";
         etiqueta.textContent = "ÚLTIMA HORA";
@@ -40,26 +43,60 @@ export async function iniciar(contenedor) {
         const lista = document.createElement("div");
         lista.className = "ticker-elementos";
 
-        titulares.forEach((n, indice) => {
-            if (indice > 0) {
-                const sep = document.createElement("span");
-                sep.className = "ticker-separador";
-                sep.textContent = "•";
-                lista.appendChild(sep);
+        const crearGrupoTitulares = (esCopia) => {
+            const grupo = document.createElement("div");
+            grupo.className = esCopia ? "ticker-grupo ticker-copia" : "ticker-grupo";
+            if (esCopia) {
+                grupo.setAttribute("aria-hidden", "true");
             }
 
-            const enlace = document.createElement("a");
-            enlace.href = `noticia.html?id=${encodeURIComponent(n.id)}`;
-            enlace.className = "ticker-enlace";
-            enlace.textContent = n.titulo;
-            lista.appendChild(enlace);
-        });
+            titulares.forEach((n) => {
+                const enlace = document.createElement("a");
+                enlace.href = `noticia.html?id=${encodeURIComponent(n.id)}`;
+                enlace.className = "ticker-enlace";
+                enlace.textContent = n.titulo;
+                if (esCopia) {
+                    enlace.tabIndex = -1;
+                }
+                grupo.appendChild(enlace);
 
+                const sep = document.createElement("span");
+                sep.className = "ticker-separador";
+                sep.setAttribute("aria-hidden", "true");
+                sep.textContent = "•";
+                grupo.appendChild(sep);
+            });
+
+            return grupo;
+        };
+
+        const grupoPrincipal = crearGrupoTitulares(false);
+        const grupoCopia = crearGrupoTitulares(true);
+
+        lista.appendChild(grupoPrincipal);
+        lista.appendChild(grupoCopia);
         pista.appendChild(lista);
-        interior.appendChild(etiqueta);
-        interior.appendChild(pista);
+        marco.appendChild(etiqueta);
+        marco.appendChild(pista);
+        interior.appendChild(marco);
         barra.appendChild(interior);
         contenedor.appendChild(barra);
+
+        const ajustarRitmoTicker = () => {
+            const anchoPista = pista.clientWidth;
+            if (anchoPista <= 0) {
+                return;
+            }
+            grupoPrincipal.style.minWidth = `${anchoPista}px`;
+            grupoCopia.style.minWidth = `${anchoPista}px`;
+
+            const distancia = Math.max(grupoPrincipal.scrollWidth, anchoPista);
+            const duracionSegundos = Math.max(16, Math.min(48, Math.round(distancia / 55)));
+            lista.style.setProperty("--ticker-duracion", `${duracionSegundos}s`);
+        };
+
+        requestAnimationFrame(ajustarRitmoTicker);
+        window.addEventListener("resize", ajustarRitmoTicker, { passive: true });
     } catch {
         // Si falla, el cintillo básico original permanece visible
     }

@@ -306,7 +306,7 @@ function renderizarMatrizPermisos(catalogo, matriz) {
     });
 
     if ((catalogo.protegidos || []).length > 0) {
-        cuerpo.appendChild(crearFilaGrupoMatriz("Administración del sistema (Solo Administrador)", true));
+        cuerpo.appendChild(crearFilaGrupoMatriz("Permisos administrativos protegidos", true));
 
         catalogo.protegidos.forEach((permiso) => {
             const tr = document.createElement("tr");

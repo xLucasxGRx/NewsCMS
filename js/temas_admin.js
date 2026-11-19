@@ -90,12 +90,16 @@ function renderizarSidebarTemas(modulos) {
 async function cargarTemasInstalados() {
     const cuerpo = document.getElementById("cuerpo-tabla-temas");
     const estadoActual = document.getElementById("estado-tema-actual");
+    const detalleEstado = document.getElementById("detalle-estado-tema");
+    const botonOriginal = document.getElementById("btn-usar-original");
+    const totalTemas = document.getElementById("total-temas");
 
     try {
         const respuesta = await fetch("../php/temas.php?modo=admin_lista", {
             credentials: "same-origin"
         });
         if (!respuesta.ok) {
+            mostrarMensajeTemas("No se pudo cargar la lista de temas.", true);
             return;
         }
 
@@ -108,61 +112,95 @@ async function cargarTemasInstalados() {
                 ? `Tema activo: ${activo.nombre}`
                 : "Diseño original activo";
         }
+        if (detalleEstado) {
+            detalleEstado.textContent = activo
+                ? `Versión v${activo.version} aplicada actualmente al portal público.`
+                : "Se está utilizando la apariencia predeterminada de NewsCMS.";
+        }
+        if (botonOriginal) {
+            botonOriginal.disabled = !activo;
+        }
+        if (totalTemas) {
+            totalTemas.textContent = temas.length === 1 ? "1 instalado" : `${temas.length} instalados`;
+        }
 
         cuerpo.textContent = "";
         if (temas.length === 0) {
-            const tr = document.createElement("tr");
-            const td = document.createElement("td");
-            td.colSpan = 5;
-            td.className = "fila-vacia";
-            td.textContent = "Aún no hay temas instalados. Se está usando el diseño original.";
-            tr.appendChild(td);
-            cuerpo.appendChild(tr);
+            renderizarEstadoVacioTemas(cuerpo);
             return;
         }
 
         temas.forEach((item) => {
-            const tr = document.createElement("tr");
             const estaActivo = Number(item.activo) === 1;
 
-            const tdNombre = document.createElement("td");
-            tdNombre.textContent = item.nombre;
+            const tarjeta = document.createElement("article");
+            tarjeta.className = estaActivo
+                ? "tarjeta-tema tema-activo"
+                : "tarjeta-tema tema-inactiva";
 
-            const tdDesc = document.createElement("td");
-            tdDesc.textContent = item.descripcion || "—";
+            // Zona superior: representación decorativa neutra de maquetación visual
+            tarjeta.appendChild(crearPreviewDecorativaTema(estaActivo));
 
-            const tdVersion = document.createElement("td");
-            tdVersion.textContent = item.version;
+            // Zona central: nombre, versión, estado y descripción
+            const cuerpoTarjeta = document.createElement("div");
+            cuerpoTarjeta.className = "tema-cuerpo";
 
-            const tdEstado = document.createElement("td");
+            const cabeceraInfo = document.createElement("div");
+            cabeceraInfo.className = "tema-cabecera-info";
+
+            const titulo = document.createElement("h3");
+            titulo.className = "tema-nombre";
+            titulo.textContent = item.nombre;
+
+            const filaMeta = document.createElement("div");
+            filaMeta.className = "tema-meta";
+
+            const version = document.createElement("span");
+            version.className = "tema-version";
+            version.textContent = `v${item.version}`;
+
             const badge = document.createElement("span");
-            badge.className = estaActivo ? "estado-badge estado-publicada" : "estado-badge estado-borrador";
-            badge.textContent = estaActivo ? "Activo" : "Inactivo";
-            tdEstado.appendChild(badge);
+            badge.className = estaActivo
+                ? "estado-tema-badge estado-tema-activo"
+                : "estado-tema-badge estado-tema-inactivo";
+            badge.textContent = estaActivo ? "Tema activo" : "Inactivo";
 
-            const tdAcciones = document.createElement("td");
-            tdAcciones.className = "celda-acciones";
+            filaMeta.appendChild(version);
+            filaMeta.appendChild(badge);
+            cabeceraInfo.appendChild(titulo);
+            cabeceraInfo.appendChild(filaMeta);
+
+            const descripcion = document.createElement("p");
+            descripcion.className = "tema-descripcion";
+            descripcion.textContent = item.descripcion || "Sin descripción disponible.";
+
+            cuerpoTarjeta.appendChild(cabeceraInfo);
+            cuerpoTarjeta.appendChild(descripcion);
+
+            // Zona inferior: acciones reales del tema
+            const pie = document.createElement("div");
+            pie.className = "tema-pie";
 
             if (!estaActivo) {
                 const btnActivar = document.createElement("button");
                 btnActivar.type = "button";
-                btnActivar.className = "enlace-accion";
-                btnActivar.textContent = "Activar";
+                btnActivar.className = "boton-primario-admin boton-activar-tema";
+                btnActivar.textContent = "Activar tema";
                 btnActivar.addEventListener("click", () => activarTema(item.id));
-                tdAcciones.appendChild(btnActivar);
+                pie.appendChild(btnActivar);
             } else {
-                const textoActivo = document.createElement("span");
-                textoActivo.className = "texto-suave-form";
-                textoActivo.textContent = "En uso";
-                tdAcciones.appendChild(textoActivo);
+                const indicadorUso = document.createElement("span");
+                indicadorUso.className = "indicador-en-uso-tema";
+                indicadorUso.appendChild(crearIconoCheckTema());
+                const lblUso = document.createElement("span");
+                lblUso.textContent = "En uso actualmente";
+                indicadorUso.appendChild(lblUso);
+                pie.appendChild(indicadorUso);
             }
 
-            tr.appendChild(tdNombre);
-            tr.appendChild(tdDesc);
-            tr.appendChild(tdVersion);
-            tr.appendChild(tdEstado);
-            tr.appendChild(tdAcciones);
-            cuerpo.appendChild(tr);
+            tarjeta.appendChild(cuerpoTarjeta);
+            tarjeta.appendChild(pie);
+            cuerpo.appendChild(tarjeta);
         });
     } catch {
         mostrarMensajeTemas("No se pudo cargar la lista de temas.", true);
@@ -299,4 +337,75 @@ function inicializarSalirTemas() {
         });
         window.location.href = "../acceso.html";
     });
+}
+
+function renderizarEstadoVacioTemas(contenedor) {
+    const caja = document.createElement("div");
+    caja.className = "estado-vacio-temas";
+
+    const titulo = document.createElement("strong");
+    titulo.className = "titulo-estado-vacio";
+    titulo.textContent = "Aún no hay temas instalados. Se está usando el diseño original.";
+
+    const nota = document.createElement("p");
+    nota.className = "descripcion-estado-vacio";
+    nota.textContent = "Puedes subir un paquete ZIP en la sección inferior para agregar nuevas apariencias visuales.";
+
+    caja.appendChild(titulo);
+    caja.appendChild(nota);
+    contenedor.appendChild(caja);
+}
+
+function crearPreviewDecorativaTema(estaActivo) {
+    const preview = document.createElement("div");
+    preview.className = estaActivo
+        ? "tema-preview-decorativa preview-tema-activa"
+        : "tema-preview-decorativa";
+    preview.setAttribute("aria-hidden", "true");
+
+    const marco = document.createElement("div");
+    marco.className = "esquema-maqueta-tema";
+
+    const barra = document.createElement("div");
+    barra.className = "esquema-barra";
+
+    const cuerpo = document.createElement("div");
+    cuerpo.className = "esquema-cuerpo";
+
+    const principal = document.createElement("div");
+    principal.className = "esquema-bloque-principal";
+
+    const lateral = document.createElement("div");
+    lateral.className = "esquema-bloque-lateral";
+
+    cuerpo.appendChild(principal);
+    cuerpo.appendChild(lateral);
+    marco.appendChild(barra);
+    marco.appendChild(cuerpo);
+    preview.appendChild(marco);
+    return preview;
+}
+
+function crearIconoCheckTema() {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2.2");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.setAttribute("class", "icono-accion-tabla");
+    svg.setAttribute("aria-hidden", "true");
+
+    const circulo = document.createElementNS(ns, "circle");
+    circulo.setAttribute("cx", "12");
+    circulo.setAttribute("cy", "12");
+    circulo.setAttribute("r", "9");
+    svg.appendChild(circulo);
+
+    const check = document.createElementNS(ns, "path");
+    check.setAttribute("d", "m8.5 12.5 2.5 2.5 4.5-5");
+    svg.appendChild(check);
+    return svg;
 }

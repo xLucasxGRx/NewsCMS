@@ -212,28 +212,75 @@ function responderComentariosAdmin(PDO $pdo): void
         return;
     }
 
-    $estado = trim($_GET['estado'] ?? '');
+    $estado = trim((string) ($_GET['estado'] ?? ''));
+    $estadosPermitidos = ['pendiente', 'aprobado', 'rechazado'];
+    if ($estado !== '' && !in_array($estado, $estadosPermitidos, true)) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'mensaje' => 'Estado de filtro no válido.']);
+        return;
+    }
+
+    $porPagina = isset($_GET['por_pagina']) ? (int) $_GET['por_pagina'] : 10;
+    $porPagina = max(1, min(50, $porPagina));
+
+    $paginaSolicitada = isset($_GET['pagina']) ? (int) $_GET['pagina'] : 1;
+    $paginaSolicitada = max(1, $paginaSolicitada);
+
+    // Contadores reales por estado en una única consulta agregada
+    $filaContadores = $pdo->query(
+        "SELECT
+            SUM(CASE WHEN c.estado = 'pendiente' THEN 1 ELSE 0 END) AS pendiente,
+            SUM(CASE WHEN c.estado = 'aprobado' THEN 1 ELSE 0 END) AS aprobado,
+            SUM(CASE WHEN c.estado = 'rechazado' THEN 1 ELSE 0 END) AS rechazado
+         FROM comentarios c
+         INNER JOIN usuarios_sociales u ON u.id = c.usuario_social_id
+         INNER JOIN noticias n ON n.id = c.noticia_id"
+    )->fetch();
+
+    $contadores = [
+        'pendiente' => (int) ($filaContadores['pendiente'] ?? 0),
+        'aprobado'  => (int) ($filaContadores['aprobado'] ?? 0),
+        'rechazado' => (int) ($filaContadores['rechazado'] ?? 0),
+    ];
+
+    $total = $estado !== ''
+        ? $contadores[$estado]
+        : ($contadores['pendiente'] + $contadores['aprobado'] + $contadores['rechazado']);
+
+    $totalPaginas = max(1, (int) ceil($total / $porPagina));
+    $pagina = min($paginaSolicitada, $totalPaginas);
+    $offset = ($pagina - 1) * $porPagina;
+
     $sql = "SELECT c.id, c.contenido, c.estado, c.fecha_creacion,
                    u.nombre AS autor, n.titulo AS noticia, n.id AS noticia_id
             FROM comentarios c
             INNER JOIN usuarios_sociales u ON u.id = c.usuario_social_id
-            INNER JOIN noticias n ON n.id = c.noticia_id
-            WHERE 1=1";
-    $parametros = [];
+            INNER JOIN noticias n ON n.id = c.noticia_id";
 
-    if (in_array($estado, ['pendiente', 'aprobado', 'rechazado'], true)) {
-        $sql .= ' AND c.estado = ?';
-        $parametros[] = $estado;
+    if ($estado !== '') {
+        $sql .= ' WHERE c.estado = :estado';
     }
 
-    $sql .= ' ORDER BY c.fecha_creacion DESC, c.id DESC';
+    $sql .= ' ORDER BY c.fecha_creacion DESC, c.id DESC LIMIT :limite OFFSET :desplazamiento';
 
     $stmt = $pdo->prepare($sql);
-    $stmt->execute($parametros);
+    if ($estado !== '') {
+        $stmt->bindValue(':estado', $estado, PDO::PARAM_STR);
+    }
+    $stmt->bindValue(':limite', $porPagina, PDO::PARAM_INT);
+    $stmt->bindValue(':desplazamiento', $offset, PDO::PARAM_INT);
+    $stmt->execute();
 
     echo json_encode([
         'ok'          => true,
         'comentarios' => $stmt->fetchAll(),
+        'contadores'  => $contadores,
+        'paginacion'  => [
+            'pagina'        => $pagina,
+            'por_pagina'    => $porPagina,
+            'total'         => $total,
+            'total_paginas' => $totalPaginas,
+        ],
     ]);
 }
 

@@ -89,108 +89,114 @@
     </section>
 
     <!-- Contenido principal del portal -->
-    <main id="inicio" class="contenedor contenido-principal">
-        <div class="rejilla-portada">
-            <!-- Sección de noticia principal -->
-            <section class="bloque-noticia-principal" aria-labelledby="titulo-principal">
-                <div class="cabecera-bloque">
-                    <span class="etiqueta-bloque">Portada</span>
-                    <h1 id="titulo-principal" class="titulo-seccion">Noticia Principal</h1>
-                </div>
+    <main id="inicio" class="contenedor contenido-principal portada-editorial">
+        <div class="rejilla-portada rejilla-editorial-portada">
+            <!-- Columna editorial principal (68% en escritorio) -->
+            <div class="columna-editorial-portada">
+                <!-- Sección de noticia principal -->
+                <section class="bloque-noticia-principal" aria-labelledby="titulo-principal">
+                    <div class="cabecera-bloque">
+                        <span class="etiqueta-bloque">Portada</span>
+                        <h1 id="titulo-principal" class="titulo-seccion">Noticia Principal</h1>
+                    </div>
 
-                <div id="contenedor-noticia-principal">
-                    <article class="estado-vacio estado-vacio-destacado">
-                        <div class="marco-imagen-vacio" aria-hidden="true">
-                            <span>Espacio reservado para imagen principal</span>
-                        </div>
-                        <div class="contenido-vacio">
-                            <h2>Aún no hay una noticia principal publicada</h2>
-                            <p>
-                                Cuando se publiquen artículos desde el panel administrativo, la noticia
-                                principal aparecerá aquí con su titular, resumen e imagen destacada.
-                            </p>
-                        </div>
-                    </article>
-                </div>
-            </section>
+                    <div id="contenedor-noticia-principal">
+                        <article class="estado-vacio estado-vacio-destacado">
+                            <div class="marco-imagen-vacio" aria-hidden="true">
+                                <span>Espacio reservado para imagen principal</span>
+                            </div>
+                            <div class="contenido-vacio">
+                                <h2>Aún no hay una noticia principal publicada</h2>
+                                <p>
+                                    Cuando se publiquen artículos desde el panel administrativo, la noticia
+                                    principal aparecerá aquí con su titular, resumen e imagen destacada.
+                                </p>
+                            </div>
+                        </article>
+                    </div>
+                </section>
 
-            <!-- Área de últimas noticias -->
-            <aside class="bloque-ultimas-noticias" aria-labelledby="titulo-ultimas">
-                <div class="cabecera-bloque">
-                    <span class="etiqueta-bloque">Cronológico</span>
-                    <h2 id="titulo-ultimas" class="titulo-seccion">Últimas Noticias</h2>
-                </div>
+                <!-- Noticias destacadas -->
+                <section class="bloque-destacadas" aria-labelledby="titulo-destacadas">
+                    <div class="cabecera-bloque">
+                        <span class="etiqueta-bloque">Selección editorial</span>
+                        <h2 id="titulo-destacadas" class="titulo-seccion">Noticias Destacadas</h2>
+                    </div>
 
-                <div id="contenedor-ultimas-noticias" class="estado-vacio">
-                    <p class="titulo-vacio">Sin noticias recientes</p>
-                    <p class="texto-vacio">
-                        En este bloque se listarán las publicaciones más recientes en orden cronológico.
-                    </p>
-                </div>
-            </aside>
+                    <div id="contenedor-destacadas" class="rejilla-destacadas">
+                        <article class="tarjeta-vacia">
+                            <span class="marcador-categoria">Destacada 1</span>
+                            <p>Espacio disponible para noticia destacada.</p>
+                        </article>
+                        <article class="tarjeta-vacia">
+                            <span class="marcador-categoria">Destacada 2</span>
+                            <p>Espacio disponible para noticia destacada.</p>
+                        </article>
+                        <article class="tarjeta-vacia">
+                            <span class="marcador-categoria">Destacada 3</span>
+                            <p>Espacio disponible para noticia destacada.</p>
+                        </article>
+                    </div>
+                </section>
+
+                <!-- Secciones por categorías -->
+                <section id="secciones" class="bloque-secciones" aria-labelledby="titulo-secciones">
+                    <div class="cabecera-bloque">
+                        <span class="etiqueta-bloque">Explorar</span>
+                        <h2 id="titulo-secciones" class="titulo-seccion">
+                            Secciones por Categorías — <span id="nombre-seccion-activa">Inicio</span>
+                        </h2>
+                    </div>
+
+                    <div id="rejilla-secciones" class="rejilla-secciones">
+                        <article class="tarjeta-seccion" data-categoria="Actualidad">
+                            <h3>Actualidad</h3>
+                            <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
+                        </article>
+
+                        <article class="tarjeta-seccion" data-categoria="Tecnología">
+                            <h3>Tecnología</h3>
+                            <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
+                        </article>
+
+                        <article class="tarjeta-seccion" data-categoria="Deportes">
+                            <h3>Deportes</h3>
+                            <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
+                        </article>
+
+                        <article class="tarjeta-seccion" data-categoria="Economía">
+                            <h3>Economía</h3>
+                            <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
+                        </article>
+
+                        <article class="tarjeta-seccion" data-categoria="Entretenimiento">
+                            <h3>Entretenimiento</h3>
+                            <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
+                        </article>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Columna secundaria editorial y complementos compactos (32% en escritorio) -->
+            <div class="columna-auxiliar-portada">
+                <!-- Área de últimas noticias -->
+                <aside class="bloque-ultimas-noticias" aria-labelledby="titulo-ultimas">
+                    <div class="cabecera-bloque">
+                        <span class="etiqueta-bloque">Cronológico</span>
+                        <h2 id="titulo-ultimas" class="titulo-seccion">Últimas Noticias</h2>
+                    </div>
+
+                    <div id="contenedor-ultimas-noticias" class="estado-vacio">
+                        <p class="titulo-vacio">Sin noticias recientes</p>
+                        <p class="texto-vacio">
+                            En este bloque se listarán las publicaciones más recientes en orden cronológico.
+                        </p>
+                    </div>
+                </aside>
+
+                <div id="zona-portada-inferior" data-zona="portada_inferior" class="zona-complementos"></div>
+            </div>
         </div>
-
-        <!-- Noticias destacadas -->
-        <section class="bloque-destacadas" aria-labelledby="titulo-destacadas">
-            <div class="cabecera-bloque">
-                <span class="etiqueta-bloque">Selección editorial</span>
-                <h2 id="titulo-destacadas" class="titulo-seccion">Noticias Destacadas</h2>
-            </div>
-
-            <div id="contenedor-destacadas" class="rejilla-destacadas">
-                <article class="tarjeta-vacia">
-                    <span class="marcador-categoria">Destacada 1</span>
-                    <p>Espacio disponible para noticia destacada.</p>
-                </article>
-                <article class="tarjeta-vacia">
-                    <span class="marcador-categoria">Destacada 2</span>
-                    <p>Espacio disponible para noticia destacada.</p>
-                </article>
-                <article class="tarjeta-vacia">
-                    <span class="marcador-categoria">Destacada 3</span>
-                    <p>Espacio disponible para noticia destacada.</p>
-                </article>
-            </div>
-        </section>
-
-        <!-- Secciones por categorías -->
-        <section id="secciones" class="bloque-secciones" aria-labelledby="titulo-secciones">
-            <div class="cabecera-bloque">
-                <span class="etiqueta-bloque">Explorar</span>
-                <h2 id="titulo-secciones" class="titulo-seccion">
-                    Secciones por Categorías — <span id="nombre-seccion-activa">Inicio</span>
-                </h2>
-            </div>
-
-            <div id="rejilla-secciones" class="rejilla-secciones">
-                <article class="tarjeta-seccion" data-categoria="Actualidad">
-                    <h3>Actualidad</h3>
-                    <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
-                </article>
-
-                <article class="tarjeta-seccion" data-categoria="Tecnología">
-                    <h3>Tecnología</h3>
-                    <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
-                </article>
-
-                <article class="tarjeta-seccion" data-categoria="Deportes">
-                    <h3>Deportes</h3>
-                    <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
-                </article>
-
-                <article class="tarjeta-seccion" data-categoria="Economía">
-                    <h3>Economía</h3>
-                    <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
-                </article>
-
-                <article class="tarjeta-seccion" data-categoria="Entretenimiento">
-                    <h3>Entretenimiento</h3>
-                    <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
-                </article>
-            </div>
-        </section>
-
-        <div id="zona-portada-inferior" data-zona="portada_inferior" class="zona-complementos"></div>
     </main>
 
     <!-- Pie de página profesional -->
