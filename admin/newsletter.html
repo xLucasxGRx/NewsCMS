@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Newsletter — NewsCMS</title>
-    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/admin.css?v=20261119c">
 </head>
 <body>
     <div id="contenedor-admin" class="contenedor-admin" hidden>
@@ -25,7 +25,7 @@
         </aside>
 
         <div class="area-principal">
-            <header class="cabecera-admin">
+            <header class="cabecera-admin cabecera-dashboard">
                 <div class="cabecera-izquierda">
                     <button
                         type="button"
@@ -37,135 +37,173 @@
                     >
                         &#9776;
                     </button>
-                    <h1 class="titulo-modulo">Configuración: Newsletter</h1>
+                    <div class="titulo-cabecera-bloque">
+                        <h1 class="titulo-modulo">Configuración: Newsletter</h1>
+                        <p class="subtitulo-modulo">Gestión de suscriptores, redacción de boletines y envíos por Gmail SMTP</p>
+                    </div>
                 </div>
 
-                <div class="cabecera-derecha">
-                    <span id="nombre-usuario" class="perfil-previa"></span>
-                    <span id="rol-usuario" class="rol-usuario"></span>
+                <div class="cabecera-derecha cabecera-usuario-dashboard">
+                    <div class="ficha-usuario-cabecera">
+                        <span id="nombre-usuario" class="perfil-previa"></span>
+                        <span id="rol-usuario" class="rol-usuario"></span>
+                    </div>
                     <button type="button" id="boton-salir" class="boton-salir">Cerrar sesión</button>
                 </div>
             </header>
 
-            <main class="contenido-admin">
-                <div class="barra-herramientas">
-                    <a href="complementos.html" class="enlace-secundario">&larr; Volver a Complementos</a>
-                    <button type="button" id="btn-nuevo-boletin" class="boton-primario-admin">+ Nuevo boletín</button>
-                </div>
-
-                <div id="mensaje-newsletter" class="alerta-admin" role="status" hidden></div>
-
-                <!-- Estado del servicio de correo real -->
-                <div id="estado-correo-servidor" class="banner-vista-previa" role="note">
-                    Comprobando disponibilidad de envío de correo...
-                </div>
-
-                <!-- Resumen de suscriptores -->
-                <div class="rejilla-estadisticas">
-                    <article class="tarjeta-estadistica">
-                        <span class="etiqueta-estadistica">Total de suscriptores</span>
-                        <strong id="stat-total-suscriptores" class="valor-estadistica">0</strong>
-                    </article>
-
-                    <article class="tarjeta-estadistica">
-                        <span class="etiqueta-estadistica">Suscriptores activos</span>
-                        <strong id="stat-suscriptores-activos" class="valor-estadistica">0</strong>
-                    </article>
-                </div>
-
-                <!-- Formulario de boletín -->
-                <section id="panel-formulario-boletin" class="tarjeta-form" hidden aria-labelledby="titulo-form-boletin">
-                    <div class="cabecera-panel">
-                        <h2 id="titulo-form-boletin">Nuevo boletín</h2>
-                        <button type="button" id="btn-cancelar-boletin" class="boton-secundario-admin">Cancelar</button>
+            <main class="contenido-admin contenido-dashboard">
+                <div class="modulo-newsletter-admin">
+                    <div class="barra-herramientas barra-superior-newsletter">
+                        <a href="complementos.html" class="enlace-secundario">&larr; Volver a Complementos</a>
+                        <button type="button" id="btn-nuevo-boletin" class="boton-primario-admin">+ Nuevo boletín</button>
                     </div>
 
-                    <form id="formulario-boletin" class="formulario-cambios" novalidate>
-                        <input type="hidden" id="boletin-id" value="0">
-
-                        <div class="campo-admin">
-                            <label for="boletin-asunto">Asunto</label>
-                            <input type="text" id="boletin-asunto" maxlength="180" required>
-                        </div>
-
-                        <div class="campo-admin">
-                            <label for="boletin-contenido">Contenido del boletín</label>
-                            <textarea id="boletin-contenido" rows="6" required placeholder="Redacta aquí las novedades para los suscriptores..."></textarea>
-                        </div>
-
-                        <div class="celda-acciones">
-                            <button type="submit" class="boton-primario-admin">Guardar borrador</button>
-                            <button type="button" id="btn-vista-previa-boletin" class="boton-secundario-admin">Vista previa</button>
-                            <button type="button" id="btn-enviar-boletin" class="boton-aviso-admin" disabled>Enviar boletín</button>
-                        </div>
-
-                        <div class="caja-prueba-newsletter">
-                            <label for="correo-prueba-newsletter">Correo para envío de prueba</label>
-                            <div class="fila-prueba-newsletter">
-                                <input type="email" id="correo-prueba-newsletter" maxlength="150" placeholder="correo-prueba@ejemplo.com">
-                                <button type="button" id="btn-enviar-prueba" class="boton-secundario-admin" disabled>Enviar correo de prueba</button>
+                    <!-- Resumen compacto de suscriptores y estado SMTP -->
+                    <section class="resumen-newsletter-strip" aria-label="Resumen de suscripciones y servicio SMTP">
+                        <div class="metricas-newsletter">
+                            <div class="metrica-newsletter-chip">
+                                <span class="metrica-newsletter-etiqueta">Total suscriptores</span>
+                                <strong id="stat-total-suscriptores" class="metrica-newsletter-valor">0</strong>
+                            </div>
+                            <div class="metrica-newsletter-chip chip-activos">
+                                <span class="metrica-newsletter-etiqueta">Suscriptores activos</span>
+                                <strong id="stat-suscriptores-activos" class="metrica-newsletter-valor">0</strong>
                             </div>
                         </div>
-                    </form>
 
-                    <div id="vista-previa-boletin" class="tarjeta-form" hidden>
-                        <h3>Vista previa del boletín</h3>
-                        <p id="previa-asunto" class="titulo-vacio"></p>
-                        <div id="previa-cuerpo" class="contenido-revision"></div>
-                    </div>
-                </section>
+                        <div id="estado-correo-servidor" class="estado-smtp-newsletter" role="note">
+                            Comprobando disponibilidad de Gmail SMTP...
+                        </div>
+                    </section>
 
-                <!-- Tabla de boletines -->
-                <section class="panel-tabla" aria-labelledby="titulo-tabla-boletines">
-                    <div class="cabecera-panel">
-                        <h2 id="titulo-tabla-boletines">Boletines registrados</h2>
-                        <span id="total-boletines" class="etiqueta-tabla">0 boletines</span>
-                    </div>
-                    <div class="contenedor-tabla">
-                        <table class="tabla-datos">
-                            <thead>
-                                <tr>
-                                    <th>Asunto</th>
-                                    <th>Estado</th>
-                                    <th>Fecha</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="cuerpo-tabla-boletines">
-                                <tr>
-                                    <td colspan="4" class="fila-vacia">Cargando boletines...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
+                    <div id="mensaje-newsletter" class="alerta-admin" role="status" hidden></div>
 
-                <!-- Tabla de suscriptores -->
-                <section class="panel-tabla" aria-labelledby="titulo-tabla-suscriptores">
-                    <div class="cabecera-panel">
-                        <h2 id="titulo-tabla-suscriptores">Suscriptores registrados</h2>
+                    <!-- Editor y consola de envío de boletines -->
+                    <section id="panel-formulario-boletin" class="panel-composer-newsletter" hidden aria-labelledby="titulo-form-boletin">
+                        <div class="cabecera-panel cabecera-panel-newsletter">
+                            <div>
+                                <h2 id="titulo-form-boletin">Nuevo boletín</h2>
+                                <p class="subtitulo-panel-newsletter">Redacta el asunto y cuerpo del boletín, guárdalo como borrador y verifica con una prueba antes de enviarlo.</p>
+                            </div>
+                            <button type="button" id="btn-cancelar-boletin" class="boton-secundario-admin">Cancelar</button>
+                        </div>
+
+                        <form id="formulario-boletin" class="rejilla-composer-newsletter" novalidate>
+                            <input type="hidden" id="boletin-id" value="0">
+
+                            <div class="composer-principal-newsletter">
+                                <div class="campo-admin">
+                                    <label for="boletin-asunto">Asunto del boletín</label>
+                                    <input type="text" id="boletin-asunto" maxlength="180" required placeholder="Ej. Novedades editoriales de la semana">
+                                </div>
+
+                                <div class="campo-admin">
+                                    <label for="boletin-contenido">Contenido del boletín</label>
+                                    <textarea id="boletin-contenido" rows="7" required placeholder="Redacta aquí las novedades para los suscriptores..."></textarea>
+                                </div>
+
+                                <div class="celda-acciones acciones-borrador-newsletter">
+                                    <button type="submit" class="boton-primario-admin">Guardar borrador</button>
+                                    <button type="button" id="btn-vista-previa-boletin" class="boton-secundario-admin">Vista previa</button>
+                                </div>
+                            </div>
+
+                            <aside class="composer-envio-newsletter" aria-label="Opciones de prueba y envío">
+                                <div class="caja-prueba-newsletter">
+                                    <h3 class="titulo-caja-envio">Prueba controlada</h3>
+                                    <p class="nota-caja-envio">
+                                        Envía un único correo a la dirección indicada para verificar formato y conexión SMTP sin afectar el estado del boletín.
+                                    </p>
+                                    <label for="correo-prueba-newsletter">Destinatario de prueba</label>
+                                    <div class="fila-prueba-newsletter">
+                                        <input type="email" id="correo-prueba-newsletter" maxlength="150" placeholder="correo-prueba@ejemplo.com">
+                                        <button type="button" id="btn-enviar-prueba" class="boton-secundario-admin boton-prueba-smtp" disabled>
+                                            Enviar correo de prueba
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="caja-envio-masivo-newsletter">
+                                    <h3 class="titulo-caja-envio">Envío a suscriptores</h3>
+                                    <p class="nota-caja-envio">
+                                        Envía este borrador individualmente a los suscriptores activos autorizados y lo marca como enviado.
+                                    </p>
+                                    <button type="button" id="btn-enviar-boletin" class="boton-aviso-admin boton-envio-masivo-newsletter" disabled>
+                                        Enviar boletín a suscriptores
+                                    </button>
+                                </div>
+                            </aside>
+                        </form>
+
+                        <div id="vista-previa-boletin" class="vista-previa-newsletter" hidden>
+                            <div class="vista-previa-barra">
+                                <span class="etiqueta-vista-previa">Vista previa del contenido</span>
+                            </div>
+                            <h3 id="previa-asunto" class="previa-asunto-newsletter"></h3>
+                            <div id="previa-cuerpo" class="contenido-revision previa-cuerpo-newsletter"></div>
+                        </div>
+                    </section>
+
+                    <!-- Tablas operativas: Boletines y Suscriptores -->
+                    <div class="rejilla-gestion-newsletter">
+                        <section class="panel-tabla panel-newsletter-tabla" aria-labelledby="titulo-tabla-boletines">
+                            <div class="cabecera-panel cabecera-panel-newsletter">
+                                <div>
+                                    <h2 id="titulo-tabla-boletines">Boletines registrados</h2>
+                                    <p class="subtitulo-panel-newsletter">Borradores listos para editar o probar y boletines ya enviados.</p>
+                                </div>
+                                <span id="total-boletines" class="etiqueta-tabla">0 boletines</span>
+                            </div>
+                            <div class="contenedor-tabla">
+                                <table class="tabla-datos tabla-newsletter-boletines">
+                                    <thead>
+                                        <tr>
+                                            <th>Asunto</th>
+                                            <th>Estado</th>
+                                            <th>Fecha</th>
+                                            <th class="col-acciones-newsletter">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cuerpo-tabla-boletines">
+                                        <tr>
+                                            <td colspan="4" class="fila-vacia">Cargando boletines...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+
+                        <section class="panel-tabla panel-newsletter-tabla" aria-labelledby="titulo-tabla-suscriptores">
+                            <div class="cabecera-panel cabecera-panel-newsletter">
+                                <div>
+                                    <h2 id="titulo-tabla-suscriptores">Suscriptores registrados</h2>
+                                    <p class="subtitulo-panel-newsletter">Solo los suscriptores activos reciben envíos.</p>
+                                </div>
+                            </div>
+                            <div class="contenedor-tabla">
+                                <table class="tabla-datos tabla-newsletter-suscriptores">
+                                    <thead>
+                                        <tr>
+                                            <th>Correo</th>
+                                            <th>Estado</th>
+                                            <th>Registro</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cuerpo-tabla-suscriptores">
+                                        <tr>
+                                            <td colspan="3" class="fila-vacia">Cargando suscriptores...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
                     </div>
-                    <div class="contenedor-tabla">
-                        <table class="tabla-datos">
-                            <thead>
-                                <tr>
-                                    <th>Correo</th>
-                                    <th>Estado</th>
-                                    <th>Fecha de registro</th>
-                                </tr>
-                            </thead>
-                            <tbody id="cuerpo-tabla-suscriptores">
-                                <tr>
-                                    <td colspan="3" class="fila-vacia">Cargando suscriptores...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
+                </div>
             </main>
         </div>
     </div>
 
-    <script src="../js/newsletter_admin.js"></script>
+    <script src="../js/newsletter_admin.js?v=20261119c"></script>
 </body>
 </html>

@@ -25,10 +25,20 @@ export async function iniciar(contenedor) {
         seccion.className = "nube-etiquetas-bloque";
         seccion.setAttribute("aria-labelledby", "titulo-nube-etiquetas");
 
+        const cabecera = document.createElement("div");
+        cabecera.className = "nube-etiquetas-cabecera";
+
+        const eyebrow = document.createElement("span");
+        eyebrow.className = "nube-etiquetas-eyebrow";
+        eyebrow.textContent = "Etiquetas";
+
         const titulo = document.createElement("h2");
         titulo.id = "titulo-nube-etiquetas";
         titulo.className = "nube-etiquetas-titulo";
         titulo.textContent = "Temas Populares";
+
+        cabecera.appendChild(eyebrow);
+        cabecera.appendChild(titulo);
 
         const lista = document.createElement("div");
         lista.className = "nube-etiquetas-lista";
@@ -40,12 +50,23 @@ export async function iniciar(contenedor) {
             const enlace = document.createElement("a");
             enlace.href = `noticias.html?etiqueta=${encodeURIComponent(etiq.identificador)}`;
             enlace.className = `nube-etiqueta nivel-${nivel}`;
-            enlace.textContent = `${etiq.nombre} (${total})`;
+            enlace.setAttribute("aria-label", `${etiq.nombre}, ${total} ${total === 1 ? "publicación" : "publicaciones"}`);
 
+            const nombreEl = document.createElement("span");
+            nombreEl.className = "nube-etiqueta-nombre";
+            nombreEl.textContent = etiq.nombre;
+
+            const conteoEl = document.createElement("span");
+            conteoEl.className = "nube-etiqueta-conteo";
+            conteoEl.setAttribute("aria-hidden", "true");
+            conteoEl.textContent = String(total);
+
+            enlace.appendChild(nombreEl);
+            enlace.appendChild(conteoEl);
             lista.appendChild(enlace);
         });
 
-        seccion.appendChild(titulo);
+        seccion.appendChild(cabecera);
         seccion.appendChild(lista);
         contenedor.appendChild(seccion);
     } catch {

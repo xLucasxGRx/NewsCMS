@@ -109,7 +109,8 @@ async function cargarDatosNewsletter() {
 
         if (correoDisponibleServidor) {
             const remitenteTxt = infoCorreo.remitente ? ` (${infoCorreo.remitente})` : "";
-            bannerCorreo.textContent = `Envío SMTP disponible vía Gmail${remitenteTxt}.`;
+            bannerCorreo.textContent = `Gmail SMTP listo${remitenteTxt}.`;
+            bannerCorreo.className = "estado-smtp-newsletter smtp-disponible";
             if (btnEnviar) {
                 btnEnviar.disabled = false;
             }
@@ -117,7 +118,8 @@ async function cargarDatosNewsletter() {
                 btnPrueba.disabled = false;
             }
         } else {
-            bannerCorreo.textContent = infoCorreo.mensaje || "Envío de boletines: No disponible: falta configurar Gmail SMTP.";
+            bannerCorreo.textContent = infoCorreo.mensaje || "Envío de boletines no disponible: falta configurar Gmail SMTP.";
+            bannerCorreo.className = "estado-smtp-newsletter smtp-pendiente";
             if (btnEnviar) {
                 btnEnviar.disabled = true;
             }
@@ -138,7 +140,7 @@ function renderizarBoletines(boletines) {
     const totalEl = document.getElementById("total-boletines");
 
     if (totalEl) {
-        totalEl.textContent = `${boletines.length} boletines`;
+        totalEl.textContent = boletines.length === 1 ? "1 boletín" : `${boletines.length} boletines`;
     }
 
     cuerpo.textContent = "";
@@ -157,19 +159,26 @@ function renderizarBoletines(boletines) {
         const tr = document.createElement("tr");
 
         const tdAsunto = document.createElement("td");
-        tdAsunto.textContent = b.asunto;
+        tdAsunto.dataset.etiqueta = "Asunto";
+        const spanAsunto = document.createElement("strong");
+        spanAsunto.className = "asunto-boletin-fila";
+        spanAsunto.textContent = b.asunto;
+        tdAsunto.appendChild(spanAsunto);
 
         const tdEstado = document.createElement("td");
+        tdEstado.dataset.etiqueta = "Estado";
         const badge = document.createElement("span");
         badge.className = b.estado === "enviado" ? "estado-badge estado-publicada" : "estado-badge estado-borrador";
         badge.textContent = b.estado === "enviado" ? "Enviado" : "Borrador";
         tdEstado.appendChild(badge);
 
         const tdFecha = document.createElement("td");
+        tdFecha.dataset.etiqueta = "Fecha";
         tdFecha.textContent = (b.fecha_envio || b.fecha_creacion || "").slice(0, 10) || "-";
 
         const tdAcciones = document.createElement("td");
-        tdAcciones.className = "celda-acciones";
+        tdAcciones.dataset.etiqueta = "Acciones";
+        tdAcciones.className = "celda-acciones celda-acciones-newsletter";
         if (b.estado === "borrador") {
             const btnEditar = document.createElement("button");
             btnEditar.type = "button";
@@ -177,6 +186,11 @@ function renderizarBoletines(boletines) {
             btnEditar.textContent = "Editar";
             btnEditar.addEventListener("click", () => abrirEdicionBoletin(b));
             tdAcciones.appendChild(btnEditar);
+        } else {
+            const spanCerrado = document.createElement("span");
+            spanCerrado.className = "nota-boletin-enviado";
+            spanCerrado.textContent = "Enviado";
+            tdAcciones.appendChild(spanCerrado);
         }
 
         tr.appendChild(tdAsunto);
@@ -206,15 +220,19 @@ function renderizarSuscriptores(suscriptores) {
         const tr = document.createElement("tr");
 
         const tdCorreo = document.createElement("td");
+        tdCorreo.dataset.etiqueta = "Correo";
+        tdCorreo.className = "celda-correo-suscriptor";
         tdCorreo.textContent = s.correo;
 
         const tdEstado = document.createElement("td");
+        tdEstado.dataset.etiqueta = "Estado";
         const badge = document.createElement("span");
         badge.className = s.estado === "activo" ? "estado-badge estado-publicada" : "estado-badge estado-borrador";
         badge.textContent = s.estado === "activo" ? "Activo" : "Inactivo";
         tdEstado.appendChild(badge);
 
         const tdFecha = document.createElement("td");
+        tdFecha.dataset.etiqueta = "Registro";
         tdFecha.textContent = (s.fecha_registro || "").slice(0, 10) || "-";
 
         tr.appendChild(tdCorreo);
@@ -397,7 +415,7 @@ function inicializarFormularioBoletin() {
             mostrarMensajeNewsletter("Error de comunicación con el servidor.", true);
         } finally {
             btnEnviar.disabled = !correoDisponibleServidor;
-            btnEnviar.textContent = "Enviar boletín";
+            btnEnviar.textContent = "Enviar boletín a suscriptores";
         }
     });
 }

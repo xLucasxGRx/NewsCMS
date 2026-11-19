@@ -18,28 +18,45 @@ export async function iniciar(contenedor) {
         seccion.className = "newsletter-bloque";
         seccion.setAttribute("aria-labelledby", "titulo-newsletter-portal");
 
+        const cabecera = document.createElement("div");
+        cabecera.className = "newsletter-cabecera";
+
+        const eyebrow = document.createElement("span");
+        eyebrow.className = "newsletter-eyebrow";
+        eyebrow.textContent = "Boletín";
+
         const titulo = document.createElement("h2");
         titulo.id = "titulo-newsletter-portal";
         titulo.className = "newsletter-titulo";
-        titulo.textContent = "Suscríbete a nuestras noticias";
+        titulo.textContent = "Mantente informado";
 
         const subtitulo = document.createElement("p");
         subtitulo.className = "newsletter-subtitulo";
-        subtitulo.textContent = "Recibe en tu correo las novedades de NewsCMS";
+        subtitulo.textContent = "Recibe novedades y noticias de NewsCMS directamente en tu correo.";
+
+        cabecera.appendChild(eyebrow);
+        cabecera.appendChild(titulo);
+        cabecera.appendChild(subtitulo);
 
         const formulario = document.createElement("form");
         formulario.className = "newsletter-formulario";
         formulario.noValidate = true;
 
+        const labelCorreo = document.createElement("label");
+        labelCorreo.className = "newsletter-label";
+        labelCorreo.htmlFor = "newsletter-correo-publico";
+        labelCorreo.textContent = "Correo electrónico";
+
         const filaCorreo = document.createElement("div");
         filaCorreo.className = "newsletter-fila";
 
         const inputCorreo = document.createElement("input");
+        inputCorreo.id = "newsletter-correo-publico";
         inputCorreo.type = "email";
         inputCorreo.name = "correo";
         inputCorreo.className = "newsletter-input";
         inputCorreo.placeholder = "tu-correo@ejemplo.com";
-        inputCorreo.setAttribute("aria-label", "Correo electrónico");
+        inputCorreo.autocomplete = "email";
         inputCorreo.required = true;
 
         const boton = document.createElement("button");
@@ -75,11 +92,13 @@ export async function iniciar(contenedor) {
             const correo = inputCorreo.value.trim();
             if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
                 mostrarEstado(mensaje, "Ingresa un correo electrónico válido.", true);
+                inputCorreo.focus();
                 return;
             }
 
             if (!checkConsentimiento.checked) {
                 mostrarEstado(mensaje, "Debes marcar la casilla de consentimiento para suscribirte.", true);
+                checkConsentimiento.focus();
                 return;
             }
 
@@ -113,12 +132,12 @@ export async function iniciar(contenedor) {
             }
         });
 
+        formulario.appendChild(labelCorreo);
         formulario.appendChild(filaCorreo);
         formulario.appendChild(etiquetaConsentimiento);
         formulario.appendChild(mensaje);
 
-        seccion.appendChild(titulo);
-        seccion.appendChild(subtitulo);
+        seccion.appendChild(cabecera);
         seccion.appendChild(formulario);
         contenedor.appendChild(seccion);
     } catch {

@@ -1170,32 +1170,10 @@ a.boton-login {
     border-top: 3px solid var(--color-primario);
 }
 
-.portada-editorial #zona-portada-inferior .nube-etiquetas-titulo,
 .portada-editorial #zona-portada-inferior .newsletter-titulo,
 .portada-editorial #zona-portada-inferior .feed-social-titulo {
     font-size: 1.06rem;
     color: var(--color-primario);
-}
-
-.portada-editorial #zona-portada-inferior .nube-etiquetas-titulo {
-    margin-bottom: 0.7rem;
-}
-
-.portada-editorial #zona-portada-inferior .nube-etiquetas-lista {
-    gap: 0.45rem;
-}
-
-.portada-editorial #zona-portada-inferior .nube-etiqueta {
-    padding: 0.22rem 0.65rem;
-    font-size: 0.82rem;
-}
-
-.portada-editorial #zona-portada-inferior .nube-etiqueta.nivel-3 {
-    font-size: 0.9rem;
-}
-
-.portada-editorial #zona-portada-inferior .nube-etiqueta.nivel-4 {
-    font-size: 0.98rem;
 }
 
 .portada-editorial #zona-portada-inferior .feed-social-encabezado {
