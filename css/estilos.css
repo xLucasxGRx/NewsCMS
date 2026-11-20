@@ -1241,15 +1241,6 @@ a.boton-login {
     margin-top: 0;
 }
 
-.portada-editorial #zona-portada-inferior .aviso-complemento-demo {
-    padding: 0.75rem 0.95rem;
-    font-size: 0.85rem;
-    line-height: 1.45;
-    font-weight: 500;
-    text-align: left;
-    border-radius: var(--radio);
-}
-
 .portada-editorial #zona-portada-inferior .nube-etiquetas-bloque,
 .portada-editorial #zona-portada-inferior .feed-social-bloque,
 .portada-editorial #zona-portada-inferior .newsletter-bloque,

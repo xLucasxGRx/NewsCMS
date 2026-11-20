@@ -10,6 +10,7 @@ let noticiaSeleccionadaActual = null;
 let secuenciaDetalleRevision = 0;
 let controladorDetalleRevision = null;
 let enviandoDecisionEditorial = false;
+let temporizadorMensajeRevision = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     iniciarRevisionEditorial();
@@ -782,9 +783,26 @@ function mostrarMensajeRevision(texto, esError) {
     if (!alerta) {
         return;
     }
+    if (temporizadorMensajeRevision) {
+        clearTimeout(temporizadorMensajeRevision);
+        temporizadorMensajeRevision = null;
+    }
+    if (!texto) {
+        alerta.textContent = "";
+        alerta.hidden = true;
+        return;
+    }
     alerta.textContent = texto;
     alerta.className = esError ? "alerta-admin alerta-admin-error" : "alerta-admin alerta-admin-exito";
     alerta.hidden = false;
+
+    if (!esError) {
+        temporizadorMensajeRevision = setTimeout(() => {
+            alerta.hidden = true;
+            alerta.textContent = "";
+            temporizadorMensajeRevision = null;
+        }, 6000);
+    }
 }
 
 function inicializarSidebarMovilRevision() {

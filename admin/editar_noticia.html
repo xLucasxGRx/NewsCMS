@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Noticia — NewsCMS</title>
-    <link rel="stylesheet" href="../css/admin.css?v=20261119f">
+    <link rel="stylesheet" href="../css/admin.css?v=20261120d">
 </head>
 <body>
     <div id="contenedor-admin" class="contenedor-admin" hidden>
@@ -155,10 +155,80 @@
                                     </div>
 
                                     <div class="grupo-ajuste-editor">
-                                        <div class="campo-admin">
-                                            <label>Etiquetas</label>
-                                            <div id="contenedor-etiquetas" class="lista-etiquetas-form">
+                                        <div class="campo-admin selector-etiquetas-editor">
+                                            <div class="cabecera-selector-etiquetas">
+                                                <label for="buscar-etiqueta-noticia">Etiquetas</label>
+                                                <button
+                                                    type="button"
+                                                    id="btn-abrir-crear-etiqueta"
+                                                    class="boton-crear-etiqueta-rapida"
+                                                    hidden
+                                                >
+                                                    + Crear nueva etiqueta
+                                                </button>
+                                            </div>
+
+                                            <div class="campo-busqueda-etiquetas-editor">
+                                                <span class="icono-busqueda-etiqueta-editor" aria-hidden="true">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <circle cx="11" cy="11" r="7"/>
+                                                        <path d="m20 20-3.5-3.5"/>
+                                                    </svg>
+                                                </span>
+                                                <input
+                                                    type="search"
+                                                    id="buscar-etiqueta-noticia"
+                                                    class="entrada-busqueda-etiqueta-editor"
+                                                    placeholder="Buscar etiqueta..."
+                                                    aria-label="Buscar etiqueta"
+                                                    maxlength="80"
+                                                >
+                                                <button
+                                                    type="button"
+                                                    id="btn-limpiar-busqueda-etiqueta-editor"
+                                                    class="boton-limpiar-etiqueta-editor"
+                                                    title="Limpiar búsqueda"
+                                                    aria-label="Limpiar búsqueda de etiquetas"
+                                                    hidden
+                                                >&times;</button>
+                                            </div>
+
+                                            <div id="etiquetas-seleccionadas-panel" class="panel-etiquetas-seleccionadas">
+                                                <div class="titulo-seleccionadas-etiquetas">
+                                                    <span>Seleccionadas</span>
+                                                    <span id="contador-etiquetas-seleccionadas" class="contador-etiquetas-chip">0</span>
+                                                </div>
+                                                <div id="lista-etiquetas-seleccionadas" class="chips-etiquetas-seleccionadas" aria-live="polite">
+                                                    <span class="sin-etiquetas-seleccionadas">Ninguna etiqueta seleccionada.</span>
+                                                </div>
+                                            </div>
+
+                                            <div id="contenedor-etiquetas" class="lista-etiquetas-form selector-etiquetas-compacto" role="group" aria-label="Etiquetas disponibles">
                                                 <p class="texto-suave-form">Cargando etiquetas...</p>
+                                            </div>
+
+                                            <div id="inputs-etiquetas-ocultos" hidden></div>
+
+                                            <div id="mensaje-etiqueta-rapida" class="alerta-etiqueta-rapida" role="status" hidden></div>
+
+                                            <div id="panel-crear-etiqueta-rapida" class="panel-crear-etiqueta-rapida" hidden aria-label="Crear nueva etiqueta">
+                                                <div class="campo-admin">
+                                                    <label for="nueva-etiqueta-nombre">Nombre de la etiqueta</label>
+                                                    <input
+                                                        type="text"
+                                                        id="nueva-etiqueta-nombre"
+                                                        maxlength="80"
+                                                        placeholder="Ej. Inteligencia Artificial"
+                                                    >
+                                                </div>
+                                                <div id="feedback-nueva-etiqueta" class="feedback-nueva-etiqueta" role="alert" hidden>
+                                                    <span id="texto-feedback-nueva-etiqueta"></span>
+                                                    <button type="button" id="btn-usar-etiqueta-existente" class="boton-usar-etiqueta-existente" hidden></button>
+                                                </div>
+                                                <div class="acciones-crear-etiqueta-rapida">
+                                                    <button type="button" id="btn-cancelar-crear-etiqueta" class="boton-secundario-admin boton-compacto-editor">Cancelar</button>
+                                                    <button type="button" id="btn-confirmar-crear-etiqueta" class="boton-primario-admin boton-compacto-editor">Crear etiqueta</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -196,6 +266,6 @@
     </div>
 
     <script src="../vendor/tinymce/js/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
-    <script src="../js/editar_noticia.js?v=20261119f"></script>
+    <script src="../js/editar_noticia.js?v=20261120d"></script>
 </body>
 </html>

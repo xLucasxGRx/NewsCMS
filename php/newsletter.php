@@ -22,6 +22,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode(['ok' => true, 'activo' => estaPluginNewsletterActivo($pdo)]);
     } elseif ($modo === 'admin_datos') {
         responderDatosAdmin($pdo);
+    } elseif ($modo === 'admin_resumen') {
+        responderResumenAdmin($pdo);
+    } elseif ($modo === 'admin_boletines') {
+        responderBoletinesAdmin($pdo);
+    } elseif ($modo === 'admin_suscriptores') {
+        responderSuscriptoresAdmin($pdo);
     } else {
         http_response_code(400);
         echo json_encode(['ok' => false, 'mensaje' => 'Modo no válido.']);
@@ -221,6 +227,256 @@ function responderDatosAdmin(PDO $pdo): void
             'mensaje'   => $estadoCorreo['mensaje'],
             'remitente' => $estadoCorreo['remitente_visible'],
         ],
+    ]);
+}
+
+/**
+ * Verifica autenticación y rol de administrador para lecturas del panel Newsletter.
+ */
+function verificarSoloAdminLectura(): bool
+{
+    iniciarSesionSegura();
+
+    if (!estaAutenticado()) {
+        http_response_code(401);
+        echo json_encode(['ok' => false, 'mensaje' => 'No autenticado.']);
+        return false;
+    }
+
+    if (!tieneRol(['administrador'])) {
+        http_response_code(403);
+        echo json_encode(['ok' => false, 'mensaje' => 'Solo el administrador puede gestionar el newsletter.']);
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Obtiene contadores globales reales de suscriptores y boletines.
+ *
+ * @return array{total_suscriptores:int,suscriptores_activos:int,total_boletines:int}
+ */
+function obtenerResumenContadoresNewsletter(PDO $pdo): array
+{
+    $totalSuscriptores = (int) $pdo->query('SELECT COUNT(*) FROM suscriptores_newsletter')->fetchColumn();
+    $suscriptoresActivos = (int) $pdo->query(
+        "SELECT COUNT(*) FROM suscriptores_newsletter WHERE estado = 'activo'"
+    )->fetchColumn();
+    $totalBoletines = (int) $pdo->query('SELECT COUNT(*) FROM boletines_newsletter')->fetchColumn();
+
+    return [
+        'total_suscriptores'   => $totalSuscriptores,
+        'suscriptores_activos' => $suscriptoresActivos,
+        'total_boletines'      => $totalBoletines,
+    ];
+}
+
+/**
+ * Escapa comodines de LIKE para búsquedas parciales seguras.
+ */
+function escaparLikeNewsletter(string $texto): string
+{
+    return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $texto);
+}
+
+/**
+ * Ejecuta una consulta paginada y ordenada de forma estable en MySQL.
+ *
+ * @param list<mixed> $parametros
+ * @return array{filas:array<int,array<string,mixed>>,total:int,pagina:int,por_pagina:int,total_paginas:int}
+ */
+function ejecutarConsultaPaginadaNewsletter(
+    PDO $pdo,
+    string $tabla,
+    string $columnas,
+    string $whereSql,
+    string $orderBy,
+    array $parametros,
+    int $paginaSolicitada,
+    int $porPaginaSolicitado
+): array {
+    $pagina = max(1, $paginaSolicitada);
+    $porPagina = max(1, min(50, $porPaginaSolicitado > 0 ? $porPaginaSolicitado : 10));
+
+    $stmtTotal = $pdo->prepare("SELECT COUNT(*) FROM {$tabla} WHERE {$whereSql}");
+    $stmtTotal->execute($parametros);
+    $totalFiltrado = (int) $stmtTotal->fetchColumn();
+
+    $totalPaginas = $totalFiltrado > 0 ? (int) ceil($totalFiltrado / $porPagina) : 0;
+    if ($totalPaginas > 0 && $pagina > $totalPaginas) {
+        $pagina = $totalPaginas;
+    } elseif ($totalFiltrado === 0) {
+        $pagina = 1;
+    }
+
+    $offset = ($pagina - 1) * $porPagina;
+    $stmtLista = $pdo->prepare(
+        "SELECT {$columnas}
+         FROM {$tabla}
+         WHERE {$whereSql}
+         ORDER BY {$orderBy}
+         LIMIT ? OFFSET ?"
+    );
+
+    $idx = 1;
+    foreach ($parametros as $valor) {
+        $stmtLista->bindValue($idx, $valor);
+        $idx++;
+    }
+    $stmtLista->bindValue($idx, $porPagina, PDO::PARAM_INT);
+    $stmtLista->bindValue($idx + 1, $offset, PDO::PARAM_INT);
+    $stmtLista->execute();
+
+    return [
+        'filas'         => $stmtLista->fetchAll(),
+        'total'         => $totalFiltrado,
+        'pagina'        => $pagina,
+        'por_pagina'    => $porPagina,
+        'total_paginas' => $totalPaginas,
+    ];
+}
+
+/**
+ * Devuelve resumen compacto general y estado interno de disponibilidad de envío (sin exponer remitente).
+ */
+function responderResumenAdmin(PDO $pdo): void
+{
+    if (!verificarSoloAdminLectura()) {
+        return;
+    }
+
+    $contadores = obtenerResumenContadoresNewsletter($pdo);
+    $estadoCorreo = cargarConfiguracionSmtp();
+    $disponible = (bool) ($estadoCorreo['disponible'] ?? false);
+
+    echo json_encode([
+        'ok'                   => true,
+        'total_suscriptores'   => $contadores['total_suscriptores'],
+        'suscriptores_activos' => $contadores['suscriptores_activos'],
+        'total_boletines'      => $contadores['total_boletines'],
+        'correo_disponible'    => $disponible,
+        'mensaje_correo'       => $disponible ? '' : (string) ($estadoCorreo['mensaje'] ?? 'Servicio de correo no disponible.'),
+    ]);
+}
+
+/**
+ * Lista boletines paginados en servidor con búsqueda por asunto y filtro real por estado.
+ */
+function responderBoletinesAdmin(PDO $pdo): void
+{
+    if (!verificarSoloAdminLectura()) {
+        return;
+    }
+
+    $busqueda = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 180);
+    $estado = trim((string) ($_GET['estado'] ?? ''));
+    if (!in_array($estado, ['', 'borrador', 'enviado'], true)) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'mensaje' => 'Filtro de estado de boletín no válido.']);
+        return;
+    }
+
+    $condiciones = ['1=1'];
+    $parametros = [];
+    if ($busqueda !== '') {
+        $condiciones[] = 'asunto LIKE ?';
+        $parametros[] = '%' . escaparLikeNewsletter($busqueda) . '%';
+    }
+    if ($estado !== '') {
+        $condiciones[] = 'estado = ?';
+        $parametros[] = $estado;
+    }
+
+    $pagina = (int) ($_GET['pagina'] ?? 1);
+    $porPagina = (int) ($_GET['por_pagina'] ?? 10);
+
+    $resultado = ejecutarConsultaPaginadaNewsletter(
+        $pdo,
+        'boletines_newsletter',
+        'id, asunto, contenido, estado, fecha_creacion, fecha_envio',
+        implode(' AND ', $condiciones),
+        'COALESCE(fecha_envio, fecha_creacion) DESC, id DESC',
+        $parametros,
+        $pagina,
+        $porPagina
+    );
+
+    $contadores = obtenerResumenContadoresNewsletter($pdo);
+    $estadoCorreo = cargarConfiguracionSmtp();
+    $disponible = (bool) ($estadoCorreo['disponible'] ?? false);
+
+    echo json_encode([
+        'ok'                   => true,
+        'boletines'            => $resultado['filas'],
+        'total'                => $resultado['total'],
+        'total_registrado'     => $contadores['total_boletines'],
+        'total_boletines'      => $contadores['total_boletines'],
+        'total_suscriptores'   => $contadores['total_suscriptores'],
+        'suscriptores_activos' => $contadores['suscriptores_activos'],
+        'pagina'               => $resultado['pagina'],
+        'por_pagina'           => $resultado['por_pagina'],
+        'total_paginas'        => $resultado['total_paginas'],
+        'correo_disponible'    => $disponible,
+        'mensaje_correo'       => $disponible ? '' : (string) ($estadoCorreo['mensaje'] ?? 'Servicio de correo no disponible.'),
+    ]);
+}
+
+/**
+ * Lista suscriptores paginados en servidor sin exponer token_baja, con búsqueda y filtro de estado.
+ */
+function responderSuscriptoresAdmin(PDO $pdo): void
+{
+    if (!verificarSoloAdminLectura()) {
+        return;
+    }
+
+    $busqueda = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 150);
+    $estado = trim((string) ($_GET['estado'] ?? ''));
+    if (!in_array($estado, ['', 'activo', 'inactivo'], true)) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'mensaje' => 'Filtro de estado de suscriptor no válido.']);
+        return;
+    }
+
+    $condiciones = ['1=1'];
+    $parametros = [];
+    if ($busqueda !== '') {
+        $condiciones[] = 'correo LIKE ?';
+        $parametros[] = '%' . escaparLikeNewsletter($busqueda) . '%';
+    }
+    if ($estado !== '') {
+        $condiciones[] = 'estado = ?';
+        $parametros[] = $estado;
+    }
+
+    $pagina = (int) ($_GET['pagina'] ?? 1);
+    $porPagina = (int) ($_GET['por_pagina'] ?? 10);
+
+    $resultado = ejecutarConsultaPaginadaNewsletter(
+        $pdo,
+        'suscriptores_newsletter',
+        'id, correo, estado, fecha_registro, fecha_baja',
+        implode(' AND ', $condiciones),
+        'fecha_registro DESC, id DESC',
+        $parametros,
+        $pagina,
+        $porPagina
+    );
+
+    $contadores = obtenerResumenContadoresNewsletter($pdo);
+
+    echo json_encode([
+        'ok'                   => true,
+        'suscriptores'         => $resultado['filas'],
+        'total'                => $resultado['total'],
+        'total_registrado'     => $contadores['total_suscriptores'],
+        'total_boletines'      => $contadores['total_boletines'],
+        'total_suscriptores'   => $contadores['total_suscriptores'],
+        'suscriptores_activos' => $contadores['suscriptores_activos'],
+        'pagina'               => $resultado['pagina'],
+        'por_pagina'           => $resultado['por_pagina'],
+        'total_paginas'        => $resultado['total_paginas'],
     ]);
 }
 

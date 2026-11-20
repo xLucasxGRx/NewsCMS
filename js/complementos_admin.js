@@ -396,10 +396,6 @@ function crearIconoComplementoSvg(identificador) {
         agregar("path", { d: "m3 7 9 6 9-6" });
     } else if (identificador === "comentarios_sociales") {
         agregar("path", { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" });
-    } else if (identificador === "aviso_informativo") {
-        agregar("circle", { cx: "12", cy: "12", r: "9" });
-        agregar("path", { d: "M12 16v-4" });
-        agregar("path", { d: "M12 8h.01" });
     } else {
         agregar("path", { d: "M12 2v4" });
         agregar("path", { d: "m6.8 6.8 2.8 2.8" });

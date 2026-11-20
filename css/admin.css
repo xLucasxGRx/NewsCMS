@@ -7566,3 +7566,1317 @@ body {
     color: #475569;
     line-height: 1.45;
 }
+
+/* =========================================================
+   Gestión de Etiquetas: Diseño Compacto, Búsqueda, Modal y Paginación
+   ========================================================= */
+
+.modal-etiqueta-admin[hidden],
+.alerta-modal-etiqueta[hidden],
+.paginacion-etiquetas[hidden],
+.controles-paginacion-etiquetas[hidden],
+.boton-limpiar-busqueda-etiqueta[hidden] {
+    display: none;
+}
+
+.modulo-etiquetas-pro {
+    max-width: 1080px;
+    gap: 1rem;
+}
+
+.etiqueta-modulo-superior {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--admin-texto-suave);
+    letter-spacing: 0.02em;
+}
+
+.encabezado-etiquetas-pro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.texto-encabezado-etiquetas {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.fila-titulo-etiquetas {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+}
+
+.fila-titulo-etiquetas h1.titulo-modulo-editorial {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.boton-nueva-etiqueta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    padding: 0.56rem 1.05rem;
+    font-size: 0.88rem;
+    white-space: nowrap;
+}
+
+.barra-busqueda-etiquetas {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    flex-wrap: wrap;
+    padding: 0.85rem 1.15rem;
+    background-color: #f8fafc;
+    border-bottom: 1px solid var(--admin-borde);
+}
+
+.campo-busqueda-etiqueta {
+    position: relative;
+    flex: 1 1 260px;
+    max-width: 380px;
+}
+
+.icono-busqueda-etiqueta {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 15px;
+    height: 15px;
+    color: #64748b;
+    pointer-events: none;
+    display: inline-flex;
+}
+
+.icono-busqueda-etiqueta svg {
+    width: 15px;
+    height: 15px;
+}
+
+.entrada-busqueda-etiqueta {
+    width: 100%;
+    height: 38px;
+    padding: 0.42rem 2.1rem 0.42rem 2.2rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.entrada-busqueda-etiqueta:focus {
+    outline: none;
+    border-color: var(--admin-primario);
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
+}
+
+.boton-limpiar-busqueda-etiqueta {
+    position: absolute;
+    right: 0.45rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 50%;
+    background-color: #e2e8f0;
+    color: #334155;
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.boton-limpiar-busqueda-etiqueta:hover {
+    background-color: #cbd5e1;
+}
+
+.resumen-resultados-etiquetas {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--admin-texto-suave);
+}
+
+/* Cuadrícula compacta en 2 columnas */
+.rejilla-etiquetas-admin {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+    padding: 1rem 1.15rem;
+}
+
+.cargando-etiquetas {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 1.8rem 1rem;
+    text-align: center;
+    color: var(--admin-texto-suave);
+    font-size: 0.9rem;
+}
+
+.item-etiqueta-admin {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.68rem 0.9rem;
+    border: 1px solid var(--admin-borde);
+    border-radius: 8px;
+    background-color: var(--admin-superficie);
+    transition: border-color 0.14s ease, background-color 0.14s ease;
+    min-width: 0;
+}
+
+.item-etiqueta-admin:hover {
+    border-color: #bfdbfe;
+    background-color: #f8fafc;
+}
+
+.info-etiqueta-item {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.14rem;
+}
+
+.nombre-etiqueta-item {
+    font-size: 0.94rem;
+    font-weight: 700;
+    color: var(--admin-texto);
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+
+.conteo-etiqueta-item {
+    font-size: 0.77rem;
+    color: var(--admin-texto-suave);
+    font-variant-numeric: tabular-nums;
+}
+
+.conteo-etiqueta-item.con-noticias {
+    color: #1d4ed8;
+    font-weight: 600;
+}
+
+.acciones-etiqueta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+.btn-icono-etiqueta {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 7px;
+    border: 1px solid var(--admin-borde);
+    background-color: #ffffff;
+    color: #334155;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+
+.btn-icono-etiqueta:hover {
+    background-color: #eff6ff;
+    border-color: #93c5fd;
+    color: var(--admin-primario);
+}
+
+.btn-icono-etiqueta:focus-visible {
+    outline: 2px solid var(--admin-primario);
+    outline-offset: 1px;
+}
+
+.btn-icono-etiqueta.btn-eliminar-etiqueta {
+    color: #b91c1c;
+    border-color: #fecaca;
+    background-color: #fef2f2;
+}
+
+.btn-icono-etiqueta.btn-eliminar-etiqueta:hover {
+    background-color: #fee2e2;
+    border-color: #f87171;
+    color: #991b1b;
+}
+
+.estado-vacio-etiquetas {
+    grid-column: 1 / -1;
+    padding: 2rem 1.25rem;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    background-color: #f8fafc;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Paginación de Etiquetas */
+.paginacion-etiquetas {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    flex-wrap: wrap;
+    padding: 0.85rem 1.15rem;
+    background-color: #f8fafc;
+    border-top: 1px solid var(--admin-borde);
+}
+
+.resumen-paginacion-etiquetas {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.info-paginacion-etiquetas {
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: var(--admin-texto);
+    font-variant-numeric: tabular-nums;
+}
+
+.detalle-pagina-etiquetas {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--admin-texto-suave);
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    background-color: #ffffff;
+    border: 1px solid var(--admin-borde);
+    font-variant-numeric: tabular-nums;
+}
+
+.controles-paginacion-etiquetas {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.numeros-paginacion-etiquetas {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.btn-pagina-etiqueta {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 0.5rem;
+    border-radius: 7px;
+    border: 1px solid var(--admin-borde);
+    background-color: #ffffff;
+    color: var(--admin-texto);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+    transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+
+.btn-pagina-etiqueta:hover:not(:disabled) {
+    background-color: #eff6ff;
+    border-color: #bfdbfe;
+    color: var(--admin-primario);
+}
+
+.btn-pagina-etiqueta.activa,
+.btn-pagina-etiqueta.activa:disabled {
+    background-color: var(--admin-primario);
+    border-color: var(--admin-primario);
+    color: #ffffff;
+    cursor: default;
+    opacity: 1;
+}
+
+.elipsis-paginacion-etiquetas {
+    padding: 0 0.25rem;
+    color: var(--admin-texto-suave);
+}
+
+.boton-nav-etiqueta {
+    height: 32px;
+    padding: 0 0.72rem;
+    font-size: 0.8rem;
+}
+
+.boton-nav-etiqueta:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Modal crear / editar etiqueta */
+.modal-etiqueta-admin {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    background-color: rgba(15, 23, 42, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+}
+
+.modal-etiqueta-dialogo {
+    width: 100%;
+    max-width: 460px;
+    background-color: var(--admin-superficie);
+    border: 1px solid var(--admin-borde);
+    border-radius: 12px;
+    box-shadow: 0 20px 42px rgba(15, 23, 42, 0.22);
+    overflow: hidden;
+}
+
+.cabecera-modal-etiqueta {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.85rem;
+    padding: 1rem 1.25rem;
+    background-color: #f8fafc;
+    border-bottom: 1px solid var(--admin-borde);
+}
+
+.cabecera-modal-etiqueta-texto h2 {
+    margin: 0;
+    font-size: 1.08rem;
+    font-weight: 700;
+    color: var(--admin-texto);
+}
+
+.subtitulo-modal-etiqueta {
+    margin: 0.22rem 0 0;
+    font-size: 0.83rem;
+    color: var(--admin-texto-suave);
+    line-height: 1.4;
+}
+
+.boton-cerrar-modal-etiqueta {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--admin-borde);
+    background-color: #ffffff;
+    color: var(--admin-texto-suave);
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.boton-cerrar-modal-etiqueta:hover {
+    background-color: #f1f5f9;
+    color: var(--admin-texto);
+}
+
+.alerta-modal-etiqueta {
+    margin: 0.9rem 1.25rem 0;
+}
+
+.cuerpo-modal-etiqueta {
+    padding: 1.15rem 1.25rem;
+}
+
+.cuerpo-modal-etiqueta input[type="text"] {
+    width: 100%;
+    height: 40px;
+    padding: 0.48rem 0.8rem;
+}
+
+.pie-modal-etiqueta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    padding: 0.9rem 1.25rem;
+    background-color: #f8fafc;
+    border-top: 1px solid var(--admin-borde);
+}
+
+@media (max-width: 760px) {
+    .encabezado-etiquetas-pro {
+        align-items: stretch;
+    }
+
+    .boton-nueva-etiqueta {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .barra-busqueda-etiquetas {
+        padding: 0.85rem 1rem;
+    }
+
+    .campo-busqueda-etiqueta {
+        max-width: none;
+        width: 100%;
+    }
+
+    .rejilla-etiquetas-admin {
+        grid-template-columns: 1fr;
+        padding: 0.85rem 1rem;
+    }
+
+    .paginacion-etiquetas {
+        padding: 0.85rem 1rem;
+    }
+
+    .controles-paginacion-etiquetas {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+/* =========================================================
+   Rediseño Profesional y Escalable: Newsletter (Admin)
+   ========================================================= */
+
+.modulo-newsletter-admin [hidden],
+.area-trabajo-newsletter[hidden],
+.panel-newsletter-tabla[hidden],
+.panel-composer-editorial[hidden],
+.paginacion-newsletter[hidden],
+.controles-paginacion-newsletter[hidden],
+.boton-limpiar-newsletter[hidden],
+.alerta-composer-newsletter[hidden] {
+    display: none;
+}
+
+.resumen-newsletter-compacto {
+    padding: 0.72rem 1.1rem;
+    justify-content: flex-start;
+}
+
+.area-trabajo-newsletter {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.pestanas-newsletter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem;
+    background-color: #f1f5f9;
+    border: 1px solid var(--admin-borde);
+    border-radius: 10px;
+    align-self: flex-start;
+}
+
+.pestana-newsletter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.48rem 0.95rem;
+    border: 0;
+    border-radius: 7px;
+    background-color: transparent;
+    color: var(--admin-texto-suave);
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.14s ease, color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.pestana-newsletter:hover {
+    color: var(--admin-texto);
+}
+
+.pestana-newsletter.activa {
+    background-color: var(--admin-superficie);
+    color: var(--admin-primario);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.badge-tab-newsletter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 20px;
+    padding: 0 0.42rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background-color: #e2e8f0;
+    color: #334155;
+    font-variant-numeric: tabular-nums;
+}
+
+.pestana-newsletter.activa .badge-tab-newsletter {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+}
+
+/* Barra de búsqueda y filtro en listados de Newsletter */
+.barra-filtros-newsletter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    flex-wrap: wrap;
+    padding: 0.85rem 1.35rem;
+    background-color: #f8fafc;
+    border-bottom: 1px solid var(--admin-borde);
+}
+
+.campo-busqueda-newsletter {
+    position: relative;
+    flex: 1 1 260px;
+    max-width: 380px;
+}
+
+.icono-busqueda-newsletter {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 15px;
+    height: 15px;
+    color: #64748b;
+    pointer-events: none;
+    display: inline-flex;
+}
+
+.icono-busqueda-newsletter svg {
+    width: 15px;
+    height: 15px;
+}
+
+.entrada-busqueda-newsletter {
+    width: 100%;
+    height: 38px;
+    padding: 0.42rem 2.1rem 0.42rem 2.2rem;
+}
+
+.boton-limpiar-newsletter {
+    position: absolute;
+    right: 0.45rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 50%;
+    background-color: #e2e8f0;
+    color: #334155;
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.boton-limpiar-newsletter:hover {
+    background-color: #cbd5e1;
+}
+
+.grupo-filtro-estado-newsletter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.etiqueta-filtro-newsletter {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--admin-texto-suave);
+}
+
+.selector-filtro-newsletter {
+    height: 38px;
+    padding: 0.38rem 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    background-color: var(--admin-superficie);
+    color: var(--admin-texto);
+    font-size: 0.86rem;
+    font-family: inherit;
+}
+
+.selector-filtro-newsletter:focus {
+    outline: none;
+    border-color: var(--admin-primario);
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
+}
+
+.resumen-resultados-newsletter {
+    margin-left: auto;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--admin-texto-suave);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Filas compactas y estados vacío/error */
+.panel-newsletter-tabla .tabla-datos th,
+.panel-newsletter-tabla .tabla-datos td {
+    padding-top: 0.74rem;
+    padding-bottom: 0.74rem;
+}
+
+.celda-estado-newsletter {
+    padding: 1.75rem 1.25rem;
+    text-align: center;
+}
+
+.estado-lista-newsletter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    max-width: 460px;
+    margin: 0 auto;
+}
+
+.estado-lista-newsletter strong {
+    font-size: 0.96rem;
+    color: var(--admin-texto);
+}
+
+.estado-lista-newsletter.es-error strong {
+    color: #991b1b;
+}
+
+.estado-lista-newsletter p {
+    margin: 0;
+    font-size: 0.84rem;
+    color: var(--admin-texto-suave);
+    line-height: 1.45;
+}
+
+/* Paginación de Newsletter */
+.paginacion-newsletter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    flex-wrap: wrap;
+    padding: 0.85rem 1.35rem;
+    background-color: #f8fafc;
+    border-top: 1px solid var(--admin-borde);
+}
+
+.resumen-paginacion-newsletter {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.info-paginacion-newsletter {
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: var(--admin-texto);
+    font-variant-numeric: tabular-nums;
+}
+
+.detalle-pagina-newsletter {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--admin-texto-suave);
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    background-color: var(--admin-superficie);
+    border: 1px solid var(--admin-borde);
+    font-variant-numeric: tabular-nums;
+}
+
+.controles-paginacion-newsletter {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.numeros-paginacion-newsletter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.btn-pagina-newsletter {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 0.5rem;
+    border-radius: 7px;
+    border: 1px solid var(--admin-borde);
+    background-color: var(--admin-superficie);
+    color: var(--admin-texto);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+    transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+
+.btn-pagina-newsletter:hover:not(:disabled) {
+    background-color: #eff6ff;
+    border-color: #bfdbfe;
+    color: var(--admin-primario);
+}
+
+.btn-pagina-newsletter.activa,
+.btn-pagina-newsletter.activa:disabled {
+    background-color: var(--admin-primario);
+    border-color: var(--admin-primario);
+    color: #ffffff;
+    cursor: default;
+}
+
+.elipsis-paginacion-newsletter {
+    padding: 0 0.25rem;
+    color: var(--admin-texto-suave);
+}
+
+.boton-nav-newsletter {
+    height: 32px;
+    padding: 0 0.72rem;
+    font-size: 0.8rem;
+}
+
+.boton-nav-newsletter:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Redacción editorial limpia en una sola columna */
+.panel-composer-editorial {
+    width: 100%;
+}
+
+.alerta-composer-newsletter {
+    margin: 1rem 1.35rem 0;
+}
+
+.formulario-editorial-newsletter {
+    padding: 1.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+}
+
+.modulo-newsletter-admin .formulario-editorial-newsletter #boletin-asunto {
+    font-size: 1rem;
+    padding: 0.65rem 0.88rem;
+}
+
+.modulo-newsletter-admin .formulario-editorial-newsletter #boletin-contenido {
+    min-height: 260px;
+    padding: 0.78rem 0.9rem;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    resize: vertical;
+}
+
+.barra-acciones-redaccion-newsletter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--admin-borde);
+}
+
+.acciones-seguras-boletin {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+}
+
+.bloque-despacho-boletin {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+    padding: 0.62rem 0.85rem;
+    background-color: #fffbeb;
+    border: 1px solid #fde68a;
+    border-left: 4px solid #d97706;
+    border-radius: 8px;
+}
+
+.nota-despacho-boletin {
+    font-size: 0.8rem;
+    color: #78350f;
+    max-width: 290px;
+    line-height: 1.35;
+}
+
+.bloque-despacho-boletin .boton-envio-masivo-newsletter {
+    width: auto;
+    padding: 0.54rem 1rem;
+    font-size: 0.86rem;
+    white-space: nowrap;
+}
+
+@media (max-width: 960px) {
+    .resumen-resultados-newsletter {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .barra-acciones-redaccion-newsletter {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .bloque-despacho-boletin {
+        justify-content: space-between;
+    }
+
+    .nota-despacho-boletin {
+        max-width: none;
+    }
+}
+
+@media (max-width: 760px) {
+    .pestanas-newsletter {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pestana-newsletter {
+        justify-content: center;
+    }
+
+    .barra-filtros-newsletter,
+    .paginacion-newsletter,
+    .formulario-editorial-newsletter {
+        padding: 1rem;
+    }
+
+    .campo-busqueda-newsletter,
+    .grupo-filtro-estado-newsletter,
+    .selector-filtro-newsletter {
+        width: 100%;
+        max-width: none;
+    }
+
+    .grupo-filtro-estado-newsletter {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.3rem;
+    }
+
+    .controles-paginacion-newsletter {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .acciones-seguras-boletin {
+        width: 100%;
+    }
+
+    .acciones-seguras-boletin button {
+        flex: 1 1 140px;
+    }
+
+    .bloque-despacho-boletin {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .bloque-despacho-boletin .boton-envio-masivo-newsletter {
+        width: 100%;
+    }
+
+    .tabla-newsletter-boletines td.celda-estado-newsletter::before,
+    .tabla-newsletter-suscriptores td.celda-estado-newsletter::before {
+        display: none;
+    }
+}
+
+/* =========================================================
+   Selector Compacto, Chips y Creación Rápida de Etiquetas (Editor de Noticias)
+   ========================================================= */
+
+.selector-etiquetas-editor [hidden],
+.boton-crear-etiqueta-rapida[hidden],
+.boton-limpiar-etiqueta-editor[hidden],
+.panel-crear-etiqueta-rapida[hidden],
+.feedback-nueva-etiqueta[hidden],
+.boton-usar-etiqueta-existente[hidden],
+.alerta-etiqueta-rapida[hidden] {
+    display: none;
+}
+
+.selector-etiquetas-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.cabecera-selector-etiquetas {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.cabecera-selector-etiquetas label {
+    margin: 0;
+}
+
+.boton-crear-etiqueta-rapida {
+    border: 1px solid #bfdbfe;
+    background-color: #eff6ff;
+    color: var(--admin-primario);
+    font-family: inherit;
+    font-size: 0.77rem;
+    font-weight: 700;
+    padding: 0.25rem 0.62rem;
+    border-radius: 6px;
+    cursor: pointer;
+    line-height: 1.3;
+    transition: background-color 0.14s ease, border-color 0.14s ease;
+}
+
+.boton-crear-etiqueta-rapida:hover {
+    background-color: #dbeafe;
+    border-color: #93c5fd;
+}
+
+.campo-busqueda-etiquetas-editor {
+    position: relative;
+    width: 100%;
+}
+
+.icono-busqueda-etiqueta-editor {
+    position: absolute;
+    left: 0.68rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    color: #64748b;
+    pointer-events: none;
+    display: inline-flex;
+}
+
+.icono-busqueda-etiqueta-editor svg {
+    width: 14px;
+    height: 14px;
+}
+
+.entrada-busqueda-etiqueta-editor {
+    width: 100%;
+    height: 36px;
+    padding: 0.36rem 1.9rem 0.36rem 2rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    font-size: 0.86rem;
+    font-family: inherit;
+    color: var(--admin-texto);
+    background-color: var(--admin-superficie);
+    transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.entrada-busqueda-etiqueta-editor:focus {
+    outline: none;
+    border-color: var(--admin-primario);
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
+}
+
+.boton-limpiar-etiqueta-editor {
+    position: absolute;
+    right: 0.42rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    border: 0;
+    border-radius: 50%;
+    background-color: #e2e8f0;
+    color: #334155;
+    font-size: 0.9rem;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.boton-limpiar-etiqueta-editor:hover {
+    background-color: #cbd5e1;
+}
+
+/* Bloque de chips Seleccionadas */
+.panel-etiquetas-seleccionadas {
+    padding: 0.52rem 0.65rem;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.42rem;
+}
+
+.titulo-seleccionadas-etiquetas {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.contador-etiquetas-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    background-color: #dbeafe;
+    color: #1d4ed8;
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.chips-etiquetas-seleccionadas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.sin-etiquetas-seleccionadas {
+    font-size: 0.79rem;
+    color: #64748b;
+}
+
+.chip-etiqueta-seleccionada {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32rem;
+    padding: 0.22rem 0.45rem 0.22rem 0.6rem;
+    border-radius: 999px;
+    background-color: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e3a8a;
+    font-size: 0.78rem;
+    font-weight: 600;
+    max-width: 100%;
+}
+
+.chip-etiqueta-nombre {
+    overflow-wrap: anywhere;
+}
+
+.chip-etiqueta-quitar {
+    width: 18px;
+    height: 18px;
+    border: 0;
+    border-radius: 50%;
+    background-color: rgba(29, 78, 216, 0.14);
+    color: #1e3a8a;
+    font-size: 0.85rem;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.chip-etiqueta-quitar:hover {
+    background-color: #1d4ed8;
+    color: #ffffff;
+}
+
+/* Panel compacto de selección múltiple */
+.panel-ajustes-editor .selector-etiquetas-compacto {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+    max-height: 184px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    background-color: #f8fafc;
+}
+
+.opcion-etiqueta-compacta {
+    display: flex;
+    align-items: center;
+    gap: 0.42rem;
+    padding: 0.38rem 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background-color: #ffffff;
+    font-size: 0.81rem;
+    line-height: 1.25;
+    cursor: pointer;
+    min-width: 0;
+    transition: border-color 0.13s ease, background-color 0.13s ease;
+}
+
+.opcion-etiqueta-compacta:hover {
+    border-color: #93c5fd;
+    background-color: #f8fafc;
+}
+
+.opcion-etiqueta-compacta.seleccionada {
+    border-color: #93c5fd;
+    background-color: #eff6ff;
+    color: #1e3a8a;
+    font-weight: 600;
+}
+
+.opcion-etiqueta-compacta input[type="checkbox"] {
+    flex-shrink: 0;
+    margin: 0;
+    accent-color: var(--admin-primario);
+}
+
+.nombre-etiqueta-opcion {
+    overflow-wrap: anywhere;
+}
+
+.estado-vacio-etiquetas-editor {
+    grid-column: 1 / -1;
+    padding: 0.8rem 0.5rem;
+    text-align: center;
+}
+
+/* Panel de creación rápida inline */
+.panel-crear-etiqueta-rapida {
+    padding: 0.72rem 0.8rem;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    background-color: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.panel-crear-etiqueta-rapida .campo-admin {
+    gap: 0.3rem;
+}
+
+.panel-crear-etiqueta-rapida .campo-admin label {
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.panel-crear-etiqueta-rapida input[type="text"] {
+    width: 100%;
+    height: 36px;
+    padding: 0.38rem 0.68rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.86rem;
+    font-family: inherit;
+    background-color: #ffffff;
+}
+
+.feedback-nueva-etiqueta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    line-height: 1.35;
+}
+
+.feedback-nueva-etiqueta.es-advertencia {
+    background-color: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #92400e;
+}
+
+.feedback-nueva-etiqueta.es-error {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+}
+
+.boton-usar-etiqueta-existente {
+    border: 1px solid #d97706;
+    background-color: #ffffff;
+    color: #92400e;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.28rem 0.62rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.boton-usar-etiqueta-existente:hover {
+    background-color: #fef3c7;
+}
+
+.acciones-crear-etiqueta-rapida {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.45rem;
+}
+
+.boton-compacto-editor {
+    padding: 0.38rem 0.72rem;
+    font-size: 0.8rem;
+}
+
+.alerta-etiqueta-rapida {
+    padding: 0.48rem 0.68rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.alerta-etiqueta-rapida.es-exito {
+    background-color: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+}
+
+.alerta-etiqueta-rapida.es-error {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+}
+
+@media (max-width: 760px) {
+    .panel-ajustes-editor .selector-etiquetas-compacto {
+        grid-template-columns: 1fr;
+        max-height: 200px;
+    }
+
+    .acciones-crear-etiqueta-rapida {
+        flex-wrap: wrap;
+    }
+
+    .acciones-crear-etiqueta-rapida button {
+        flex: 1 1 110px;
+    }
+}

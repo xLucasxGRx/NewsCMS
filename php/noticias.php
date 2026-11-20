@@ -449,6 +449,7 @@ function responderListaAdmin(PDO $pdo): void
                         (SELECT r.observaciones
                          FROM revisiones_editoriales r
                          WHERE r.noticia_id = n.id
+                           AND r.accion = 'cambios_solicitados'
                          ORDER BY r.fecha_creacion DESC, r.id DESC
                          LIMIT 1) AS ultima_observacion,
                         (SELECT a.estado
@@ -545,6 +546,8 @@ function responderNoticiaAdmin(PDO $pdo): void
     $noticia['etiquetas_ids'] = array_map('intval', $stmtEtiquetas->fetchAll(PDO::FETCH_COLUMN));
     $noticia['actualizacion_activa'] = null;
     $noticia['version_publicada'] = null;
+    $noticia['observacion_vigente'] = null;
+    $propuestaActiva = null;
 
     if ($noticia['estado'] === 'publicada') {
         $noticia['version_publicada'] = [
@@ -568,6 +571,7 @@ function responderNoticiaAdmin(PDO $pdo): void
         $propuesta = $stmtProp->fetch();
 
         if ($propuesta) {
+            $propuestaActiva = $propuesta;
             $noticia['titulo'] = $propuesta['titulo'];
             $noticia['resumen'] = $propuesta['resumen'];
             $noticia['contenido'] = $propuesta['contenido'];
@@ -584,17 +588,66 @@ function responderNoticiaAdmin(PDO $pdo): void
             $noticia['actualizacion_activa'] = [
                 'id'                  => (int) $propuesta['id'],
                 'estado'              => $propuesta['estado'],
-                'observaciones'       => $propuesta['observaciones'],
-                'editor'              => $propuesta['editor_nombre'],
+                'observaciones'       => $propuesta['estado'] === 'cambios_solicitados' ? $propuesta['observaciones'] : null,
+                'editor'              => $propuesta['estado'] === 'cambios_solicitados' ? $propuesta['editor_nombre'] : null,
                 'fecha_actualizacion' => $propuesta['fecha_actualizacion'],
             ];
         }
     }
 
+    $noticia['observacion_vigente'] = obtenerObservacionVigenteNoticia($pdo, $noticia, $propuestaActiva);
+
     echo json_encode([
         'ok'      => true,
         'noticia' => $noticia,
     ]);
+}
+
+/**
+ * Devuelve únicamente la observación editorial vigente cuando existe una corrección activa sin resolver.
+ * Nunca expone aprobaciones históricas como advertencias vigentes.
+ */
+function obtenerObservacionVigenteNoticia(PDO $pdo, array $noticia, ?array $propuesta): ?array
+{
+    if ($noticia['estado'] === 'publicada') {
+        if (
+            $propuesta
+            && ($propuesta['estado'] ?? '') === 'cambios_solicitados'
+            && trim((string) ($propuesta['observaciones'] ?? '')) !== ''
+        ) {
+            return [
+                'tipo'          => 'actualizacion',
+                'observaciones' => (string) $propuesta['observaciones'],
+                'editor'        => $propuesta['editor_nombre'] ?? null,
+                'fecha'         => $propuesta['fecha_actualizacion'] ?? null,
+            ];
+        }
+        return null;
+    }
+
+    if ($noticia['estado'] === 'cambios_solicitados') {
+        $stmtRev = $pdo->prepare(
+            "SELECT r.observaciones, r.fecha_creacion, u.nombre AS editor
+             FROM revisiones_editoriales r
+             LEFT JOIN usuarios u ON u.id = r.editor_id
+             WHERE r.noticia_id = ?
+               AND r.accion = 'cambios_solicitados'
+             ORDER BY r.fecha_creacion DESC, r.id DESC
+             LIMIT 1"
+        );
+        $stmtRev->execute([(int) $noticia['id']]);
+        $rev = $stmtRev->fetch();
+        if ($rev && trim((string) ($rev['observaciones'] ?? '')) !== '') {
+            return [
+                'tipo'          => 'noticia',
+                'observaciones' => (string) $rev['observaciones'],
+                'editor'        => $rev['editor'] ?? null,
+                'fecha'         => $rev['fecha_creacion'] ?? null,
+            ];
+        }
+    }
+
+    return null;
 }
 
 /**
@@ -800,12 +853,23 @@ function guardarNoticia(PDO $pdo): void
             $resumenLimpio = $resumen !== '' ? $resumen : null;
 
             if ($propuesta) {
-                $stmtUpdProp = $pdo->prepare(
-                    'UPDATE actualizaciones_noticias
-                     SET autor_id = ?, titulo = ?, resumen = ?, contenido = ?, categoria_id = ?,
-                         imagen = ?, etiquetas_json = ?, es_destacada = ?, es_ultima_hora = ?, estado = ?
-                     WHERE id = ?'
-                );
+                if ($estadoPropuesta === 'pendiente_revision') {
+                    // Al reenviar a revisión inicia un nuevo ciclo pendiente; el historial previo queda intacto en revisiones_editoriales
+                    $stmtUpdProp = $pdo->prepare(
+                        'UPDATE actualizaciones_noticias
+                         SET autor_id = ?, titulo = ?, resumen = ?, contenido = ?, categoria_id = ?,
+                             imagen = ?, etiquetas_json = ?, es_destacada = ?, es_ultima_hora = ?, estado = ?,
+                             observaciones = NULL, editor_id = NULL, fecha_revision = NULL
+                         WHERE id = ?'
+                    );
+                } else {
+                    $stmtUpdProp = $pdo->prepare(
+                        'UPDATE actualizaciones_noticias
+                         SET autor_id = ?, titulo = ?, resumen = ?, contenido = ?, categoria_id = ?,
+                             imagen = ?, etiquetas_json = ?, es_destacada = ?, es_ultima_hora = ?, estado = ?
+                         WHERE id = ?'
+                    );
+                }
                 $stmtUpdProp->execute([
                     $usuario['id'],
                     $titulo,
@@ -854,12 +918,22 @@ function guardarNoticia(PDO $pdo): void
                     ? 'Correcciones de actualización guardadas. Reenvíala a revisión cuando esté lista.'
                     : 'Borrador de actualización guardado. La versión publicada en el portal permanece sin cambios.');
 
+            $obsVigente = null;
+            if ($estadoPropuesta === 'cambios_solicitados' && $propuesta && trim((string) ($propuesta['observaciones'] ?? '')) !== '') {
+                $obsVigente = obtenerObservacionVigenteNoticia(
+                    $pdo,
+                    ['id' => $id, 'estado' => 'publicada'],
+                    array_merge($propuesta, ['estado' => 'cambios_solicitados'])
+                );
+            }
+
             echo json_encode([
                 'ok'                   => true,
                 'id'                   => $id,
                 'actualizacion_id'     => $actualizacionId,
                 'estado'               => 'publicada',
                 'estado_actualizacion' => $estadoPropuesta,
+                'observacion_vigente'  => $obsVigente,
                 'mensaje'              => $mensaje,
             ]);
             return;
@@ -946,11 +1020,16 @@ function guardarNoticia(PDO $pdo): void
                 ? 'Correcciones guardadas. Reenvía la noticia a revisión cuando esté lista.'
                 : 'Borrador guardado correctamente.');
 
+        $obsVigenteB = $estadoFinal === 'cambios_solicitados'
+            ? obtenerObservacionVigenteNoticia($pdo, ['id' => $id, 'estado' => $estadoFinal], null)
+            : null;
+
         echo json_encode([
-            'ok'      => true,
-            'id'      => $id,
-            'estado'  => $estadoFinal,
-            'mensaje' => $mensaje,
+            'ok'                  => true,
+            'id'                  => $id,
+            'estado'              => $estadoFinal,
+            'observacion_vigente' => $obsVigenteB,
+            'mensaje'             => $mensaje,
         ]);
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {

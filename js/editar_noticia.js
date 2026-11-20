@@ -11,6 +11,15 @@ let estadoActualizacionActual = null;
 let tinyMceListo = false;
 let tinyMceErrorCarga = false;
 let envioEnCurso = false;
+let secuenciaCargaNoticia = 0;
+let controladorCargaNoticia = null;
+let temporizadorMensajeEditor = null;
+
+let catalogoEtiquetasEditor = [];
+const etiquetasSeleccionadasIds = new Set();
+let selectorEtiquetasInicializado = false;
+let creandoEtiquetaRapida = false;
+let temporizadorMensajeEtiquetaRapida = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     iniciarEditorNoticia();
@@ -53,6 +62,7 @@ async function iniciarEditorNoticia() {
         inicializarSalirEditor();
         inicializarVistaPreviaImagen();
         inicializarBotonesGuardado();
+        inicializarSelectorEtiquetasEditor();
 
         document.getElementById("contenedor-admin").hidden = false;
 
@@ -112,8 +122,11 @@ function renderizarSidebarEditor(modulos) {
 function configurarPermisosVisuales(permisos) {
     const opcionesEditoriales = document.getElementById("opciones-editoriales");
     const btnRevision = document.getElementById("btn-revision");
+    const btnCrearEtiqueta = document.getElementById("btn-abrir-crear-etiqueta");
+    const panelCrearEtiqueta = document.getElementById("panel-crear-etiqueta-rapida");
     const puedePublicar = Boolean(permisos && permisos.publicar_noticias);
     const puedeEnviarRevision = Boolean(permisos && permisos.enviar_revision);
+    const puedeGestionarEtiquetas = Boolean(permisos && permisos.gestionar_etiquetas);
 
     if (opcionesEditoriales) {
         opcionesEditoriales.hidden = !puedePublicar;
@@ -121,6 +134,63 @@ function configurarPermisosVisuales(permisos) {
     if (btnRevision) {
         btnRevision.hidden = !puedeEnviarRevision;
     }
+    if (btnCrearEtiqueta) {
+        btnCrearEtiqueta.hidden = !puedeGestionarEtiquetas;
+    }
+    if (panelCrearEtiqueta && !puedeGestionarEtiquetas) {
+        panelCrearEtiqueta.hidden = true;
+    }
+}
+
+function normalizarNombreVisibleEtiqueta(texto) {
+    return String(texto || "").trim().replace(/\s+/g, " ");
+}
+
+function normalizarClaveEtiqueta(texto) {
+    const limpio = normalizarNombreVisibleEtiqueta(texto);
+    if (!limpio) {
+        return "";
+    }
+    return limpio
+        .normalize("NFKD")
+        .replace(/\p{M}+/gu, "")
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function ordenarCatalogoEtiquetasEditor() {
+    catalogoEtiquetasEditor.sort((a, b) =>
+        (a.nombre || "").localeCompare(b.nombre || "", "es", { sensitivity: "base" })
+    );
+}
+
+function buscarEtiquetaEquivalenteLocal(nombre) {
+    const clave = normalizarClaveEtiqueta(nombre);
+    if (!clave) {
+        return null;
+    }
+    return catalogoEtiquetasEditor.find((item) => item.clave === clave) || null;
+}
+
+function agregarOActualizarEtiquetaCatalogo(etiq) {
+    const id = Number(etiq && etiq.id);
+    const nombre = normalizarNombreVisibleEtiqueta(etiq && etiq.nombre);
+    if (!id || !nombre) {
+        return null;
+    }
+    const clave = (etiq && etiq.clave_normalizada) || normalizarClaveEtiqueta(nombre);
+    const existente = catalogoEtiquetasEditor.find((x) => x.id === id);
+    if (existente) {
+        existente.nombre = nombre;
+        existente.clave = clave;
+        ordenarCatalogoEtiquetasEditor();
+        return existente;
+    }
+    const registro = { id, nombre, clave };
+    catalogoEtiquetasEditor.push(registro);
+    ordenarCatalogoEtiquetasEditor();
+    return registro;
 }
 
 async function cargarCatalogos() {
@@ -145,128 +215,546 @@ async function cargarCatalogos() {
         selectCat.appendChild(opcion);
     });
 
-    contenedorEtiquetas.textContent = "";
-    if (etiquetas.length === 0) {
+    catalogoEtiquetasEditor = [];
+    etiquetas.forEach((etiq) => {
+        agregarOActualizarEtiquetaCatalogo(etiq);
+    });
+
+    if (contenedorEtiquetas && catalogoEtiquetasEditor.length === 0) {
+        contenedorEtiquetas.textContent = "";
         const aviso = document.createElement("p");
         aviso.className = "texto-suave-form";
         aviso.textContent = "Aún no hay etiquetas registradas en el sistema.";
         contenedorEtiquetas.appendChild(aviso);
+    }
+
+    sincronizarVistaEtiquetasEditor();
+}
+
+function inicializarSelectorEtiquetasEditor() {
+    if (selectorEtiquetasInicializado) {
+        return;
+    }
+    selectorEtiquetasInicializado = true;
+
+    const inputBuscar = document.getElementById("buscar-etiqueta-noticia");
+    const btnLimpiar = document.getElementById("btn-limpiar-busqueda-etiqueta-editor");
+    const btnAbrirCrear = document.getElementById("btn-abrir-crear-etiqueta");
+    const inputNueva = document.getElementById("nueva-etiqueta-nombre");
+    const btnConfirmarCrear = document.getElementById("btn-confirmar-crear-etiqueta");
+    const btnCancelarCrear = document.getElementById("btn-cancelar-crear-etiqueta");
+
+    inputBuscar?.addEventListener("input", () => {
+        if (btnLimpiar) {
+            btnLimpiar.hidden = inputBuscar.value.trim() === "";
+        }
+        renderizarListaEtiquetasEditor();
+    });
+
+    inputBuscar?.addEventListener("search", () => {
+        if (btnLimpiar) {
+            btnLimpiar.hidden = inputBuscar.value.trim() === "";
+        }
+        renderizarListaEtiquetasEditor();
+    });
+
+    btnLimpiar?.addEventListener("click", () => {
+        if (inputBuscar) {
+            inputBuscar.value = "";
+            inputBuscar.focus();
+        }
+        btnLimpiar.hidden = true;
+        renderizarListaEtiquetasEditor();
+    });
+
+    btnAbrirCrear?.addEventListener("click", abrirPanelCrearEtiquetaRapida);
+    btnCancelarCrear?.addEventListener("click", cerrarPanelCrearEtiquetaRapida);
+    btnConfirmarCrear?.addEventListener("click", crearEtiquetaRapida);
+
+    inputNueva?.addEventListener("input", () => {
+        ocultarFeedbackNuevaEtiqueta();
+    });
+
+    inputNueva?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            crearEtiquetaRapida();
+        } else if (e.key === "Escape") {
+            e.preventDefault();
+            cerrarPanelCrearEtiquetaRapida();
+        }
+    });
+}
+
+function sincronizarVistaEtiquetasEditor() {
+    sincronizarInputsOcultosEtiquetas();
+    renderizarChipsEtiquetasSeleccionadas();
+    renderizarListaEtiquetasEditor();
+}
+
+function sincronizarInputsOcultosEtiquetas() {
+    const contenedor = document.getElementById("inputs-etiquetas-ocultos");
+    if (!contenedor) {
+        return;
+    }
+    contenedor.textContent = "";
+
+    Array.from(etiquetasSeleccionadasIds)
+        .filter((id) => Number.isInteger(id) && id > 0)
+        .sort((a, b) => a - b)
+        .forEach((id) => {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = "etiquetas[]";
+            input.value = String(id);
+            contenedor.appendChild(input);
+        });
+}
+
+function renderizarChipsEtiquetasSeleccionadas() {
+    const lista = document.getElementById("lista-etiquetas-seleccionadas");
+    const contador = document.getElementById("contador-etiquetas-seleccionadas");
+    if (!lista) {
         return;
     }
 
-    etiquetas.forEach((etiq) => {
+    const seleccionadas = Array.from(etiquetasSeleccionadasIds)
+        .map((id) => catalogoEtiquetasEditor.find((item) => item.id === id))
+        .filter(Boolean)
+        .sort((a, b) => a.nombre.localeCompare(b.nombre, "es", { sensitivity: "base" }));
+
+    if (contador) {
+        contador.textContent = String(seleccionadas.length);
+    }
+
+    lista.textContent = "";
+    if (seleccionadas.length === 0) {
+        const vacio = document.createElement("span");
+        vacio.className = "sin-etiquetas-seleccionadas";
+        vacio.textContent = "Ninguna etiqueta seleccionada.";
+        lista.appendChild(vacio);
+        return;
+    }
+
+    seleccionadas.forEach((etiq) => {
+        const chip = document.createElement("span");
+        chip.className = "chip-etiqueta-seleccionada";
+
+        const texto = document.createElement("span");
+        texto.className = "chip-etiqueta-nombre";
+        texto.textContent = etiq.nombre;
+
+        const btnQuitar = document.createElement("button");
+        btnQuitar.type = "button";
+        btnQuitar.className = "chip-etiqueta-quitar";
+        btnQuitar.setAttribute("aria-label", `Quitar etiqueta ${etiq.nombre}`);
+        btnQuitar.title = `Quitar ${etiq.nombre}`;
+        btnQuitar.textContent = "×";
+        btnQuitar.addEventListener("click", () => {
+            etiquetasSeleccionadasIds.delete(etiq.id);
+            sincronizarVistaEtiquetasEditor();
+        });
+
+        chip.appendChild(texto);
+        chip.appendChild(btnQuitar);
+        lista.appendChild(chip);
+    });
+}
+
+function renderizarListaEtiquetasEditor() {
+    const contenedor = document.getElementById("contenedor-etiquetas");
+    if (!contenedor) {
+        return;
+    }
+
+    contenedor.textContent = "";
+    if (catalogoEtiquetasEditor.length === 0) {
+        const aviso = document.createElement("p");
+        aviso.className = "texto-suave-form";
+        aviso.textContent = "Aún no hay etiquetas registradas en el sistema.";
+        contenedor.appendChild(aviso);
+        return;
+    }
+
+    const consulta = (document.getElementById("buscar-etiqueta-noticia")?.value || "").trim();
+    const claveConsulta = normalizarClaveEtiqueta(consulta);
+
+    const filtradas = claveConsulta === ""
+        ? catalogoEtiquetasEditor
+        : catalogoEtiquetasEditor.filter((item) => item.clave.includes(claveConsulta));
+
+    if (filtradas.length === 0) {
+        const sinResultados = document.createElement("div");
+        sinResultados.className = "estado-vacio-etiquetas-editor";
+
+        const msg = document.createElement("p");
+        msg.className = "texto-suave-form";
+        msg.textContent = `No se encontraron etiquetas para "${consulta}".`;
+        sinResultados.appendChild(msg);
+        contenedor.appendChild(sinResultados);
+        return;
+    }
+
+    filtradas.forEach((etiq) => {
+        const seleccionada = etiquetasSeleccionadasIds.has(etiq.id);
         const label = document.createElement("label");
-        label.className = "casilla-admin";
+        label.className = seleccionada
+            ? "casilla-admin opcion-etiqueta-compacta seleccionada"
+            : "casilla-admin opcion-etiqueta-compacta";
 
         const check = document.createElement("input");
         check.type = "checkbox";
-        check.name = "etiquetas[]";
+        check.className = "check-etiqueta-selector";
         check.value = String(etiq.id);
+        check.checked = seleccionada;
+        check.addEventListener("change", () => {
+            if (check.checked) {
+                etiquetasSeleccionadasIds.add(etiq.id);
+            } else {
+                etiquetasSeleccionadasIds.delete(etiq.id);
+            }
+            sincronizarVistaEtiquetasEditor();
+        });
 
         const span = document.createElement("span");
+        span.className = "nombre-etiqueta-opcion";
         span.textContent = etiq.nombre;
 
         label.appendChild(check);
         label.appendChild(span);
-        contenedorEtiquetas.appendChild(label);
+        contenedor.appendChild(label);
     });
+}
+
+function abrirPanelCrearEtiquetaRapida() {
+    if (!permisosUsuarioEditor || !permisosUsuarioEditor.gestionar_etiquetas) {
+        return;
+    }
+    const panel = document.getElementById("panel-crear-etiqueta-rapida");
+    const inputNueva = document.getElementById("nueva-etiqueta-nombre");
+    const inputBuscar = document.getElementById("buscar-etiqueta-noticia");
+    if (!panel || !inputNueva) {
+        return;
+    }
+    ocultarFeedbackNuevaEtiqueta();
+    const sugerencia = normalizarNombreVisibleEtiqueta(inputBuscar?.value || "");
+    inputNueva.value = sugerencia && !buscarEtiquetaEquivalenteLocal(sugerencia) ? sugerencia : "";
+    panel.hidden = false;
+    inputNueva.focus();
+}
+
+function cerrarPanelCrearEtiquetaRapida() {
+    const panel = document.getElementById("panel-crear-etiqueta-rapida");
+    const inputNueva = document.getElementById("nueva-etiqueta-nombre");
+    ocultarFeedbackNuevaEtiqueta();
+    if (inputNueva) {
+        inputNueva.value = "";
+    }
+    if (panel) {
+        panel.hidden = true;
+    }
+}
+
+function ocultarFeedbackNuevaEtiqueta() {
+    const box = document.getElementById("feedback-nueva-etiqueta");
+    const txt = document.getElementById("texto-feedback-nueva-etiqueta");
+    const btnUsar = document.getElementById("btn-usar-etiqueta-existente");
+    if (box) box.hidden = true;
+    if (txt) txt.textContent = "";
+    if (btnUsar) {
+        btnUsar.hidden = true;
+        btnUsar.textContent = "";
+        btnUsar.onclick = null;
+    }
+}
+
+function mostrarFeedbackEtiquetaDuplicada(etiquetaExistente, textoMensaje) {
+    const box = document.getElementById("feedback-nueva-etiqueta");
+    const txt = document.getElementById("texto-feedback-nueva-etiqueta");
+    const btnUsar = document.getElementById("btn-usar-etiqueta-existente");
+    if (!box || !txt) {
+        return;
+    }
+    txt.textContent = textoMensaje || "Esta etiqueta ya existe";
+    box.className = "feedback-nueva-etiqueta es-advertencia";
+    box.hidden = false;
+
+    if (btnUsar && etiquetaExistente && etiquetaExistente.id) {
+        btnUsar.textContent = `Usar "${etiquetaExistente.nombre}"`;
+        btnUsar.hidden = false;
+        btnUsar.onclick = () => {
+            const normalizada = agregarOActualizarEtiquetaCatalogo(etiquetaExistente);
+            if (normalizada) {
+                etiquetasSeleccionadasIds.add(normalizada.id);
+                sincronizarVistaEtiquetasEditor();
+                cerrarPanelCrearEtiquetaRapida();
+                mostrarMensajeEtiquetaRapida(`Etiqueta "${normalizada.nombre}" seleccionada.`, false);
+            }
+        };
+    }
+}
+
+function mostrarErrorNuevaEtiqueta(texto) {
+    const box = document.getElementById("feedback-nueva-etiqueta");
+    const txt = document.getElementById("texto-feedback-nueva-etiqueta");
+    const btnUsar = document.getElementById("btn-usar-etiqueta-existente");
+    if (!box || !txt) {
+        return;
+    }
+    if (btnUsar) {
+        btnUsar.hidden = true;
+        btnUsar.onclick = null;
+    }
+    txt.textContent = texto;
+    box.className = "feedback-nueva-etiqueta es-error";
+    box.hidden = false;
+}
+
+function mostrarMensajeEtiquetaRapida(texto, esError) {
+    const caja = document.getElementById("mensaje-etiqueta-rapida");
+    if (!caja) {
+        return;
+    }
+    if (temporizadorMensajeEtiquetaRapida) {
+        clearTimeout(temporizadorMensajeEtiquetaRapida);
+        temporizadorMensajeEtiquetaRapida = null;
+    }
+    if (!texto) {
+        caja.textContent = "";
+        caja.hidden = true;
+        return;
+    }
+    caja.textContent = texto;
+    caja.className = esError ? "alerta-etiqueta-rapida es-error" : "alerta-etiqueta-rapida es-exito";
+    caja.hidden = false;
+    if (!esError) {
+        temporizadorMensajeEtiquetaRapida = setTimeout(() => {
+            caja.hidden = true;
+            caja.textContent = "";
+            temporizadorMensajeEtiquetaRapida = null;
+        }, 4200);
+    }
+}
+
+async function crearEtiquetaRapida() {
+    if (creandoEtiquetaRapida) {
+        return;
+    }
+    if (!permisosUsuarioEditor || !permisosUsuarioEditor.gestionar_etiquetas) {
+        mostrarErrorNuevaEtiqueta("No tienes permisos para crear etiquetas nuevas.");
+        return;
+    }
+
+    const inputNueva = document.getElementById("nueva-etiqueta-nombre");
+    const btnConfirmar = document.getElementById("btn-confirmar-crear-etiqueta");
+    const btnCancelar = document.getElementById("btn-cancelar-crear-etiqueta");
+    const nombre = normalizarNombreVisibleEtiqueta(inputNueva?.value || "");
+
+    if (!nombre) {
+        mostrarErrorNuevaEtiqueta("Escribe el nombre de la etiqueta.");
+        inputNueva?.focus();
+        return;
+    }
+
+    if (nombre.length > 80) {
+        mostrarErrorNuevaEtiqueta("El nombre no puede superar los 80 caracteres.");
+        inputNueva?.focus();
+        return;
+    }
+
+    const coincidenciaLocal = buscarEtiquetaEquivalenteLocal(nombre);
+    if (coincidenciaLocal) {
+        mostrarFeedbackEtiquetaDuplicada(
+            coincidenciaLocal,
+            `Esta etiqueta ya existe como "${coincidenciaLocal.nombre}".`
+        );
+        inputNueva?.focus();
+        return;
+    }
+
+    const form = new FormData();
+    form.append("csrf_token", csrfTokenEditor);
+    form.append("accion", "crear_etiqueta");
+    form.append("nombre", nombre);
+
+    creandoEtiquetaRapida = true;
+    if (btnConfirmar) {
+        btnConfirmar.disabled = true;
+        btnConfirmar.textContent = "Creando...";
+    }
+    if (btnCancelar) {
+        btnCancelar.disabled = true;
+    }
+
+    try {
+        const respuesta = await fetch("../php/catalogos.php", {
+            method: "POST",
+            body: form,
+            credentials: "same-origin"
+        });
+        const resultado = await respuesta.json();
+
+        if (respuesta.ok && resultado.ok && Number(resultado.id) > 0) {
+            const creada = resultado.etiqueta || {
+                id: Number(resultado.id),
+                nombre
+            };
+            const registro = agregarOActualizarEtiquetaCatalogo(creada);
+            if (registro) {
+                etiquetasSeleccionadasIds.add(registro.id);
+                sincronizarVistaEtiquetasEditor();
+            }
+            cerrarPanelCrearEtiquetaRapida();
+            mostrarMensajeEtiquetaRapida(`Etiqueta "${nombre}" creada y seleccionada.`, false);
+            return;
+        }
+
+        if (respuesta.status === 409 && resultado.etiqueta_existente) {
+            const registroExistente = agregarOActualizarEtiquetaCatalogo(resultado.etiqueta_existente);
+            sincronizarVistaEtiquetasEditor();
+            mostrarFeedbackEtiquetaDuplicada(
+                registroExistente || resultado.etiqueta_existente,
+                resultado.mensaje || "Esta etiqueta ya existe."
+            );
+            inputNueva?.focus();
+            return;
+        }
+
+        mostrarErrorNuevaEtiqueta(resultado.mensaje || "No se pudo crear la etiqueta.");
+        inputNueva?.focus();
+    } catch {
+        mostrarErrorNuevaEtiqueta("Error de comunicación con el servidor.");
+    } finally {
+        creandoEtiquetaRapida = false;
+        if (btnConfirmar) {
+            btnConfirmar.disabled = false;
+            btnConfirmar.textContent = "Crear etiqueta";
+        }
+        if (btnCancelar) {
+            btnCancelar.disabled = false;
+        }
+    }
 }
 
 async function cargarNoticiaExistente(id) {
-    const respuesta = await fetch(`../php/noticias.php?modo=admin_obtener&id=${encodeURIComponent(id)}`, {
-        credentials: "same-origin"
-    });
-
-    const datos = await respuesta.json();
-    if (!respuesta.ok || !datos.ok) {
-        mostrarMensajeEditor(datos.mensaje || "No se puede editar esta noticia.", true);
-        return;
+    const miSecuencia = ++secuenciaCargaNoticia;
+    if (controladorCargaNoticia) {
+        controladorCargaNoticia.abort();
     }
+    controladorCargaNoticia = typeof AbortController !== "undefined" ? new AbortController() : null;
 
-    const n = datos.noticia;
-    const act = n.actualizacion_activa || null;
-    estadoNoticiaActual = n.estado || "borrador";
-    estadoActualizacionActual = act ? act.estado : null;
+    mostrarMensajeEditor("", false);
+    mostrarAvisoFlujoEditor("", false, false);
+    renderizarObservacionesVigentesEditor("nueva", null, null);
 
-    document.getElementById("titulo-pagina-editor").textContent = "Editar noticia";
-    const subtituloEditor = document.getElementById("subtitulo-pagina-editor");
-    if (subtituloEditor) {
-        subtituloEditor.textContent = n.estado === "publicada"
-            ? "Propón actualizaciones sin alterar la noticia publicada hasta su aprobación editorial"
-            : "Modifica el artículo y guarda avances o envíalo a Revisión Editorial";
-    }
-    actualizarInsigniaEstadoEditor(estadoNoticiaActual, estadoActualizacionActual);
-    actualizarFlujoBotonesEditor(estadoNoticiaActual, estadoActualizacionActual);
-    document.getElementById("noticia-id").value = String(n.id);
-    document.getElementById("titulo").value = n.titulo || "";
-    document.getElementById("resumen").value = n.resumen || "";
-    document.getElementById("categoria-id").value = String(n.categoria_id || "");
+    try {
+        const respuesta = await fetch(`../php/noticias.php?modo=admin_obtener&id=${encodeURIComponent(id)}`, {
+            credentials: "same-origin",
+            signal: controladorCargaNoticia ? controladorCargaNoticia.signal : undefined
+        });
 
-    const instanciaTiny = obtenerInstanciaTinyMce();
-    if (!tinyMceListo || !instanciaTiny) {
-        deshabilitarBotonesGuardado(true);
-        mostrarMensajeEditor("No se pudo cargar el contenido porque TinyMCE no está inicializado.", true);
-        return;
-    }
-
-    instanciaTiny.setContent(n.contenido || "<p></p>");
-    if (instanciaTiny.undoManager) {
-        instanciaTiny.undoManager.clear();
-    }
-
-    document.getElementById("es-destacada").checked = Number(n.es_destacada) === 1;
-    document.getElementById("es-ultima-hora").checked = Number(n.es_ultima_hora) === 1;
-
-    if (n.imagen) {
-        const img = document.getElementById("imagen-previa");
-        const cont = document.getElementById("contenedor-vista-previa");
-        img.src = `../${n.imagen}`;
-        cont.hidden = false;
-        actualizarEstadoVisualImagen(true);
-    } else {
-        actualizarEstadoVisualImagen(false);
-    }
-
-    const idsEtiquetas = n.etiquetas_ids || [];
-    document.querySelectorAll('input[name="etiquetas[]"]').forEach((check) => {
-        check.checked = idsEtiquetas.includes(Number(check.value));
-    });
-
-    if (act && act.estado === "cambios_solicitados" && act.observaciones) {
-        const caja = document.getElementById("caja-observaciones-editor");
-        const texto = document.getElementById("texto-observaciones-editor");
-        if (caja && texto) {
-            texto.textContent = act.editor ? `${act.observaciones} (${act.editor})` : act.observaciones;
-            caja.hidden = false;
+        const datos = await respuesta.json();
+        if (miSecuencia !== secuenciaCargaNoticia) {
+            return;
         }
-    } else {
-        await cargarObservacionesNoticia(id);
+        if (!respuesta.ok || !datos.ok) {
+            mostrarMensajeEditor(datos.mensaje || "No se puede editar esta noticia.", true);
+            return;
+        }
+
+        const n = datos.noticia;
+        const act = n.actualizacion_activa || null;
+        estadoNoticiaActual = n.estado || "borrador";
+        estadoActualizacionActual = act ? act.estado : null;
+
+        document.getElementById("titulo-pagina-editor").textContent = "Editar noticia";
+        const subtituloEditor = document.getElementById("subtitulo-pagina-editor");
+        if (subtituloEditor) {
+            subtituloEditor.textContent = n.estado === "publicada"
+                ? "Propón actualizaciones sin alterar la noticia publicada hasta su aprobación editorial"
+                : "Modifica el artículo y guarda avances o envíalo a Revisión Editorial";
+        }
+        actualizarInsigniaEstadoEditor(estadoNoticiaActual, estadoActualizacionActual);
+        actualizarFlujoBotonesEditor(estadoNoticiaActual, estadoActualizacionActual);
+        document.getElementById("noticia-id").value = String(n.id);
+        document.getElementById("titulo").value = n.titulo || "";
+        document.getElementById("resumen").value = n.resumen || "";
+        document.getElementById("categoria-id").value = String(n.categoria_id || "");
+
+        const instanciaTiny = obtenerInstanciaTinyMce();
+        if (!tinyMceListo || !instanciaTiny) {
+            deshabilitarBotonesGuardado(true);
+            mostrarMensajeEditor("No se pudo cargar el contenido porque TinyMCE no está inicializado.", true);
+            return;
+        }
+
+        instanciaTiny.setContent(n.contenido || "<p></p>");
+        if (instanciaTiny.undoManager) {
+            instanciaTiny.undoManager.clear();
+        }
+
+        document.getElementById("es-destacada").checked = Number(n.es_destacada) === 1;
+        document.getElementById("es-ultima-hora").checked = Number(n.es_ultima_hora) === 1;
+
+        if (n.imagen) {
+            const img = document.getElementById("imagen-previa");
+            const cont = document.getElementById("contenedor-vista-previa");
+            img.src = `../${n.imagen}`;
+            cont.hidden = false;
+            actualizarEstadoVisualImagen(true);
+        } else {
+            actualizarEstadoVisualImagen(false);
+        }
+
+        etiquetasSeleccionadasIds.clear();
+        (n.etiquetas_ids || []).forEach((idEt) => {
+            const num = Number(idEt);
+            if (num > 0) {
+                etiquetasSeleccionadasIds.add(num);
+            }
+        });
+        sincronizarVistaEtiquetasEditor();
+
+        renderizarObservacionesVigentesEditor(
+            estadoNoticiaActual,
+            estadoActualizacionActual,
+            n.observacion_vigente || null
+        );
+    } catch (error) {
+        if (error && error.name === "AbortError") {
+            return;
+        }
+        if (miSecuencia === secuenciaCargaNoticia) {
+            mostrarMensajeEditor("No se pudo obtener la información vigente de la noticia.", true);
+        }
     }
 }
 
-async function cargarObservacionesNoticia(id) {
+/**
+ * Muestra observaciones únicamente cuando existe una solicitud de correcciones vigente sin resolver.
+ * Nunca muestra aprobaciones anteriores como si fueran advertencias activas.
+ */
+function renderizarObservacionesVigentesEditor(estado, estadoActualizacion, obsVigente) {
     const caja = document.getElementById("caja-observaciones-editor");
     const texto = document.getElementById("texto-observaciones-editor");
     if (!caja || !texto) {
         return;
     }
 
-    try {
-        const respuesta = await fetch(`../php/revision.php?accion=historial&noticia_id=${encodeURIComponent(id)}`, {
-            credentials: "same-origin"
-        });
-        if (!respuesta.ok) {
-            return;
-        }
-        const datos = await respuesta.json();
-        const revisiones = datos.revisiones || [];
-        if (revisiones.length > 0 && revisiones[0].observaciones) {
-            texto.textContent = `${revisiones[0].observaciones} (${revisiones[0].editor})`;
-            caja.hidden = false;
-        }
-    } catch {
-        // Sin observaciones adicionales
+    caja.hidden = true;
+    texto.textContent = "";
+
+    const requiereCorreccion = estado === "cambios_solicitados"
+        || (estado === "publicada" && estadoActualizacion === "cambios_solicitados");
+
+    if (!requiereCorreccion || !obsVigente || !obsVigente.observaciones) {
+        return;
     }
+
+    texto.textContent = obsVigente.editor
+        ? `${obsVigente.observaciones} (${obsVigente.editor})`
+        : obsVigente.observaciones;
+    caja.hidden = false;
 }
 
 /**
@@ -400,7 +888,7 @@ function actualizarInsigniaEstadoEditor(estado, estadoActualizacion) {
         const sufijos = {
             borrador: "Publicada · Borrador de actualización",
             pendiente_revision: "Publicada · Actualización pendiente",
-            cambios_solicitados: "Publicada · Correcciones en actualización"
+            cambios_solicitados: "Publicada · Correcciones solicitadas sobre actualización"
         };
         badge.className = estadoActualizacion === "pendiente_revision"
             ? "estado-badge estado-pendiente_revision"
@@ -494,7 +982,7 @@ function actualizarFlujoBotonesEditor(estado, estadoActualizacion) {
         mostrarAvisoFlujoEditor(
             estadoActualizacion === "borrador"
                 ? "Estás editando un borrador de actualización. La versión publicada en el portal sigue intacta hasta su aprobación."
-                : "Esta noticia está publicada. Cualquier modificación se guardará como propuesta de actualización pendiente de aprobación.",
+                : "",
             false,
             false
         );
@@ -612,12 +1100,20 @@ async function enviarFormularioNoticia(accion) {
 
             actualizarInsigniaEstadoEditor(estadoNoticiaActual, estadoActualizacionActual);
             actualizarFlujoBotonesEditor(estadoNoticiaActual, estadoActualizacionActual);
+            renderizarObservacionesVigentesEditor(
+                estadoNoticiaActual,
+                estadoActualizacionActual,
+                resultado.observacion_vigente || null
+            );
 
             if (nuevoId > 0 && !new URLSearchParams(window.location.search).get("id")) {
                 window.history.replaceState(null, "", `editar_noticia.html?id=${encodeURIComponent(nuevoId)}`);
             }
 
-            mostrarMensajeEditor(resultado.mensaje || "Noticia guardada.", false);
+            const mensajeTemporal = estadoActualizacionActual === "pendiente_revision"
+                ? "Actualización enviada correctamente a Revisión Editorial."
+                : (resultado.mensaje || "Cambios guardados correctamente.");
+            mostrarMensajeEditor(mensajeTemporal, false);
             return;
         }
 
@@ -635,9 +1131,29 @@ function mostrarMensajeEditor(texto, esError) {
     if (!alerta) {
         return;
     }
+
+    if (temporizadorMensajeEditor) {
+        clearTimeout(temporizadorMensajeEditor);
+        temporizadorMensajeEditor = null;
+    }
+
+    if (!texto) {
+        alerta.textContent = "";
+        alerta.hidden = true;
+        return;
+    }
+
     alerta.textContent = texto;
     alerta.className = esError ? "alerta-admin alerta-admin-error" : "alerta-admin alerta-admin-exito";
     alerta.hidden = false;
+
+    if (!esError) {
+        temporizadorMensajeEditor = setTimeout(() => {
+            alerta.hidden = true;
+            alerta.textContent = "";
+            temporizadorMensajeEditor = null;
+        }, 5500);
+    }
 }
 
 function inicializarSidebarMovilEditor() {

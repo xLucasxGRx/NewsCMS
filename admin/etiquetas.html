@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Etiquetas — NewsCMS</title>
-    <link rel="stylesheet" href="../css/admin.css">
+    <title>Gestión de etiquetas — NewsCMS</title>
+    <link rel="stylesheet" href="../css/admin.css?v=20261120">
 </head>
 <body data-catalogo="etiquetas">
     <div id="contenedor-admin" class="contenedor-admin" hidden>
@@ -38,8 +38,7 @@
                         &#9776;
                     </button>
                     <div class="titulo-cabecera-bloque">
-                        <h1 class="titulo-modulo">Etiquetas</h1>
-                        <p class="subtitulo-modulo">Palabras clave rápidas para clasificar las noticias</p>
+                        <span class="etiqueta-modulo-superior">Catálogo editorial</span>
                     </div>
                 </div>
 
@@ -53,64 +52,74 @@
             </header>
 
             <main class="contenido-admin contenido-catalogos-admin">
-                <div class="modulo-etiquetas">
-                    <div class="encabezado-catalogo">
-                        <div>
-                            <h2 class="titulo-modulo-editorial">Etiquetas del portal</h2>
+                <div class="modulo-etiquetas modulo-etiquetas-pro">
+                    <div class="encabezado-etiquetas-pro">
+                        <div class="texto-encabezado-etiquetas">
+                            <div class="fila-titulo-etiquetas">
+                                <h1 class="titulo-modulo-editorial">Gestión de etiquetas</h1>
+                                <span id="total-catalogo" class="etiqueta-tabla contador-catalogo">0 etiquetas</span>
+                            </div>
                             <p class="descripcion-modulo-editorial">
-                                Agrega nuevas etiquetas en una línea o edita las existentes de forma rápida.
+                                Organiza las palabras clave utilizadas para clasificar noticias.
                             </p>
                         </div>
-                        <span id="total-catalogo" class="etiqueta-tabla contador-catalogo">0 registros</span>
+
+                        <button type="button" id="btn-nueva-etiqueta" class="boton-primario-admin boton-nueva-etiqueta">
+                            <span aria-hidden="true">+</span> Nueva etiqueta
+                        </button>
                     </div>
 
                     <div id="mensaje-catalogo" class="alerta-admin" role="status" hidden></div>
 
-                    <!-- Barra compacta horizontal para crear o editar etiqueta -->
-                    <section id="panel-formulario-catalogo" class="barra-form-etiquetas" aria-labelledby="titulo-form-catalogo">
-                        <div class="cabecera-inline-etiquetas">
-                            <h3 id="titulo-form-catalogo">Nueva etiqueta</h3>
-                        </div>
-
-                        <form id="formulario-catalogo" class="form-horizontal-etiquetas" novalidate>
-                            <input type="hidden" id="catalogo-id" value="0">
-
-                            <div class="campo-admin campo-nombre-etiqueta">
-                                <label for="catalogo-nombre" class="etiqueta-accesible">Nombre de la etiqueta</label>
+                    <section class="panel-tabla panel-listado-etiquetas" aria-label="Listado de etiquetas">
+                        <div class="barra-busqueda-etiquetas">
+                            <div class="campo-busqueda-etiqueta">
+                                <span class="icono-busqueda-etiqueta" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="7"/>
+                                        <path d="m20 20-3.5-3.5"/>
+                                    </svg>
+                                </span>
                                 <input
-                                    type="text"
-                                    id="catalogo-nombre"
+                                    type="search"
+                                    id="filtro-busqueda-etiqueta"
+                                    class="entrada-filtro entrada-busqueda-etiqueta"
+                                    placeholder="Buscar etiqueta..."
+                                    aria-label="Buscar etiqueta por nombre"
                                     maxlength="80"
-                                    placeholder="Nombre de la etiqueta (ej. Inteligencia Artificial)"
-                                    required
                                 >
-                            </div>
-
-                            <div class="acciones-inline-etiquetas">
-                                <button type="submit" class="boton-primario-admin boton-guardar-etiqueta">Guardar</button>
-                                <button type="button" id="btn-cancelar-catalogo" class="boton-secundario-admin boton-cancelar-inline" hidden>
-                                    Cancelar
+                                <button
+                                    type="button"
+                                    id="btn-limpiar-busqueda-etiqueta"
+                                    class="boton-limpiar-busqueda-etiqueta"
+                                    title="Limpiar búsqueda"
+                                    aria-label="Limpiar búsqueda"
+                                    hidden
+                                >
+                                    &times;
                                 </button>
                             </div>
-                        </form>
-                    </section>
 
-                    <section class="panel-tabla panel-listado-etiquetas" aria-labelledby="titulo-tabla-etiquetas">
-                        <div class="contenedor-tabla">
-                            <table class="tabla-datos tabla-etiquetas-admin">
-                                <thead>
-                                    <tr>
-                                        <th class="col-etiq-nombre">Etiqueta</th>
-                                        <th class="col-etiq-total">Noticias relacionadas</th>
-                                        <th class="col-etiq-acciones">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="cuerpo-tabla-catalogo">
-                                    <tr>
-                                        <td colspan="3" class="fila-vacia">Cargando etiquetas...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <span id="resumen-resultados-etiquetas" class="resumen-resultados-etiquetas">Orden alfabético (A–Z)</span>
+                        </div>
+
+                        <div id="cuerpo-tabla-catalogo" class="rejilla-etiquetas-admin" aria-live="polite">
+                            <p class="cargando-etiquetas">Cargando etiquetas...</p>
+                        </div>
+
+                        <div id="paginacion-etiquetas" class="paginacion-etiquetas" hidden>
+                            <div class="resumen-paginacion-etiquetas">
+                                <span id="info-paginacion-etiquetas" class="info-paginacion-etiquetas">Mostrando 0–0 de 0 etiquetas</span>
+                                <span id="detalle-pagina-etiquetas" class="detalle-pagina-etiquetas">Página 1 de 1</span>
+                            </div>
+
+                            <div id="controles-paginacion-etiquetas" class="controles-paginacion-etiquetas" aria-label="Paginación de etiquetas">
+                                <button type="button" id="btn-etiquetas-primera" class="boton-secundario-admin boton-nav-etiqueta" title="Primera página">Primera</button>
+                                <button type="button" id="btn-etiquetas-anterior" class="boton-secundario-admin boton-nav-etiqueta">Anterior</button>
+                                <div id="numeros-paginacion-etiquetas" class="numeros-paginacion-etiquetas"></div>
+                                <button type="button" id="btn-etiquetas-siguiente" class="boton-secundario-admin boton-nav-etiqueta">Siguiente</button>
+                                <button type="button" id="btn-etiquetas-ultima" class="boton-secundario-admin boton-nav-etiqueta" title="Última página">Última</button>
+                            </div>
                         </div>
                     </section>
                 </div>
@@ -118,6 +127,59 @@
         </div>
     </div>
 
-    <script src="../js/catalogos_admin.js"></script>
+    <!-- Modal para crear o editar etiqueta -->
+    <div
+        id="panel-formulario-catalogo"
+        class="modal-etiqueta-admin"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titulo-form-catalogo"
+        hidden
+    >
+        <div class="modal-etiqueta-dialogo">
+            <div class="cabecera-modal-etiqueta">
+                <div class="cabecera-modal-etiqueta-texto">
+                    <h2 id="titulo-form-catalogo">Crear nueva etiqueta</h2>
+                    <p id="subtitulo-modal-etiqueta" class="subtitulo-modal-etiqueta">
+                        Agrega una palabra clave para organizar y relacionar noticias.
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    id="btn-cerrar-modal-etiqueta"
+                    class="boton-cerrar-modal-etiqueta"
+                    aria-label="Cerrar ventana"
+                >
+                    &times;
+                </button>
+            </div>
+
+            <div id="mensaje-modal-etiqueta" class="alerta-admin alerta-modal-etiqueta" role="alert" hidden></div>
+
+            <form id="formulario-catalogo" class="formulario-modal-etiqueta" novalidate>
+                <input type="hidden" id="catalogo-id" value="0">
+
+                <div class="cuerpo-modal-etiqueta">
+                    <div class="campo-admin">
+                        <label for="catalogo-nombre">Nombre de la etiqueta</label>
+                        <input
+                            type="text"
+                            id="catalogo-nombre"
+                            maxlength="80"
+                            placeholder="Ej. Inteligencia Artificial"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="pie-modal-etiqueta">
+                    <button type="button" id="btn-cancelar-catalogo" class="boton-secundario-admin">Cancelar</button>
+                    <button type="submit" id="btn-guardar-etiqueta" class="boton-primario-admin">Crear etiqueta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/catalogos_admin.js?v=20261120"></script>
 </body>
 </html>

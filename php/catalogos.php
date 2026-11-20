@@ -5,6 +5,7 @@
 
 require_once __DIR__ . '/../config/conexion.php';
 require_once __DIR__ . '/../config/seguridad.php';
+require_once __DIR__ . '/normalizacion_etiquetas.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -18,6 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $modo = $_GET['modo'] ?? '';
     if ($modo === 'nube_etiquetas') {
         listarNubeEtiquetasPublica($pdo);
+    } elseif ($modo === 'admin_etiquetas') {
+        listarEtiquetasAdmin($pdo);
     } else {
         listarCatalogos($pdo);
     }
@@ -46,7 +49,7 @@ function listarCatalogos(PDO $pdo): void
     )->fetchAll();
 
     $etiquetas = $pdo->query(
-        'SELECT e.id, e.nombre, e.identificador, COUNT(ne.noticia_id) AS total_noticias
+        'SELECT e.id, e.nombre, e.clave_normalizada, e.identificador, COUNT(ne.noticia_id) AS total_noticias
          FROM etiquetas e
          LEFT JOIN noticias_etiquetas ne ON ne.etiqueta_id = e.id
          GROUP BY e.id
@@ -79,6 +82,81 @@ function listarNubeEtiquetasPublica(PDO $pdo): void
     echo json_encode([
         'ok'        => true,
         'etiquetas' => $etiquetas,
+    ]);
+}
+
+/**
+ * Lista etiquetas para el panel administrativo con búsqueda por nombre, orden alfabético y paginación real.
+ */
+function listarEtiquetasAdmin(PDO $pdo): void
+{
+    iniciarSesionSegura();
+
+    if (!estaAutenticado()) {
+        http_response_code(401);
+        echo json_encode(['ok' => false, 'mensaje' => 'No autenticado.']);
+        return;
+    }
+
+    if (!tieneRol(['administrador', 'editor', 'redactor']) || !tienePermiso('gestionar_etiquetas')) {
+        http_response_code(403);
+        echo json_encode(['ok' => false, 'mensaje' => 'No tienes permisos para administrar etiquetas.']);
+        return;
+    }
+
+    $busqueda = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 80);
+    $pagina = max(1, (int) ($_GET['pagina'] ?? 1));
+    $porPaginaSolicitado = (int) ($_GET['por_pagina'] ?? 16);
+    $porPagina = max(1, min(48, $porPaginaSolicitado > 0 ? $porPaginaSolicitado : 16));
+
+    $totalRegistrado = (int) $pdo->query('SELECT COUNT(*) FROM etiquetas')->fetchColumn();
+
+    $whereSql = '1=1';
+    $parametros = [];
+    if ($busqueda !== '') {
+        $whereSql = 'e.nombre LIKE ?';
+        $parametros[] = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $busqueda) . '%';
+    }
+
+    $stmtTotal = $pdo->prepare("SELECT COUNT(*) FROM etiquetas e WHERE {$whereSql}");
+    $stmtTotal->execute($parametros);
+    $totalFiltrado = (int) $stmtTotal->fetchColumn();
+
+    $totalPaginas = $totalFiltrado > 0 ? (int) ceil($totalFiltrado / $porPagina) : 0;
+    if ($totalPaginas > 0 && $pagina > $totalPaginas) {
+        $pagina = $totalPaginas;
+    } elseif ($totalFiltrado === 0) {
+        $pagina = 1;
+    }
+    $offset = ($pagina - 1) * $porPagina;
+
+    $stmtLista = $pdo->prepare(
+        "SELECT e.id, e.nombre, e.identificador, COUNT(ne.noticia_id) AS total_noticias
+         FROM etiquetas e
+         LEFT JOIN noticias_etiquetas ne ON ne.etiqueta_id = e.id
+         WHERE {$whereSql}
+         GROUP BY e.id, e.nombre, e.identificador
+         ORDER BY e.nombre ASC, e.id ASC
+         LIMIT ? OFFSET ?"
+    );
+
+    $indice = 1;
+    foreach ($parametros as $valor) {
+        $stmtLista->bindValue($indice, $valor);
+        $indice++;
+    }
+    $stmtLista->bindValue($indice, $porPagina, PDO::PARAM_INT);
+    $stmtLista->bindValue($indice + 1, $offset, PDO::PARAM_INT);
+    $stmtLista->execute();
+
+    echo json_encode([
+        'ok'               => true,
+        'etiquetas'        => $stmtLista->fetchAll(),
+        'total'            => $totalFiltrado,
+        'total_registrado' => $totalRegistrado,
+        'pagina'           => $pagina,
+        'por_pagina'       => $porPagina,
+        'total_paginas'    => $totalPaginas,
     ]);
 }
 
@@ -231,52 +309,164 @@ function eliminarCategoria(PDO $pdo): void
 
 function crearEtiqueta(PDO $pdo): void
 {
-    $nombre = trim($_POST['nombre'] ?? '');
+    $nombre = normalizarNombreVisibleEtiqueta((string) ($_POST['nombre'] ?? ''));
 
-    if ($nombre === '' || mb_strlen($nombre) > 80) {
+    if ($nombre === '' || mb_strlen($nombre, 'UTF-8') > 80) {
         http_response_code(400);
         echo json_encode(['ok' => false, 'mensaje' => 'El nombre de la etiqueta es obligatorio (máximo 80 caracteres).']);
         return;
     }
 
-    if (existeNombreDuplicado($pdo, 'etiquetas', $nombre, 0)) {
-        http_response_code(409);
-        echo json_encode(['ok' => false, 'mensaje' => 'Ya existe una etiqueta con ese nombre.']);
+    $clave = normalizarClaveEtiqueta($nombre);
+    if ($clave === '') {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'mensaje' => 'El nombre de la etiqueta no es válido.']);
+        return;
+    }
+
+    $existente = buscarEtiquetaPorClave($pdo, $clave, 0);
+    if ($existente) {
+        responderEtiquetaDuplicada($existente);
         return;
     }
 
     $identificador = generarIdentificadorCatalogo($pdo, 'etiquetas', $nombre);
-    $stmt = $pdo->prepare('INSERT INTO etiquetas (nombre, identificador) VALUES (?, ?)');
-    $stmt->execute([$nombre, $identificador]);
+
+    try {
+        $stmt = $pdo->prepare('INSERT INTO etiquetas (nombre, clave_normalizada, identificador) VALUES (?, ?, ?)');
+        $stmt->execute([$nombre, $clave, $identificador]);
+        $nuevoId = (int) $pdo->lastInsertId();
+    } catch (PDOException $e) {
+        if ((string) $e->getCode() === '23000') {
+            $colision = buscarEtiquetaPorClave($pdo, $clave, 0);
+            if ($colision) {
+                responderEtiquetaDuplicada($colision);
+                return;
+            }
+            http_response_code(409);
+            echo json_encode([
+                'ok'      => false,
+                'codigo'  => 'duplicada',
+                'mensaje' => 'Esta etiqueta ya existe.',
+            ]);
+            return;
+        }
+        error_log('NewsCMS - Error al crear etiqueta: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['ok' => false, 'mensaje' => 'No se pudo registrar la etiqueta.']);
+        return;
+    }
 
     echo json_encode([
-        'ok'      => true,
-        'id'      => (int) $pdo->lastInsertId(),
-        'mensaje' => 'Etiqueta creada correctamente.',
+        'ok'       => true,
+        'id'       => $nuevoId,
+        'etiqueta' => [
+            'id'                => $nuevoId,
+            'nombre'            => $nombre,
+            'clave_normalizada' => $clave,
+            'identificador'     => $identificador,
+        ],
+        'mensaje'  => 'Etiqueta creada correctamente.',
     ]);
 }
 
 function editarEtiqueta(PDO $pdo): void
 {
     $id = (int) ($_POST['id'] ?? 0);
-    $nombre = trim($_POST['nombre'] ?? '');
+    $nombre = normalizarNombreVisibleEtiqueta((string) ($_POST['nombre'] ?? ''));
 
-    if ($id <= 0 || $nombre === '' || mb_strlen($nombre) > 80) {
+    if ($id <= 0 || $nombre === '' || mb_strlen($nombre, 'UTF-8') > 80) {
         http_response_code(400);
         echo json_encode(['ok' => false, 'mensaje' => 'Datos de etiqueta no válidos.']);
         return;
     }
 
-    if (existeNombreDuplicado($pdo, 'etiquetas', $nombre, $id)) {
-        http_response_code(409);
-        echo json_encode(['ok' => false, 'mensaje' => 'Ya existe otra etiqueta con ese nombre.']);
+    $clave = normalizarClaveEtiqueta($nombre);
+    if ($clave === '') {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'mensaje' => 'El nombre de la etiqueta no es válido.']);
         return;
     }
 
-    $stmt = $pdo->prepare('UPDATE etiquetas SET nombre = ? WHERE id = ?');
-    $stmt->execute([$nombre, $id]);
+    $existente = buscarEtiquetaPorClave($pdo, $clave, $id);
+    if ($existente) {
+        responderEtiquetaDuplicada($existente, true);
+        return;
+    }
 
-    echo json_encode(['ok' => true, 'mensaje' => 'Etiqueta actualizada correctamente.']);
+    try {
+        $stmt = $pdo->prepare('UPDATE etiquetas SET nombre = ?, clave_normalizada = ? WHERE id = ?');
+        $stmt->execute([$nombre, $clave, $id]);
+    } catch (PDOException $e) {
+        if ((string) $e->getCode() === '23000') {
+            $colision = buscarEtiquetaPorClave($pdo, $clave, $id);
+            if ($colision) {
+                responderEtiquetaDuplicada($colision, true);
+                return;
+            }
+            http_response_code(409);
+            echo json_encode([
+                'ok'      => false,
+                'codigo'  => 'duplicada',
+                'mensaje' => 'Ya existe otra etiqueta con ese nombre.',
+            ]);
+            return;
+        }
+        error_log('NewsCMS - Error al editar etiqueta: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['ok' => false, 'mensaje' => 'No se pudo actualizar la etiqueta.']);
+        return;
+    }
+
+    echo json_encode([
+        'ok'       => true,
+        'etiqueta' => [
+            'id'                => $id,
+            'nombre'            => $nombre,
+            'clave_normalizada' => $clave,
+        ],
+        'mensaje'  => 'Etiqueta actualizada correctamente.',
+    ]);
+}
+
+/**
+ * Busca una etiqueta equivalente mediante clave canónica excluyendo un ID opcional.
+ */
+function buscarEtiquetaPorClave(PDO $pdo, string $clave, int $excluirId): ?array
+{
+    $stmt = $pdo->prepare(
+        'SELECT id, nombre, clave_normalizada, identificador
+         FROM etiquetas
+         WHERE clave_normalizada = ?
+           AND id <> ?
+         LIMIT 1'
+    );
+    $stmt->execute([$clave, $excluirId]);
+    $fila = $stmt->fetch();
+    if (!$fila) {
+        return null;
+    }
+    return [
+        'id'                => (int) $fila['id'],
+        'nombre'            => (string) $fila['nombre'],
+        'clave_normalizada' => (string) $fila['clave_normalizada'],
+        'identificador'     => (string) $fila['identificador'],
+    ];
+}
+
+function responderEtiquetaDuplicada(array $existente, bool $enEdicion = false): void
+{
+    http_response_code(409);
+    $mensaje = $enEdicion
+        ? 'Ya existe otra etiqueta equivalente: "' . $existente['nombre'] . '".'
+        : 'Esta etiqueta ya existe: "' . $existente['nombre'] . '".';
+
+    echo json_encode([
+        'ok'                 => false,
+        'codigo'             => 'duplicada',
+        'mensaje'            => $mensaje,
+        'etiqueta_existente' => $existente,
+    ]);
 }
 
 function eliminarEtiqueta(PDO $pdo): void
@@ -311,8 +501,7 @@ function existeNombreDuplicado(PDO $pdo, string $tabla, string $nombre, int $exc
 
 function generarIdentificadorCatalogo(PDO $pdo, string $tabla, string $nombre): string
 {
-    $base = strtolower(trim($nombre));
-    $base = strtr($base, ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n']);
+    $base = normalizarClaveEtiqueta($nombre);
     $base = trim((string) preg_replace('/[^a-z0-9]+/', '-', $base), '-');
     if ($base === '') {
         $base = 'elemento';

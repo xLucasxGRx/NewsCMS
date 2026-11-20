@@ -36,8 +36,10 @@ CREATE TABLE IF NOT EXISTS categorias (
 CREATE TABLE IF NOT EXISTS etiquetas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(80) NOT NULL,
+    clave_normalizada VARCHAR(120) NOT NULL,
     identificador VARCHAR(100) NOT NULL,
-    UNIQUE KEY uk_etiquetas_identificador (identificador)
+    UNIQUE KEY uk_etiquetas_identificador (identificador),
+    UNIQUE KEY uk_etiquetas_clave_normalizada (clave_normalizada)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 4. Tabla principal de noticias
