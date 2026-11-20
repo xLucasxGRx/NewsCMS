@@ -6,7 +6,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     mostrarFechaActual();
     actualizarAnioPie();
-    comprobarEstadoSesion();
     cargarNoticiasPortada();
     inicializarMenuMovil();
     inicializarNavegacionSecciones();
@@ -34,35 +33,6 @@ function actualizarAnioPie() {
     const elementoAnio = document.getElementById("anio-actual");
     if (elementoAnio) {
         elementoAnio.textContent = String(new Date().getFullYear());
-    }
-}
-
-async function comprobarEstadoSesion() {
-    const enlaceAcceso = document.getElementById("enlace-acceso");
-    if (!enlaceAcceso) {
-        return;
-    }
-
-    try {
-        const respuesta = await fetch("php/comprobar_sesion.php", {
-            credentials: "same-origin"
-        });
-        if (!respuesta.ok) {
-            return;
-        }
-
-        const datos = await respuesta.json();
-        if (datos.autenticado) {
-            enlaceAcceso.textContent = "Ir al panel";
-            enlaceAcceso.setAttribute("href", "admin/index.html");
-            enlaceAcceso.hidden = false;
-        } else {
-            enlaceAcceso.textContent = "Acceso editorial";
-            enlaceAcceso.setAttribute("href", "acceso.html");
-            enlaceAcceso.hidden = false;
-        }
-    } catch {
-        // Mantener enlace predeterminado
     }
 }
 
@@ -161,37 +131,63 @@ function renderizarNoticiaPrincipal(noticia) {
 
 function renderizarUltimasNoticias(lista) {
     const contenedor = document.getElementById("contenedor-ultimas-noticias");
-    if (!contenedor || lista.length === 0) {
+    const pie = document.getElementById("pie-ultimas-noticias");
+    const recientes = Array.isArray(lista) ? lista.slice(0, 4) : [];
+
+    if (!contenedor) {
+        return;
+    }
+
+    if (recientes.length === 0) {
+        if (pie) {
+            pie.hidden = true;
+        }
         return;
     }
 
     contenedor.className = "lista-ultimas-publicas";
     contenedor.textContent = "";
 
-    lista.forEach((n) => {
+    recientes.forEach((n) => {
         const item = document.createElement("article");
         item.className = "item-ultima-noticia";
 
+        const filaMeta = document.createElement("div");
+        filaMeta.className = "fila-meta-ultima";
+
         const cat = document.createElement("span");
-        cat.className = "marcador-categoria";
-        cat.textContent = n.categoria;
+        cat.className = "marcador-categoria marcador-categoria-ultima";
+        cat.textContent = n.categoria || "";
+        filaMeta.appendChild(cat);
+
+        const fecha = n.fecha_publicacion ? n.fecha_publicacion.slice(0, 10) : "";
+        const textoFecha = fecha || n.autor || "";
+        if (textoFecha) {
+            const fechaEl = document.createElement("time");
+            fechaEl.className = "fecha-ultima-noticia";
+            if (fecha) {
+                fechaEl.setAttribute("datetime", fecha);
+            }
+            fechaEl.textContent = textoFecha;
+            filaMeta.appendChild(fechaEl);
+        }
 
         const h3 = document.createElement("h3");
+        h3.className = "titulo-ultima-noticia";
         const enlace = document.createElement("a");
         enlace.href = `noticia.html?id=${encodeURIComponent(n.id)}`;
-        enlace.textContent = n.titulo;
+        enlace.title = n.titulo || "";
+        enlace.textContent = n.titulo || "";
         h3.appendChild(enlace);
 
-        const meta = document.createElement("p");
-        meta.className = "meta-noticia";
-        const fecha = n.fecha_publicacion ? n.fecha_publicacion.slice(0, 10) : "";
-        meta.textContent = fecha || n.autor;
-
-        item.appendChild(cat);
+        item.appendChild(filaMeta);
         item.appendChild(h3);
-        item.appendChild(meta);
         contenedor.appendChild(item);
     });
+
+    if (pie) {
+        pie.hidden = false;
+    }
 }
 
 function renderizarDestacadas(lista) {
@@ -243,29 +239,35 @@ function renderizarDestacadas(lista) {
 }
 
 function renderizarPorCategoria(noticias) {
-    if (noticias.length === 0) {
+    const tarjetas = document.querySelectorAll(".tarjeta-seccion");
+    if (!tarjetas.length) {
         return;
     }
 
-    const tarjetas = document.querySelectorAll(".tarjeta-seccion");
-    tarjetas.forEach((tarjeta) => {
-        const catNombre = tarjeta.getAttribute("data-categoria");
-        const coincidencias = noticias.filter((n) => n.categoria === catNombre).slice(0, 2);
-        if (coincidencias.length === 0) {
-            return;
-        }
+    const lista = Array.isArray(noticias) ? noticias : [];
 
-        const principalCat = coincidencias[0];
+    tarjetas.forEach((tarjeta) => {
+        const catNombre = tarjeta.getAttribute("data-categoria") || "";
+        const slugFallback = tarjeta.getAttribute("data-slug") || catNombre;
+        const coincidencias = lista.filter((n) => n.categoria === catNombre).slice(0, 2);
+        const principalCat = coincidencias[0] || null;
+        const slugCategoria = (principalCat && principalCat.categoria_slug) || slugFallback;
+
         tarjeta.textContent = "";
 
-        if (principalCat.imagen) {
+        // Zona A: Imagen protagonista de la categoría
+        if (principalCat && principalCat.imagen) {
             const enlaceImg = document.createElement("a");
             enlaceImg.href = `noticia.html?id=${encodeURIComponent(principalCat.id)}`;
             enlaceImg.className = "miniatura-seccion-enlace";
+            enlaceImg.setAttribute("aria-label", `Leer noticia destacada de ${catNombre}: ${principalCat.titulo}`);
+
             const img = document.createElement("img");
             img.src = principalCat.imagen;
-            img.alt = principalCat.titulo;
+            img.alt = principalCat.titulo || catNombre;
+            img.loading = "lazy";
             img.className = "miniatura-seccion-img";
+
             enlaceImg.appendChild(img);
             tarjeta.appendChild(enlaceImg);
         }
@@ -273,31 +275,55 @@ function renderizarPorCategoria(noticias) {
         const cuerpo = document.createElement("div");
         cuerpo.className = "cuerpo-tarjeta-seccion";
 
+        // Zona B: Identidad protagonista de la categoría + acción Ver sección en la misma zona
         const cabeceraCat = document.createElement("div");
         cabeceraCat.className = "cabecera-tarjeta-seccion";
 
+        const identidadCat = document.createElement("div");
+        identidadCat.className = "identidad-categoria-tarjeta";
+
+        const etiquetaZona = document.createElement("span");
+        etiquetaZona.className = "etiqueta-seccion-tarjeta";
+        etiquetaZona.textContent = "Sección";
+
         const h3 = document.createElement("h3");
+        h3.className = "nombre-categoria-seccion";
         h3.textContent = catNombre;
-        cabeceraCat.appendChild(h3);
+
+        identidadCat.appendChild(etiquetaZona);
+        identidadCat.appendChild(h3);
 
         const verMas = document.createElement("a");
-        verMas.href = `noticias.html?categoria=${encodeURIComponent(principalCat.categoria_slug || catNombre)}`;
+        verMas.href = `noticias.html?categoria=${encodeURIComponent(slugCategoria)}`;
         verMas.className = "enlace-ver-categoria";
         verMas.textContent = "Ver sección →";
-        cabeceraCat.appendChild(verMas);
+        verMas.setAttribute("aria-label", `Ver todas las noticias de ${catNombre}`);
 
+        cabeceraCat.appendChild(identidadCat);
+        cabeceraCat.appendChild(verMas);
         cuerpo.appendChild(cabeceraCat);
 
+        // Zona C: Titulares secundarios relacionados (hasta 2 artículos existentes)
         const listaTitulares = document.createElement("div");
         listaTitulares.className = "estado-tarjeta lista-titulares-seccion";
 
-        coincidencias.forEach((item, idx) => {
-            const enlace = document.createElement("a");
-            enlace.href = `noticia.html?id=${encodeURIComponent(item.id)}`;
-            enlace.className = idx === 0 ? "enlace-categoria-noticia titular-primario-seccion" : "enlace-categoria-noticia titular-secundario-seccion";
-            enlace.textContent = item.titulo;
-            listaTitulares.appendChild(enlace);
-        });
+        if (coincidencias.length === 0) {
+            const vacio = document.createElement("p");
+            vacio.className = "sin-noticias-seccion";
+            vacio.textContent = "Sin publicaciones recientes en esta sección.";
+            listaTitulares.appendChild(vacio);
+        } else {
+            coincidencias.forEach((item, idx) => {
+                const enlace = document.createElement("a");
+                enlace.href = `noticia.html?id=${encodeURIComponent(item.id)}`;
+                enlace.className = idx === 0
+                    ? "enlace-categoria-noticia titular-primario-seccion"
+                    : "enlace-categoria-noticia titular-secundario-seccion";
+                enlace.title = item.titulo || "";
+                enlace.textContent = item.titulo || "";
+                listaTitulares.appendChild(enlace);
+            });
+        }
 
         cuerpo.appendChild(listaTitulares);
         tarjeta.appendChild(cuerpo);
@@ -337,7 +363,13 @@ function inicializarNavegacionSecciones() {
             enlace.classList.add("activo");
 
             if (tituloSeccion) {
-                tituloSeccion.textContent = seccion;
+                if (seccion === "Inicio") {
+                    tituloSeccion.textContent = "";
+                    tituloSeccion.hidden = true;
+                } else {
+                    tituloSeccion.textContent = `· ${seccion}`;
+                    tituloSeccion.hidden = false;
+                }
             }
 
             tarjetas.forEach((tarjeta) => {

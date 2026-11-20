@@ -4,7 +4,6 @@
 
 document.addEventListener("DOMContentLoaded", async () => {
     mostrarFechaListado();
-    comprobarSesionListado();
     await cargarCategoriasFiltro();
     inicializarFiltrosListado();
     await cargarListadoPublico();
@@ -21,28 +20,6 @@ function mostrarFechaListado() {
     const anio = document.getElementById("anio-actual");
     if (anio) {
         anio.textContent = String(new Date().getFullYear());
-    }
-}
-
-async function comprobarSesionListado() {
-    const enlace = document.getElementById("enlace-acceso");
-    if (!enlace) {
-        return;
-    }
-    try {
-        const r = await fetch("php/comprobar_sesion.php", { credentials: "same-origin" });
-        const d = await r.json();
-        if (d.autenticado) {
-            enlace.textContent = "Ir al panel";
-            enlace.href = "admin/index.html";
-            enlace.hidden = false;
-        } else {
-            enlace.textContent = "Acceso editorial";
-            enlace.href = "acceso.html";
-            enlace.hidden = false;
-        }
-    } catch {
-        // Mantener enlace por defecto
     }
 }
 

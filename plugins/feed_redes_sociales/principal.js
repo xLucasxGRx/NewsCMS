@@ -1,7 +1,35 @@
 /**
- * Complemento: Feed de Redes Sociales
- * Consulta php/redes_sociales.php?modo=publico y muestra los enlaces visibles.
+ * Complemento: Feed de Redes Sociales (público)
+ * Consulta php/redes_sociales.php?modo=publico y muestra una lista compacta de canales visibles.
  */
+
+function esUrlSocialSegura(url) {
+    if (typeof url !== "string" || !url.trim()) {
+        return false;
+    }
+    try {
+        const parsed = new URL(url.trim(), window.location.origin);
+        return (parsed.protocol === "http:" || parsed.protocol === "https:") && parsed.hostname !== "";
+    } catch {
+        return false;
+    }
+}
+
+function obtenerNombreSocialVisible(plataforma, titulo) {
+    const plat = typeof plataforma === "string" ? plataforma.trim() : "";
+    const tit = typeof titulo === "string" ? titulo.trim() : "";
+
+    if (plat && tit) {
+        const normPlat = plat.replace(/\s+/g, "").toLowerCase();
+        const normTit = tit.replace(/\s+/g, "").toLowerCase();
+        if (normPlat === normTit) {
+            return plat;
+        }
+        return tit;
+    }
+
+    return plat || tit || "Red social";
+}
 
 export async function iniciar(contenedor) {
     try {
@@ -11,106 +39,71 @@ export async function iniciar(contenedor) {
         }
 
         const datos = await respuesta.json();
-        const enlaces = datos.enlaces || [];
+        const enlaces = Array.isArray(datos.enlaces) ? datos.enlaces : [];
 
         if (!datos.ok || !datos.activo || enlaces.length === 0) {
             return;
         }
 
+        const enlacesValidos = enlaces.filter((item) => esUrlSocialSegura(item.url));
+        if (enlacesValidos.length === 0) {
+            return;
+        }
+
         const seccion = document.createElement("section");
-        seccion.className = "feed-social-bloque";
+        seccion.className = "feed-social-bloque feed-social-compacto";
         seccion.setAttribute("aria-labelledby", "titulo-feed-social");
 
         const encabezado = document.createElement("div");
         encabezado.className = "feed-social-encabezado";
-
-        const bloqueTitulo = document.createElement("div");
-        bloqueTitulo.className = "feed-social-titulo-grupo";
-
-        const eyebrow = document.createElement("span");
-        eyebrow.className = "feed-social-eyebrow";
-        eyebrow.textContent = "Canales oficiales";
 
         const titulo = document.createElement("h2");
         titulo.id = "titulo-feed-social";
         titulo.className = "feed-social-titulo";
         titulo.textContent = "Redes Sociales";
 
-        bloqueTitulo.appendChild(eyebrow);
-        bloqueTitulo.appendChild(titulo);
+        encabezado.appendChild(titulo);
 
-        const resumen = document.createElement("span");
-        resumen.className = "feed-social-resumen";
-        resumen.textContent = enlaces.length === 1 ? "1 canal activo" : `${enlaces.length} canales activos`;
+        const lista = document.createElement("ul");
+        lista.className = "feed-social-lista";
 
-        encabezado.appendChild(bloqueTitulo);
-        encabezado.appendChild(resumen);
-
-        const rejilla = document.createElement("div");
-        rejilla.className = "feed-social-rejilla";
-
-        enlaces.forEach((item) => {
+        enlacesValidos.forEach((item) => {
             const plataforma = String(item.plataforma || "").trim();
-            const platSlug = plataforma.toLowerCase();
+            const platSlug = plataforma.toLowerCase().replace(/[^a-z0-9_-]+/g, "");
+            const nombreVisible = obtenerNombreSocialVisible(plataforma, item.titulo);
 
-            const tarjeta = document.createElement("article");
-            tarjeta.className = "feed-social-tarjeta";
-
-            const cabecera = document.createElement("div");
-            cabecera.className = "feed-social-cabecera";
+            const fila = document.createElement("li");
+            fila.className = "feed-social-fila";
 
             const icono = document.createElement("span");
-            icono.className = `feed-social-icono icono-${platSlug}`;
+            icono.className = `feed-social-icono icono-${platSlug || "general"}`;
             icono.setAttribute("aria-hidden", "true");
             icono.appendChild(crearSvgPlataformaSocial(plataforma));
 
-            const plat = document.createElement("span");
-            plat.className = "feed-social-plataforma";
-            plat.textContent = plataforma || "Red social";
+            const nombre = document.createElement("span");
+            nombre.className = "feed-social-nombre";
+            nombre.textContent = nombreVisible;
 
-            const tipoAcceso = document.createElement("span");
-            tipoAcceso.className = "feed-social-tipo";
-            tipoAcceso.textContent = "Enlace oficial";
-
-            cabecera.appendChild(icono);
-            cabecera.appendChild(plat);
-            cabecera.appendChild(tipoAcceso);
-
-            const h3 = document.createElement("h3");
-            h3.className = "feed-social-nombre";
-            h3.textContent = item.titulo;
-
-            tarjeta.appendChild(cabecera);
-            tarjeta.appendChild(h3);
-
-            if (item.descripcion) {
-                const desc = document.createElement("p");
-                desc.className = "feed-social-desc";
-                desc.textContent = item.descripcion;
-                tarjeta.appendChild(desc);
-            }
-
-            const pie = document.createElement("div");
-            pie.className = "feed-social-pie";
-
-            const boton = document.createElement("a");
-            boton.href = item.url;
-            boton.target = "_blank";
-            boton.rel = "noopener noreferrer";
-            boton.className = "feed-social-enlace";
+            const enlace = document.createElement("a");
+            enlace.href = String(item.url).trim();
+            enlace.target = "_blank";
+            enlace.rel = "noopener noreferrer";
+            enlace.className = "feed-social-enlace";
+            enlace.setAttribute("aria-label", `Visitar ${nombreVisible}`);
 
             const textoEnlace = document.createElement("span");
-            textoEnlace.textContent = "Visitar enlace";
-            boton.appendChild(textoEnlace);
-            boton.appendChild(crearSvgEnlaceExterno());
+            textoEnlace.textContent = "Visitar";
+            enlace.appendChild(textoEnlace);
+            enlace.appendChild(crearSvgEnlaceExterno());
 
-            pie.appendChild(boton);
-            tarjeta.appendChild(pie);
-            rejilla.appendChild(tarjeta);
+            fila.appendChild(icono);
+            fila.appendChild(nombre);
+            fila.appendChild(enlace);
+            lista.appendChild(fila);
         });
 
         seccion.appendChild(encabezado);
-        seccion.appendChild(rejilla);
+        seccion.appendChild(lista);
         contenedor.appendChild(seccion);
     } catch {
         // Si falla, no interrumpe la portada
@@ -121,8 +114,8 @@ function crearSvgPlataformaSocial(plataforma) {
     const svgNS = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(svgNS, "svg");
     svg.setAttribute("viewBox", "0 0 24 24");
-    svg.setAttribute("width", "15");
-    svg.setAttribute("height", "15");
+    svg.setAttribute("width", "18");
+    svg.setAttribute("height", "18");
     svg.setAttribute("fill", "currentColor");
     svg.setAttribute("aria-hidden", "true");
 

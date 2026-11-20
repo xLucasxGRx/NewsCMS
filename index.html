@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NewsCMS — Portal de Noticias</title>
-    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/estilos.css?v=20261120e">
     <script src="js/cargador_temas.js"></script>
 </head>
 <body>
@@ -15,7 +15,7 @@
         </div>
     </div>
 
-    <!-- Cabecera moderna con logotipo, buscador y botón de sesión -->
+    <!-- Cabecera moderna con logotipo y buscador -->
     <header class="encabezado">
         <div class="contenedor encabezado-superior">
             <div class="marca">
@@ -34,21 +34,18 @@
                 <button type="submit" class="boton-buscar">Buscar</button>
             </form>
 
-            <div class="acciones-usuario">
-                <a href="admin/index.html" id="enlace-acceso" class="boton-login" hidden>Ir al panel</a>
-                <button
-                    type="button"
-                    id="boton-menu"
-                    class="boton-menu"
-                    aria-expanded="false"
-                    aria-controls="menu-principal"
-                    aria-label="Abrir menú de categorías"
-                >
-                    <span class="linea-menu"></span>
-                    <span class="linea-menu"></span>
-                    <span class="linea-menu"></span>
-                </button>
-            </div>
+            <button
+                type="button"
+                id="boton-menu"
+                class="boton-menu"
+                aria-expanded="false"
+                aria-controls="menu-principal"
+                aria-label="Abrir menú de categorías"
+            >
+                <span class="linea-menu"></span>
+                <span class="linea-menu"></span>
+                <span class="linea-menu"></span>
+            </button>
         </div>
 
         <!-- Menú de categorías -->
@@ -141,35 +138,35 @@
 
                 <!-- Secciones por categorías -->
                 <section id="secciones" class="bloque-secciones" aria-labelledby="titulo-secciones">
-                    <div class="cabecera-bloque">
-                        <span class="etiqueta-bloque">Explorar</span>
+                    <div class="cabecera-bloque cabecera-secciones-portada">
+                        <span class="etiqueta-bloque">Explora NewsCMS</span>
                         <h2 id="titulo-secciones" class="titulo-seccion">
-                            Secciones por Categorías — <span id="nombre-seccion-activa">Inicio</span>
+                            Noticias por categoría <span id="nombre-seccion-activa" class="subfiltro-seccion-activa" hidden></span>
                         </h2>
                     </div>
 
                     <div id="rejilla-secciones" class="rejilla-secciones">
-                        <article class="tarjeta-seccion" data-categoria="Actualidad">
+                        <article class="tarjeta-seccion" data-categoria="Actualidad" data-slug="actualidad">
                             <h3>Actualidad</h3>
                             <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
                         </article>
 
-                        <article class="tarjeta-seccion" data-categoria="Tecnología">
+                        <article class="tarjeta-seccion" data-categoria="Tecnología" data-slug="tecnologia">
                             <h3>Tecnología</h3>
                             <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
                         </article>
 
-                        <article class="tarjeta-seccion" data-categoria="Deportes">
+                        <article class="tarjeta-seccion" data-categoria="Deportes" data-slug="deportes">
                             <h3>Deportes</h3>
                             <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
                         </article>
 
-                        <article class="tarjeta-seccion" data-categoria="Economía">
+                        <article class="tarjeta-seccion" data-categoria="Economía" data-slug="economia">
                             <h3>Economía</h3>
                             <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
                         </article>
 
-                        <article class="tarjeta-seccion" data-categoria="Entretenimiento">
+                        <article class="tarjeta-seccion" data-categoria="Entretenimiento" data-slug="entretenimiento">
                             <h3>Entretenimiento</h3>
                             <p class="estado-tarjeta">Sin publicaciones disponibles en esta categoría.</p>
                         </article>
@@ -191,6 +188,9 @@
                         <p class="texto-vacio">
                             En este bloque se listarán las publicaciones más recientes en orden cronológico.
                         </p>
+                    </div>
+                    <div id="pie-ultimas-noticias" class="pie-ultimas-noticias" hidden>
+                        <a href="noticias.html" class="enlace-todas-ultimas">Ver todas las noticias <span aria-hidden="true">&rarr;</span></a>
                     </div>
                 </aside>
 
@@ -214,7 +214,6 @@
                     <li><a href="#secciones">Categorías</a></li>
                     <li><a href="archivo.html">Archivo</a></li>
                     <li><a href="php/rss.php">RSS</a></li>
-                    <li><a href="acceso.html">Acceso editorial</a></li>
                 </ul>
             </div>
 
@@ -225,7 +224,7 @@
         </div>
     </footer>
 
-    <script src="js/app.js"></script>
+    <script src="js/app.js?v=20261120c"></script>
     <script src="js/configuracion_portal.js"></script>
     <script type="module" src="js/cargador_complementos.js"></script>
 </body>

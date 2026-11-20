@@ -1,6 +1,6 @@
 /**
- * Complemento Gestor de Publicidad (publico)
- * Carga hasta 3 anuncios activos en #zona-portada-inferior mediante la firma modular iniciar(contenedor).
+ * Complemento Gestor de Publicidad (público)
+ * Muestra hasta 3 anuncios activos en #zona-portada-inferior con composición comercial limpia.
  */
 
 function esEnlacePublicidadSeguro(url) {
@@ -43,6 +43,44 @@ function asignarImagenPublicaConRespaldo(img, rutaImagen, idAnuncio, onFalloTota
     img.src = rutaImagen;
 }
 
+function crearIconoEnlaceExterno() {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.setAttribute("class", "publicidad-cta-icono");
+    svg.setAttribute("aria-hidden", "true");
+
+    const box = document.createElementNS(ns, "path");
+    box.setAttribute("d", "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6");
+
+    const arrow1 = document.createElementNS(ns, "polyline");
+    arrow1.setAttribute("points", "15 3 21 3 21 9");
+
+    const arrow2 = document.createElementNS(ns, "line");
+    arrow2.setAttribute("x1", "10");
+    arrow2.setAttribute("y1", "14");
+    arrow2.setAttribute("x2", "21");
+    arrow2.setAttribute("y2", "3");
+
+    svg.appendChild(box);
+    svg.appendChild(arrow1);
+    svg.appendChild(arrow2);
+    return svg;
+}
+
+function construirTextoCtaPublicidad(titulo) {
+    const limpio = typeof titulo === "string" ? titulo.trim() : "";
+    if (limpio !== "" && limpio.length <= 22) {
+        return `Visitar ${limpio}`;
+    }
+    return "Visitar sitio";
+}
+
 export async function iniciar(contenedor) {
     const zona = contenedor || document.getElementById("zona-portada-inferior");
     if (!zona) {
@@ -64,10 +102,13 @@ export async function iniciar(contenedor) {
             return;
         }
 
+        const listaAnuncios = datos.anuncios.slice(0, 3);
+
         const bloque = document.createElement("section");
-        bloque.className = "publicidad-bloque";
+        bloque.className = "publicidad-bloque publicidad-showcase";
         bloque.setAttribute("aria-label", "Publicidad");
 
+        // A. Identificación publicitaria discreta y única
         const cabecera = document.createElement("div");
         cabecera.className = "publicidad-cabecera";
 
@@ -75,39 +116,29 @@ export async function iniciar(contenedor) {
         etiqueta.className = "publicidad-etiqueta";
         etiqueta.textContent = "Publicidad";
 
-        const nota = document.createElement("span");
-        nota.className = "publicidad-nota-editorial";
-        nota.textContent = "Espacio patrocinado";
-
         cabecera.appendChild(etiqueta);
-        cabecera.appendChild(nota);
         bloque.appendChild(cabecera);
 
         const rejilla = document.createElement("div");
         rejilla.className = "publicidad-rejilla";
 
-        datos.anuncios.forEach((anuncio) => {
-            const tarjeta = document.createElement("article");
-            tarjeta.className = "publicidad-tarjeta";
-
+        listaAnuncios.forEach((anuncio) => {
+            const tituloTexto = typeof anuncio.titulo === "string" ? anuncio.titulo.trim() : "";
+            const descTexto = typeof anuncio.descripcion === "string" ? anuncio.descripcion.trim() : "";
             const rutaImagen = typeof anuncio.imagen === "string" ? anuncio.imagen.trim() : "";
             const tieneEnlace = esEnlacePublicidadSeguro(anuncio.enlace);
 
-            const contenedorTarjeta = document.createElement(tieneEnlace ? "a" : "div");
-            contenedorTarjeta.className = "publicidad-enlace";
-            if (tieneEnlace) {
-                contenedorTarjeta.href = anuncio.enlace.trim();
-                contenedorTarjeta.target = "_blank";
-                contenedorTarjeta.rel = "noopener noreferrer";
-            }
+            const tarjeta = document.createElement("article");
+            tarjeta.className = "publicidad-tarjeta";
 
+            // B. Imagen o identidad visual protagonista sin recortes ni deformaciones
             if (rutaImagen !== "") {
                 const marco = document.createElement("div");
                 marco.className = "publicidad-marco-imagen";
 
                 const imagen = document.createElement("img");
                 imagen.className = "publicidad-imagen";
-                imagen.alt = anuncio.titulo || "Anuncio publicitario";
+                imagen.alt = tituloTexto !== "" ? `Anuncio de ${tituloTexto}` : "Anuncio publicitario";
                 imagen.loading = "lazy";
                 asignarImagenPublicaConRespaldo(imagen, rutaImagen, anuncio.id, () => {
                     marco.remove();
@@ -115,40 +146,48 @@ export async function iniciar(contenedor) {
                 });
 
                 marco.appendChild(imagen);
-                contenedorTarjeta.appendChild(marco);
+                tarjeta.appendChild(marco);
             } else {
                 tarjeta.classList.add("publicidad-tarjeta--textual");
             }
 
+            // C. Información comercial y acción única de visita
             const cuerpo = document.createElement("div");
             cuerpo.className = "publicidad-cuerpo";
 
-            const superior = document.createElement("div");
-            superior.className = "publicidad-cuerpo-superior";
+            const info = document.createElement("div");
+            info.className = "publicidad-info";
 
             const titulo = document.createElement("h3");
             titulo.className = "publicidad-titulo";
-            titulo.textContent = anuncio.titulo || "";
-            superior.appendChild(titulo);
+            titulo.textContent = tituloTexto;
+            info.appendChild(titulo);
 
-            if (anuncio.descripcion) {
+            if (descTexto !== "") {
                 const desc = document.createElement("p");
                 desc.className = "publicidad-desc";
-                desc.textContent = anuncio.descripcion;
-                superior.appendChild(desc);
+                desc.textContent = descTexto;
+                info.appendChild(desc);
             }
 
-            cuerpo.appendChild(superior);
+            cuerpo.appendChild(info);
 
             if (tieneEnlace) {
-                const cta = document.createElement("span");
-                cta.className = "publicidad-cta";
-                cta.textContent = "Visitar sitio \u2192";
+                const cta = document.createElement("a");
+                cta.className = "publicidad-cta-btn";
+                cta.href = anuncio.enlace.trim();
+                cta.target = "_blank";
+                cta.rel = "noopener noreferrer";
+
+                const lbl = document.createElement("span");
+                lbl.textContent = construirTextoCtaPublicidad(tituloTexto);
+                cta.appendChild(lbl);
+                cta.appendChild(crearIconoEnlaceExterno());
+
                 cuerpo.appendChild(cta);
             }
 
-            contenedorTarjeta.appendChild(cuerpo);
-            tarjeta.appendChild(contenedorTarjeta);
+            tarjeta.appendChild(cuerpo);
             rejilla.appendChild(tarjeta);
         });
 

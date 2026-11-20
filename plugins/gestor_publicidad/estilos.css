@@ -1,164 +1,191 @@
-.publicidad-bloque {
+/* ==========================================================================
+   NewsCMS - Complemento: Gestor de Publicidad (Presentación comercial pública)
+   ========================================================================== */
+
+.publicidad-bloque.publicidad-showcase {
     background-color: var(--color-superficie, #ffffff);
     border: 1px solid var(--color-borde, #e2e8f0);
+    border-top: 3px solid var(--color-primario, #162a45);
     border-radius: var(--radio, 8px);
-    padding: 0.95rem 1.05rem;
-    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+    padding: 0.9rem 1rem 1rem;
+    box-shadow: 0 3px 14px rgba(15, 23, 42, 0.05);
 }
 
-.publicidad-cabecera {
+/* A. Identificación publicitaria discreta */
+.publicidad-bloque.publicidad-showcase .publicidad-cabecera {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.65rem;
-    flex-wrap: wrap;
-    padding-bottom: 0.6rem;
-    margin-bottom: 0.8rem;
+    justify-content: flex-start;
+    padding-bottom: 0.55rem;
+    margin-bottom: 0.78rem;
     border-bottom: 1px solid var(--color-borde, #e2e8f0);
 }
 
-.publicidad-etiqueta {
+.publicidad-bloque.publicidad-showcase .publicidad-etiqueta {
     display: inline-flex;
     align-items: center;
-    padding: 0.18rem 0.55rem;
+    padding: 0.16rem 0.52rem;
     border-radius: 4px;
     background-color: var(--color-fondo, #f8fafc);
-    border: 1px solid var(--color-borde, #e2e8f0);
-    font-size: 0.68rem;
+    border: 1px solid var(--color-borde, #cbd5e1);
+    font-size: 0.65rem;
     font-weight: 800;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.09em;
     text-transform: uppercase;
     color: var(--color-texto-suave, #64748b);
+    line-height: 1.25;
 }
 
-.publicidad-nota-editorial {
-    font-size: 0.72rem;
-    color: var(--color-texto-suave, #64748b);
-}
-
-.publicidad-rejilla {
+/* Rejilla preparada para 1, 2 o 3 anuncios sin amontonarse */
+.publicidad-bloque.publicidad-showcase .publicidad-rejilla {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 0.85rem;
+    grid-template-columns: 1fr;
+    gap: 0.95rem;
 }
 
-.publicidad-tarjeta {
+.publicidad-bloque.publicidad-showcase .publicidad-tarjeta {
+    background-color: var(--color-superficie, #ffffff);
     border: 1px solid var(--color-borde, #e2e8f0);
     border-radius: calc(var(--radio, 8px) - 1px);
     overflow: hidden;
-    background-color: var(--color-fondo, #f8fafc);
-    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
-}
-
-.publicidad-tarjeta:hover {
-    border-color: var(--color-acento, #2563eb);
-    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
-    transform: translateY(-1px);
-}
-
-.publicidad-enlace {
-    text-decoration: none;
-    color: inherit;
     display: flex;
     flex-direction: column;
-    height: 100%;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
-.publicidad-marco-imagen {
-    background-color: var(--color-superficie, #ffffff);
+.publicidad-bloque.publicidad-showcase .publicidad-tarjeta:hover {
+    border-color: #94a3b8;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+
+/* B. Escenario visual protagonista y adaptable a logos cuadrados, horizontales o verticales */
+.publicidad-bloque.publicidad-showcase .publicidad-marco-imagen {
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
     border-bottom: 1px solid var(--color-borde, #e2e8f0);
-    padding: 0.6rem;
+    padding: 0.85rem 0.95rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 112px;
-    max-height: 185px;
+    min-height: 150px;
+    max-height: 224px;
     overflow: hidden;
 }
 
-.publicidad-imagen {
+.publicidad-bloque.publicidad-showcase .publicidad-imagen {
     max-width: 100%;
-    max-height: 165px;
+    max-height: 196px;
     width: auto;
     height: auto;
     object-fit: contain;
     display: block;
 }
 
-.publicidad-cuerpo {
-    padding: 0.75rem 0.9rem;
+/* C. Información comercial y botón de visita destacado */
+.publicidad-bloque.publicidad-showcase .publicidad-cuerpo {
+    padding: 0.9rem 1rem 1rem;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 0.45rem;
-    flex: 1;
+    gap: 0.78rem;
 }
 
-.publicidad-titulo {
-    font-size: 0.92rem;
-    font-weight: 700;
-    line-height: 1.32;
-    color: var(--color-primario, #162a45);
+.publicidad-bloque.publicidad-showcase .publicidad-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.publicidad-bloque.publicidad-showcase .publicidad-titulo {
     margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.06rem;
+    font-weight: 700;
+    line-height: 1.28;
+    color: var(--color-primario, #162a45);
+    overflow-wrap: anywhere;
 }
 
-.publicidad-desc {
-    font-size: 0.81rem;
-    color: var(--color-texto-suave, #64748b);
-    margin: 0.28rem 0 0;
-    line-height: 1.45;
+.publicidad-bloque.publicidad-showcase .publicidad-desc {
+    margin: 0;
+    font-size: 0.86rem;
+    line-height: 1.48;
+    color: var(--color-texto-suave, #475569);
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-.publicidad-cta {
-    font-size: 0.76rem;
+.publicidad-bloque.publicidad-showcase .publicidad-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    width: 100%;
+    min-height: 40px;
+    padding: 0.56rem 0.95rem;
+    background-color: var(--color-primario, #162a45);
+    color: #ffffff;
+    border: 1px solid transparent;
+    border-radius: var(--radio, 6px);
+    font-size: 0.87rem;
     font-weight: 700;
-    color: var(--color-acento, #2563eb);
+    text-decoration: none;
     letter-spacing: 0.01em;
+    transition: background-color 0.16s ease, box-shadow 0.16s ease;
 }
 
-.publicidad-tarjeta:hover .publicidad-cta {
-    text-decoration: underline;
+.publicidad-bloque.publicidad-showcase .publicidad-cta-btn:hover {
+    background-color: var(--color-acento, #b91c1c);
 }
 
-.publicidad-tarjeta--textual {
-    border-left: 3px solid var(--color-acento, #2563eb);
-    background-color: var(--color-superficie, #ffffff);
+.publicidad-bloque.publicidad-showcase .publicidad-cta-btn:focus-visible {
+    outline: 2px solid var(--color-acento, #b91c1c);
+    outline-offset: 2px;
 }
 
-.publicidad-tarjeta--textual .publicidad-cuerpo {
-    padding: 0.9rem 1rem;
-    gap: 0.55rem;
+.publicidad-cta-icono {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
 }
 
-.publicidad-tarjeta--textual .publicidad-titulo {
-    font-size: 0.96rem;
-    line-height: 1.35;
+/* Presentación dedicada para anuncios textuales sin imagen */
+.publicidad-bloque.publicidad-showcase .publicidad-tarjeta--textual {
+    border-left: 4px solid var(--color-primario, #162a45);
+    background: linear-gradient(180deg, var(--color-fondo, #f8fafc) 0%, var(--color-superficie, #ffffff) 100%);
 }
 
-.publicidad-tarjeta--textual .publicidad-desc {
-    -webkit-line-clamp: 4;
-    margin-top: 0.35rem;
+.publicidad-bloque.publicidad-showcase .publicidad-tarjeta--textual .publicidad-cuerpo {
+    padding: 1rem;
+    gap: 0.82rem;
+}
+
+.publicidad-bloque.publicidad-showcase .publicidad-tarjeta--textual .publicidad-titulo {
+    font-size: 1.08rem;
+}
+
+.publicidad-bloque.publicidad-showcase .publicidad-tarjeta--textual .publicidad-desc {
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
 }
 
 @media (max-width: 640px) {
-    .publicidad-bloque {
-        padding: 0.85rem;
+    .publicidad-bloque.publicidad-showcase {
+        padding: 0.85rem 0.9rem 0.95rem;
     }
 
-    .publicidad-rejilla {
-        grid-template-columns: 1fr;
+    .publicidad-bloque.publicidad-showcase .publicidad-marco-imagen {
+        min-height: 132px;
+        max-height: 196px;
+        padding: 0.75rem;
     }
 
-    .publicidad-marco-imagen {
-        min-height: 96px;
-        max-height: 160px;
+    .publicidad-bloque.publicidad-showcase .publicidad-imagen {
+        max-height: 172px;
     }
 
-    .publicidad-imagen {
-        max-height: 142px;
+    .publicidad-bloque.publicidad-showcase .publicidad-cuerpo {
+        padding: 0.85rem 0.9rem 0.92rem;
     }
 }
